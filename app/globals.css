@@ -14,8 +14,7 @@
 
 @theme inline {
   /* Shopici Theme */
-  --color-background: var(--shopici-background);
-  --color-foreground: var(--shopici-foreground);
+
 
   --color-shopici-black: var(--shopici-black);
   --color-shopici-charcoal: var(--shopici-charcoal);
@@ -32,11 +31,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --shopici-background: #0a0a0a;
-    --shopici-foreground: #ededed;
 
-    --shopici-charcoal: #b3b3b3;
-    --shopici-gray: #2a2a2a;
   }
 }
 
