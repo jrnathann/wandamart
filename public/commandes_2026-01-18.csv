@@ -1,0 +1,4 @@
+"ID","Statut","Total (XAF)","Date","Client","Téléphone","Zone de livraison","Créneau d'appel","Nombre d'articles","Articles","Checkpoints"
+"order_001","En préparation","61000","18/01/2026","Saha","465465454","Yaoundé","morning","2","prod_001 x2 | prod_002 x1","En préparation @ Shopici Warehouse"
+"order_002","Livré","66000","18/01/2026","Mbappe","677889900","Douala","afternoon","1","prod_003 x3","En préparation @ Shopici Warehouse → En route @ Hub Douala"
+"order_003","Livré","25000","18/01/2026","Nadine","699112233","Bafoussam","evening","1","prod_002 x1","En préparation @ Shopici Warehouse → En route @ Hub Bafoussam → Livré @ Bafoussam"

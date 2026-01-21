@@ -1,0 +1,18 @@
+// configData.ts
+export const storeConfig = {
+  name: "Shopici",
+  description: "Votre boutique en ligne pour tous vos besoins",
+  contact: {
+    email: "contact@shopici.com",
+    phone: "+237 6 71 89 32 50",
+    address: "Yaoundé, Cameroun"
+  },
+  currency: "XAF",
+  social: {
+    facebook: "https://web.facebook.com/profile.php?id=61582791245183",
+  },
+  tracking: {
+    facebookPixelId: "735596049606757",
+    googleAnalyticsId: "UA-XXXXXXXXX-X",
+  },
+};
