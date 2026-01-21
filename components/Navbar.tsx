@@ -24,7 +24,7 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
 
     return (
         <>
-            <header className="w-full border-b border-shopici-gray bg-background sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+            <header className="w-full sticky top-0 z-30 backdrop-blur-sm bg-white">
                 <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
                     <Link href="/" className="flex items-center gap-2 z-40">
                         <Image
@@ -37,13 +37,13 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
                     </Link>
 
                     <div className="hidden items-center gap-8 md:flex">
-                        <Link href="/" className="text-sm font-medium text-shopici-charcoal hover:text-shopici-black transition-colors">
+                        <Link href="/" className="text-sm font-medium text-[#414141] hover:text-shopici-black transition-colors">
                             Home
                         </Link>
-                        <Link href="/products" className="text-sm font-medium text-shopici-charcoal hover:text-shopici-black transition-colors">
+                        <Link href="/products" className="text-sm font-medium text-[#414141] hover:text-shopici-black transition-colors">
                             Products
                         </Link>
-                        <Link href="/contact" className="text-sm font-medium text-shopici-charcoal hover:text-shopici-black transition-colors">
+                        <Link href="/contact" className="text-sm font-medium text-[#414141] hover:text-shopici-black transition-colors">
                             Contact
                         </Link>
                     </div>

@@ -41,7 +41,7 @@ export default function ProductCard({ product, onProductAdded }: ProductCardProp
   return (
     <div 
       onClick={handleCardClick}
-      className="group bg-background rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-shopici-gray/30 cursor-pointer"
+      className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-shopici-gray/30 cursor-pointer"
     >
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden bg-shopici-gray/20">
@@ -77,12 +77,12 @@ export default function ProductCard({ product, onProductAdded }: ProductCardProp
 
       {/* Product Info */}
       <div className="p-4">
-        <h3 className="font-semibold text-shopici-black mb-2 line-clamp-2 group-hover:text-shopici-blue transition-colors">
+        <h3 className="font-semibold text-[#414141] mb-2 line-clamp-2 group-hover:text-shopici-blue transition-colors">
           {product.name}
         </h3>
         
         {product.shortDescription && (
-          <p className="text-sm text-shopici-charcoal mb-3 line-clamp-1">
+          <p className="text-sm text-[#414141] mb-3 line-clamp-1">
             {product.shortDescription}
           </p>
         )}
@@ -96,7 +96,7 @@ export default function ProductCard({ product, onProductAdded }: ProductCardProp
             {product.currency}
           </span>
           {product.compareAtPrice && (
-            <span className="text-sm text-shopici-charcoal line-through">
+            <span className="text-sm text-[#414141] line-through">
               {formatPrice(product.compareAtPrice)}
             </span>
           )}
@@ -104,7 +104,7 @@ export default function ProductCard({ product, onProductAdded }: ProductCardProp
 
         {/* Delivery Info */}
         {product.delivery.available && (
-          <div className="flex items-center gap-4 text-xs text-shopici-charcoal mb-3 pb-3 border-b border-shopici-gray/50">
+          <div className="flex items-center gap-4 text-xs text-[#414141] mb-3 pb-3 border-b border-shopici-gray/50">
             <div className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               <span>{product.delivery.areas[0]}</span>

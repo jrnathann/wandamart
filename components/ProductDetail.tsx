@@ -72,11 +72,11 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     // If product not found, show error
     if (!product) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="text-center">
-                    <Package className="w-24 h-24 mx-auto mb-4 text-shopici-charcoal/40" />
+                    <Package className="w-24 h-24 mx-auto mb-4 text-[#414141]/40" />
                     <h1 className="text-2xl font-bold text-shopici-black mb-2">Produit non trouvé</h1>
-                    <p className="text-shopici-charcoal mb-6">Le produit que vous recherchez n'existe pas.</p>
+                    <p className="text-[#414141] mb-6">Le produit que vous recherchez n'existe pas.</p>
                     <a
                         href="/products"
                         className="inline-block px-6 py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-colors"
@@ -165,7 +165,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
 
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-white">
             {/* Urgency Banner */}
             <div className="bg-gradient-to-r from-shopici-coral to-orange-600 text-white py-3 px-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-sm md:text-base font-semibold">
@@ -208,7 +208,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                 </>
                             ) : (
                                 <div className="absolute inset-0 bg-gradient-to-br from-shopici-gray to-shopici-blue/20 flex items-center justify-center">
-                                    <Package className="w-24 h-24 text-shopici-charcoal/40" />
+                                    <Package className="w-24 h-24 text-[#414141]/40" />
                                 </div>
                             )}
 
@@ -253,7 +253,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                 {product.name}
                             </h1>
                             {product.shortDescription && (
-                                <p className="text-shopici-charcoal text-lg">
+                                <p className="text-[#414141] text-lg">
                                     {product.shortDescription}
                                 </p>
                             )}
@@ -267,13 +267,13 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                 </span>
                                 <span className="text-2xl font-semibold text-shopici-black">XAF</span>
                                 {product.compareAtPrice && (
-                                    <span className="text-xl text-shopici-charcoal line-through">
+                                    <span className="text-xl text-[#414141] line-through">
                                         {formatPrice(product.compareAtPrice)}
                                     </span>
                                 )}
                             </div>
                             {product.compareAtPrice && (
-                                <p className="text-sm text-shopici-charcoal flex items-center gap-2">
+                                <p className="text-sm text-[#414141] flex items-center gap-2">
                                     <TrendingUp className="w-4 h-4 text-green-600" />
                                     Économisez {formatPrice(product.compareAtPrice - product.price)} XAF aujourd'hui!
                                 </p>
@@ -286,7 +286,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                             <div className="flex items-center gap-3 bg-shopici-gray/20 rounded-lg p-2">
                                 <button
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="w-10 h-10 rounded-lg bg-background hover:bg-shopici-blue hover:text-white flex items-center justify-center font-bold transition-colors"
+                                    className="w-10 h-10 rounded-lg bg-white text-black hover:bg-shopici-blue hover:text-white flex items-center justify-center font-bold transition-colors"
                                 >
                                     -
                                 </button>
@@ -295,7 +295,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                 </span>
                                 <button
                                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                                    className="w-10 h-10 rounded-lg bg-background hover:bg-shopici-blue hover:text-white flex items-center justify-center font-bold transition-colors"
+                                    className="w-10 h-10 rounded-lg bg-white text-black hover:bg-shopici-blue hover:text-white flex items-center justify-center font-bold transition-colors"
                                 >
                                     +
                                 </button>
@@ -312,7 +312,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                 COMMANDER MAINTENANT
                             </button>
 
-                            <div className="text-center text-sm text-shopici-charcoal">
+                            <div className="text-center text-sm text-[#414141]">
                                 <p className="flex items-center justify-center gap-2">
                                     <Shield className="w-4 h-4 text-green-600" />
                                     Paiement 100% sécurisé à la livraison
@@ -322,12 +322,12 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
 
                         {/* Delivery Info */}
                         {product.delivery.available && (
-                            <div className="bg-background border border-shopici-gray/30 rounded-xl p-5">
+                            <div className="bg-white border border-shopici-gray/30 rounded-xl p-5">
                                 <h3 className="font-semibold text-shopici-black mb-3 flex items-center gap-2">
                                     <MapPin className="w-5 h-5 text-shopici-blue" />
                                     Informations de livraison
                                 </h3>
-                                <div className="space-y-2 text-sm text-shopici-charcoal">
+                                <div className="space-y-2 text-sm text-[#414141]">
                                     <p className="flex items-center gap-2">
                                         <CheckCircle className="w-4 h-4 text-green-600" />
                                         Livraison: {product.delivery.estimatedDays}
@@ -365,8 +365,8 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 {/* Product Description */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold text-shopici-black mb-4">Description du produit</h2>
-                    <div className="bg-background border border-shopici-gray/30 rounded-xl p-6">
-                        <p className="text-shopici-charcoal leading-relaxed whitespace-pre-line">
+                    <div className="bg-white border border-shopici-gray/30 rounded-xl p-6">
+                        <p className="text-[#414141] leading-relaxed whitespace-pre-line">
                             {product.description}
                         </p>
                     </div>
@@ -400,7 +400,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                 </div>
                             ))}
                         </div>
-                        <p className="text-center text-sm text-shopici-charcoal mt-4">
+                        <p className="text-center text-sm text-[#414141] mt-4">
                             Plus de 500+ clients satisfaits à travers le Cameroun
                         </p>
                     </div>
@@ -416,18 +416,18 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     />
 
                     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-                        <div className="bg-background rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
                             {!orderSubmitted ? (
                                 <div className="p-4 sm:p-6">
                                     {/* Modal Header - Sticky on mobile */}
-                                    <div className="sticky top-0 bg-background z-10 pb-4 sm:pb-6 border-b sm:border-0 border-shopici-gray/20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 sm:pt-0">
+                                    <div className="sticky top-0 bg-white z-10 pb-4 sm:pb-6 border-b sm:border-0 border-shopici-gray/20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 sm:pt-0">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xl sm:text-2xl font-bold text-shopici-black">Finaliser la commande</h3>
                                             <button
                                                 onClick={() => setShowOrderModal(false)}
                                                 className="w-9 h-9 sm:w-8 sm:h-8 rounded-full hover:bg-shopici-gray/20 flex items-center justify-center transition-colors flex-shrink-0"
                                             >
-                                                <X className="w-6 h-6 sm:w-5 sm:h-5 text-shopici-charcoal" />
+                                                <X className="w-6 h-6 sm:w-5 sm:h-5 text-[#414141]" />
                                             </button>
                                         </div>
                                     </div>
@@ -436,11 +436,11 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                         {/* Order Summary */}
                                         <div className="bg-shopici-gray/10 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
                                             <div className="flex justify-between items-center mb-1.5 sm:mb-2">
-                                                <span className="text-xs sm:text-sm text-shopici-charcoal">Produit:</span>
+                                                <span className="text-xs sm:text-sm text-[#414141]">Produit:</span>
                                                 <span className="font-semibold text-shopici-black text-xs sm:text-sm text-right flex-1 ml-2 line-clamp-1">{product.name}</span>
                                             </div>
                                             <div className="flex justify-between items-center mb-1.5 sm:mb-2">
-                                                <span className="text-xs sm:text-sm text-shopici-charcoal">Quantité:</span>
+                                                <span className="text-xs sm:text-sm text-[#414141]">Quantité:</span>
                                                 <span className="font-semibold text-shopici-black text-sm sm:text-base">{quantity}</span>
                                             </div>
                                             <div className="flex justify-between items-center pt-2 border-t border-shopici-gray/30">
@@ -464,7 +464,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                     value={orderForm.name}
                                                     onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })}
                                                     placeholder="Exemple: Jean Dupont"
-                                                    className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                                                    className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
                                                 />
                                             </div>
 
@@ -479,7 +479,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                     value={orderForm.phone}
                                                     onChange={(e) => setOrderForm({ ...orderForm, phone: e.target.value })}
                                                     placeholder="Exemple: 677 123 456"
-                                                    className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                                                    className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
                                                 />
                                             </div>
 
@@ -495,7 +495,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                         onClick={() => setOrderForm({ ...orderForm, hasWhatsApp: true })}
                                                         className={`p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.hasWhatsApp
                                                             ? 'bg-green-500 border-green-500 text-white shadow-lg scale-105'
-                                                            : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-green-500'
+                                                            : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-green-500'
                                                             }`}
                                                     >
                                                         <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2" />
@@ -506,14 +506,14 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                         onClick={() => setOrderForm({ ...orderForm, hasWhatsApp: false })}
                                                         className={`p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${!orderForm.hasWhatsApp && orderForm.phone !== ""
                                                             ? 'bg-gray-500 border-gray-500 text-white shadow-lg scale-105'
-                                                            : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-gray-500'
+                                                            : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-gray-500'
                                                             }`}
                                                     >
                                                         <Phone className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2" />
                                                         NON
                                                     </button>
                                                 </div>
-                                                <p className="text-xs sm:text-sm text-shopici-charcoal mt-2 text-center">
+                                                <p className="text-xs sm:text-sm text-[#414141] mt-2 text-center">
                                                     Choisissez comment vous voulez qu'on vous contacte
                                                 </p>
                                             </div>
@@ -527,7 +527,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                 <select
                                                     value={orderForm.deliveryZone}
                                                     onChange={(e) => setOrderForm({ ...orderForm, deliveryZone: e.target.value })}
-                                                    className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                                                    className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
                                                 >
                                                     <option value="">-- Choisissez votre ville --</option>
                                                     <option value="yaounde">Yaoundé</option>
@@ -556,7 +556,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                         onClick={() => setOrderForm({ ...orderForm, callTime: 'morning' })}
                                                         className={`w-full p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.callTime === 'morning'
                                                             ? 'bg-shopici-blue border-shopici-blue text-white shadow-lg'
-                                                            : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
+                                                            : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
                                                             }`}
                                                     >
                                                         🌅 MATIN (8h - 12h)
@@ -566,7 +566,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                         onClick={() => setOrderForm({ ...orderForm, callTime: 'afternoon' })}
                                                         className={`w-full p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.callTime === 'afternoon'
                                                             ? 'bg-shopici-blue border-shopici-blue text-white shadow-lg'
-                                                            : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
+                                                            : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
                                                             }`}
                                                     >
                                                         ☀️ APRÈS-MIDI (12h - 17h)
@@ -576,7 +576,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                                         onClick={() => setOrderForm({ ...orderForm, callTime: 'evening' })}
                                                         className={`w-full p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.callTime === 'evening'
                                                             ? 'bg-shopici-blue border-shopici-blue text-white shadow-lg'
-                                                            : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
+                                                            : 'bg-white border-shopici-gray/30 text-shopici-black  hover:border-shopici-blue'
                                                             }`}
                                                     >
                                                         🌙 SOIR (17h - 20h)
@@ -585,7 +585,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                             </div>
 
                                             {/* Big Submit Button - Sticky on mobile */}
-                                            <div className="sticky bottom-0 bg-background -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 border-t sm:border-0 border-shopici-gray/20">
+                                            <div className="sticky bottom-0 bg-white -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 border-t sm:border-0 border-shopici-gray/20">
                                                 <button
                                                     onClick={handleOrderSubmit}
                                                     disabled={submitting}
@@ -628,10 +628,10 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                                     <h3 className="text-xl sm:text-2xl font-bold text-shopici-black mb-2">
                                         Commande confirmée!
                                     </h3>
-                                    <p className="text-sm sm:text-base text-shopici-charcoal mb-3 sm:mb-4">
+                                    <p className="text-sm sm:text-base text-[#414141] mb-3 sm:mb-4">
                                         Merci {orderForm.name}! Nous vous contacterons très bientôt pour finaliser votre commande.
                                     </p>
-                                    <p className="text-xs sm:text-sm text-shopici-charcoal">
+                                    <p className="text-xs sm:text-sm text-[#414141]">
                                         Numéro: {orderForm.phone}
                                     </p>
                                 </div>

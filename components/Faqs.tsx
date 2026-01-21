@@ -56,7 +56,7 @@ export default function FAQSection() {
     };
 
     return (
-        <section className="w-full py-16 px-4 bg-background">
+        <section className="w-full py-16 px-4 bg-white">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
@@ -66,7 +66,7 @@ export default function FAQSection() {
                     <h2 className="text-4xl font-bold text-shopici-black mb-4">
                         Questions Fréquentes
                     </h2>
-                    <p className="text-lg text-shopici-charcoal max-w-2xl mx-auto">
+                    <p className="text-lg text-[#414141] max-w-2xl mx-auto">
                         Trouvez rapidement des réponses à vos questions. Si vous ne trouvez pas ce que vous cherchez, n'hésitez pas à nous contacter.
                     </p>
                 </div>
@@ -76,7 +76,7 @@ export default function FAQSection() {
                     {faqs.map((faq) => (
                         <div
                             key={faq.id}
-                            className="group bg-background border border-shopici-gray/30 rounded-xl overflow-hidden hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg"
+                            className="group bg-white border border-shopici-gray/30 rounded-xl overflow-hidden hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg"
                         >
                             <button
                                 onClick={() => toggleItem(faq.id)}
@@ -113,7 +113,7 @@ export default function FAQSection() {
                             >
                                 <div className="px-6 pb-5 pt-0">
                                     <div className="pt-4 border-t border-shopici-gray/30">
-                                        <p className="text-shopici-charcoal leading-relaxed">
+                                        <p className="text-[#414141] leading-relaxed">
                                             {faq.answer}
                                         </p>
                                     </div>
@@ -125,7 +125,7 @@ export default function FAQSection() {
 
                 {/* CTA */}
                 <div className="mt-12 text-center">
-                    <p className="text-shopici-charcoal mb-4">
+                    <p className="text-[#414141] mb-4">
                         Vous n'avez pas trouvé la réponse à votre question ?
                     </p>
                     <Link href={"/contact"} className="inline-flex items-center gap-2 px-6 py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">

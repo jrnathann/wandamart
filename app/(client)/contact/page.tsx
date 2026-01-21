@@ -54,12 +54,12 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-shopici-black to-shopici-charcoal text-white py-16 px-4">
+      <div className="bg-gradient-to-br from-shopici-black to-text-[#414141] text-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Contactez-nous</h1>
-          <p className="text-lg text-shopici-gray max-w-2xl mx-auto">
+          <p className="text-lg text-[#414141] max-w-2xl mx-auto">
             Une question ? Besoin d'aide ? Notre équipe est là pour vous accompagner
           </p>
         </div>
@@ -74,52 +74,52 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-shopici-black mb-6">
                 Informations de Contact
               </h2>
-              <p className="text-shopici-charcoal mb-8">
+              <p className="text-[#414141] mb-8">
                 N'hésitez pas à nous contacter par l'un des moyens ci-dessous. Nous répondons généralement sous 24h.
               </p>
             </div>
 
             {/* Contact Cards */}
             <div className="space-y-4">
-              <div className="bg-background border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
+              <div className="bg-white border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-shopici-blue/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-shopici-blue" />
+                  <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-6 h-6 text-shopici-coral" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-shopici-black mb-1">Adresse</h3>
-                    <p className="text-sm text-shopici-charcoal">
+                    <p className="text-sm text-[#414141]">
                       {storeConfig.contact.address}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-background border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
+              <div className="bg-white border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center flex-shrink-0">
                     <Phone className="w-6 h-6 text-shopici-coral" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-shopici-black mb-1">Téléphone</h3>
-                    <a href="tel:+237" className="text-sm text-shopici-charcoal hover:text-shopici-coral transition-colors">
+                    <a href="tel:+237" className="text-sm text-[#414141] hover:text-shopici-coral transition-colors">
                       {storeConfig.contact.phone}
                     </a>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-background border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
+              <div className="bg-white border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center flex-shrink-0">
                     <Clock className="w-6 h-6 text-shopici-coral" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-shopici-black mb-1">Horaires</h3>
-                    <p className="text-sm text-shopici-charcoal">
+                    <p className="text-sm text-[#414141]">
                       Lun - Sam: 8h00 - 18h00
                     </p>
-                    <p className="text-sm text-shopici-charcoal">
+                    <p className="text-sm text-[#414141]">
                       Dimanche: Fermé
                     </p>
                   </div>
@@ -144,14 +144,14 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <div className="bg-background border border-shopici-gray/30 rounded-2xl p-8 shadow-sm">
+            <div className="bg-white border border-shopici-gray/30 rounded-2xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center">
                   <MessageSquare className="w-6 h-6 text-shopici-coral" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-shopici-black">Envoyez-nous un message</h2>
-                  <p className="text-sm text-shopici-charcoal">Nous vous répondrons dans les plus brefs délais</p>
+                  <p className="text-sm text-[#414141]">Nous vous répondrons dans les plus brefs délais</p>
                 </div>
               </div>
 
@@ -176,7 +176,7 @@ export default function ContactPage() {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-background text-shopici-black"
+                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-white text-shopici-black"
                       placeholder="Votre nom"
                     />
                   </div>
@@ -192,7 +192,7 @@ export default function ContactPage() {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-background text-shopici-black"
+                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-white text-shopici-black"
                       placeholder="votre@email.com"
                     />
                   </div>
@@ -209,7 +209,7 @@ export default function ContactPage() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-background text-shopici-black"
+                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-white text-shopici-black"
                       placeholder="+237 XXX XXX XXX"
                     />
                   </div>
@@ -224,7 +224,7 @@ export default function ContactPage() {
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-background text-shopici-black"
+                      className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all bg-white text-shopici-black"
                     >
                       <option value="">Sélectionnez un sujet</option>
                       <option value="order">Question sur une commande</option>
@@ -247,7 +247,7 @@ export default function ContactPage() {
                     onChange={handleChange}
                     required
                     rows={6}
-                    className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all resize-none bg-background text-shopici-black"
+                    className="w-full px-4 py-3 border border-shopici-gray/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-shopici-blue focus:border-transparent transition-all resize-none bg-white text-shopici-black"
                     placeholder="Écrivez votre message ici..."
                   />
                 </div>

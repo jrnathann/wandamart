@@ -194,21 +194,21 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
                             <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
                                 <Clock className="w-8 h-8 text-blue-600" />
                             </div>
-                            <h3 className="font-semibold text-lg mb-2">Livraison Rapide</h3>
+                            <h3 className="font-semibold text-[#414141] text-lg mb-2">Livraison Rapide</h3>
                             <p className="text-gray-600 text-sm">Recevez vos commandes en 1-2 jours</p>
                         </div>
                         <div className="text-center">
                             <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
                                 <Star className="w-8 h-8 text-green-600" />
                             </div>
-                            <h3 className="font-semibold text-lg mb-2">Qualité Garantie</h3>
+                            <h3 className="font-semibold text-[#414141] text-lg mb-2">Qualité Garantie</h3>
                             <p className="text-gray-600 text-sm">Produits authentiques et vérifiés</p>
                         </div>
                         <div className="text-center">
                             <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                                 <MapPin className="w-8 h-8 text-purple-600" />
                             </div>
-                            <h3 className="font-semibold text-lg mb-2">Partout au Cameroun</h3>
+                            <h3 className="font-semibold text-[#414141] text-lg mb-2">Partout au Cameroun</h3>
                             <p className="text-gray-600 text-sm">Livraison dans toutes les régions</p>
                         </div>
                     </div>

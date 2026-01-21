@@ -24,7 +24,7 @@ export default function Footer() {
               />
               <h3 className="text-2xl font-bold">Shopici</h3>
             </div>
-            <p className="text-shopici-gray text-sm leading-relaxed">
+            <p className="text-gray-300 text-sm leading-relaxed">
               Votre destination shopping en ligne au Cameroun. Des produits de qualité, livrés directement chez vous.
             </p>
             <div className="flex gap-3">
@@ -44,7 +44,7 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Liens Rapides</h4>
             <ul className="space-y-2">
               <li>
-                <a href="/products" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300 text-sm">
+                <a href="/products" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
                   Nos Produits
                 </a>
               </li>
@@ -54,12 +54,12 @@ export default function Footer() {
                 </a>
               </li> */}
               <li>
-                <a href="/about" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300 text-sm">
+                <a href="/about" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
                   À Propos
                 </a>
               </li>
               <li>
-                <a href="/contact" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300 text-sm">
+                <a href="/contact" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
                   Contact
                 </a>
               </li>
@@ -71,12 +71,12 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Service Client</h4>
             <ul className="space-y-2">
               <li>
-                <a href="/shipping" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300 text-sm">
+                <a href="/shipping" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
                   Suivre ma commande
                 </a>
               </li>
               <li>
-                <a href="/terms" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300 text-sm">
+                <a href="/terms" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
                   Conditions d'utilisation
                 </a>
               </li>
@@ -89,13 +89,13 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-shopici-coral mt-0.5 flex-shrink-0" />
-                <span className="text-shopici-gray">
+                <span className="text-gray-300">
                   {storeConfig.contact.address}
                 </span>
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <Phone className="w-4 h-4 text-shopici-coral flex-shrink-0" />
-                <a href="tel:+237" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300">
+                <a href="tel:+237" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300">
                   {storeConfig.contact.phone}
                 </a>
               </li>
@@ -106,14 +106,14 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-shopici-charcoal">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-shopici-gray text-sm">
+            <p className="text-gray-300 text-sm">
               © {currentYear} Shopici. Tous droits réservés.
             </p>
             <div className="flex gap-6 text-sm">
-              <a href="/privacy" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300">
+              <a href="/privacy" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300">
                 Politique de confidentialité
               </a>
-              <a href="/cookies" className="text-shopici-gray hover:text-shopici-coral transition-colors duration-300">
+              <a href="/cookies" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300">
                 Cookies
               </a>
             </div>

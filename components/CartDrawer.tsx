@@ -128,7 +128,7 @@ export default function CartDrawer({
 
       {/* Cart Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full md:w-[500px] bg-background shadow-2xl z-[70] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 h-full w-full md:w-[500px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         <div className="flex flex-col h-full">
@@ -172,7 +172,7 @@ export default function CartDrawer({
                 {cart.map((item, index) => (
                   <div
                     key={item._id}
-                    className="bg-background border border-shopici-gray/30 rounded-xl p-3 sm:p-4 hover:shadow-lg transition-all duration-300"
+                    className="bg-white border border-shopici-gray/30 rounded-xl p-3 sm:p-4 hover:shadow-lg transition-all duration-300"
                     style={{
                       animation: `slideIn 0.3s ease-out ${index * 0.1}s backwards`
                     }}
@@ -203,18 +203,18 @@ export default function CartDrawer({
                           <div className="flex items-center gap-1.5 sm:gap-2 bg-shopici-gray/20 rounded-lg p-1">
                             <button
                               onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-background hover:bg-shopici-blue hover:text-white flex items-center justify-center transition-colors"
+                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-white hover:bg-shopici-blue hover:text-white flex items-center justify-center transition-colors"
                             >
-                              <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-black" />
                             </button>
                             <span className="w-6 sm:w-8 text-center text-sm sm:text-base font-semibold text-shopici-black">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-background hover:bg-shopici-blue hover:text-white flex items-center justify-center transition-colors"
+                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-white hover:bg-shopici-blue hover:text-white flex items-center justify-center transition-colors"
                             >
-                              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <Plus className="w-3 h-3 sm:w-4 sm:h-4 text-black"/>
                             </button>
                           </div>
 
@@ -291,11 +291,11 @@ export default function CartDrawer({
           />
 
           <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center sm:p-4">
-            <div className="bg-background rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
               {!orderSubmitted ? (
                 <div className="p-4 sm:p-6">
                   {/* Modal Header - Sticky on mobile */}
-                  <div className="sticky top-0 bg-background z-10 pb-4 sm:pb-6 border-b sm:border-0 border-shopici-gray/20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 sm:pt-0">
+                  <div className="sticky top-0 bg-white z-10 pb-4 sm:pb-6 border-b sm:border-0 border-shopici-gray/20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-4 sm:pt-0">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl sm:text-2xl font-bold text-shopici-black">Finaliser la commande</h3>
                       <button
@@ -343,7 +343,7 @@ export default function CartDrawer({
                           value={orderForm.name}
                           onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })}
                           placeholder="Exemple: Jean Dupont"
-                          className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                          className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
                         />
                       </div>
 
@@ -358,7 +358,7 @@ export default function CartDrawer({
                           value={orderForm.phone}
                           onChange={(e) => setOrderForm({ ...orderForm, phone: e.target.value })}
                           placeholder="Exemple: 677 123 456"
-                          className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                          className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
                         />
                       </div>
 
@@ -374,7 +374,7 @@ export default function CartDrawer({
                             onClick={() => setOrderForm({ ...orderForm, hasWhatsApp: true })}
                             className={`p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.hasWhatsApp
                               ? 'bg-green-500 border-green-500 text-white shadow-lg scale-105'
-                              : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-green-500'
+                              : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-green-500'
                               }`}
                           >
                             <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2" />
@@ -385,7 +385,7 @@ export default function CartDrawer({
                             onClick={() => setOrderForm({ ...orderForm, hasWhatsApp: false })}
                             className={`p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${!orderForm.hasWhatsApp && orderForm.phone !== ""
                               ? 'bg-gray-500 border-gray-500 text-white shadow-lg scale-105'
-                              : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-gray-500'
+                              : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-gray-500'
                               }`}
                           >
                             <Phone className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2" />
@@ -406,7 +406,7 @@ export default function CartDrawer({
                         <select
                           value={orderForm.deliveryZone}
                           onChange={(e) => setOrderForm({ ...orderForm, deliveryZone: e.target.value })}
-                          className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                          className="w-full px-3 py-3 sm:px-4 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
                         >
                           <option value="">-- Choisissez votre ville --</option>
                           <option value="yaounde">Yaoundé</option>
@@ -435,7 +435,7 @@ export default function CartDrawer({
                             onClick={() => setOrderForm({ ...orderForm, callTime: 'morning' })}
                             className={`w-full p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.callTime === 'morning'
                               ? 'bg-shopici-blue border-shopici-blue text-white shadow-lg'
-                              : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
+                              : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
                               }`}
                           >
                             🌅 MATIN (8h - 12h)
@@ -445,7 +445,7 @@ export default function CartDrawer({
                             onClick={() => setOrderForm({ ...orderForm, callTime: 'afternoon' })}
                             className={`w-full p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.callTime === 'afternoon'
                               ? 'bg-shopici-blue border-shopici-blue text-white shadow-lg'
-                              : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
+                              : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
                               }`}
                           >
                             ☀️ APRÈS-MIDI (12h - 17h)
@@ -455,7 +455,7 @@ export default function CartDrawer({
                             onClick={() => setOrderForm({ ...orderForm, callTime: 'evening' })}
                             className={`w-full p-3 sm:p-4 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${orderForm.callTime === 'evening'
                               ? 'bg-shopici-blue border-shopici-blue text-white shadow-lg'
-                              : 'bg-background border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
+                              : 'bg-white border-shopici-gray/30 text-shopici-black hover:border-shopici-blue'
                               }`}
                           >
                             🌙 SOIR (17h - 20h)
@@ -464,7 +464,7 @@ export default function CartDrawer({
                       </div>
 
                       {/* Submit Button - Sticky on mobile */}
-                      <div className="sticky bottom-0 bg-background -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 border-t sm:border-0 border-shopici-gray/20">
+                      <div className="sticky bottom-0 bg-white -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 border-t sm:border-0 border-shopici-gray/20">
                         <button
                           onClick={handleOrderSubmit}
                           disabled={submitting}

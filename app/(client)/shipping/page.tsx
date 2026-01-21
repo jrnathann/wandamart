@@ -93,7 +93,7 @@ export default function OrderTrackingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-shopici-gray/10 to-shopici-blue/5">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-shopici-black to-shopici-charcoal text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
@@ -119,7 +119,7 @@ export default function OrderTrackingPage() {
                 value={trackingId}
                 onChange={(e) => setTrackingId(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-4 text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+                className="w-full pl-12 pr-4 py-4 text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
               />
             </div>
             <button

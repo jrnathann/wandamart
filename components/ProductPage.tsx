@@ -111,7 +111,7 @@ export default function ProductsPage() {
     return <ProductsSkeleton />;
   }
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-gradient-to-r from-shopici-blue to-shopici-coral text-white py-8 sm:py-12 px-4">
         <div className="max-w-7xl mx-auto">
@@ -135,7 +135,7 @@ export default function ProductsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher un produit..."
-              className="w-full pl-12 pr-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black"
+              className="w-full pl-12 pr-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
             />
             {searchQuery && (
               <button
@@ -152,7 +152,7 @@ export default function ProductsPage() {
             {/* Filter Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-background border-2 border-shopici-gray/30 hover:border-shopici-blue rounded-xl font-semibold text-shopici-black transition-all"
+              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-white border-2 border-shopici-gray/30 hover:border-shopici-blue rounded-xl font-semibold text-shopici-black transition-all"
             >
               <SlidersHorizontal className="w-5 h-5" />
               <span>Filtres</span>
@@ -168,7 +168,7 @@ export default function ProductsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-3 pr-10 border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-background text-shopici-black font-semibold appearance-none cursor-pointer"
+                className="w-full px-4 py-3 pr-10 border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black font-semibold appearance-none cursor-pointer"
               >
                 <option value="featured">En vedette</option>
                 <option value="newest">Nouveautés</option>
@@ -190,7 +190,7 @@ export default function ProductsPage() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-background border-2 border-shopici-gray/30 rounded-2xl animate-slideDown">
+          <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white border-2 border-shopici-gray/30 rounded-2xl animate-slideDown">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg sm:text-xl font-bold text-shopici-black">Filtres</h3>
               {activeFiltersCount > 0 && (
