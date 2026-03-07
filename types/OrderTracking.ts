@@ -14,8 +14,7 @@ export interface CustomerInfo {
   callTime: "morning" | "afternoon" | "evening";
 }
 
-export type OrderStatus = "En préparation" | "En route" | "Livré" | "Annulé"; // ✅ added Annulé
-
+export type OrderStatus = "En préparation" | "En route" | "Livré" | "Annulé"; 
 export interface OrderItem {
   productId: string;
   quantity: number;

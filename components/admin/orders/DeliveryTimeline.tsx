@@ -73,10 +73,11 @@ export default function DeliveryTimeline({
     };
 
     const getDefaultLocation = (status: OrderStatus): string => {
-        const locations = {
+        const locations: Record<OrderStatus, string> = {
             "En préparation": "Shopici Warehouse",
             "En route": "En transit",
-            "Livré": "Livré au client"
+            "Livré": "Livré au client",
+            "Annulé": "Commande annulée"
         };
         return locations[status];
     };
