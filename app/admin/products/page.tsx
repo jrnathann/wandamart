@@ -116,15 +116,15 @@ export default function ProductsPage() {
          * Skeleton Components
          * -------------------------------------------*/
     const StatSkeleton = () => (
-        <div className="h-24 rounded-xl animate-pulse bg-gray-200 dark:bg-gray-700" />
+        <div className="h-24 rounded-xl animate-pulse bg-gray-200" />
     );
 
     const ProductCardSkeleton = () => (
-        <div className="h-60 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+        <div className="h-60 bg-gray-200 rounded-xl animate-pulse" />
     );
 
     const ProductListItemSkeleton = () => (
-        <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse mb-3" />
+        <div className="h-20 bg-gray-200 rounded-xl animate-pulse mb-3" />
     );
     /* ---------------------------------------------
      * Render
@@ -193,12 +193,12 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white dark:bg-shopici-charcoal/95 rounded-2xl border border-shopici-charcoal/10 p-6 space-y-4">
-                    <div className="bg-white dark:bg-shopici-charcoal/95 rounded-2xl border border-shopici-charcoal/10 p-6 space-y-4">
+                <div className="bg-white  rounded-2xl border border-shopici-charcoal/10 p-6 space-y-4">
+                    <div className="bg-white  rounded-2xl border border-shopici-charcoal/10 p-6 space-y-4">
                         {loading ? (
                             <div className="space-y-3">
-                                <div className="h-10 w-full rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
-                                <div className="h-10 w-full rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                                <div className="h-10 w-full rounded-xl bg-gray-200 animate-pulse" />
+                                <div className="h-10 w-full rounded-xl bg-gray-200 animate-pulse" />
                             </div>
                         ) : (
                             <>
@@ -222,7 +222,7 @@ export default function ProductsPage() {
                             <select
                                 value={categoryFilter}
                                 onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white dark:bg-shopici-charcoal/90 text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
+                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white  text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
                             >
                                 <option value="">Toutes catégories</option>
                                 {categories.map((cat) => (
@@ -234,7 +234,7 @@ export default function ProductsPage() {
                             <select
                                 value={availabilityFilter}
                                 onChange={(e) => setAvailabilityFilter(e.target.value as any)}
-                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white dark:bg-shopici-charcoal/90 text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
+                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
                             >
                                 <option value="all">Tous statuts</option>
                                 <option value="available">Disponibles</option>
@@ -245,7 +245,7 @@ export default function ProductsPage() {
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white dark:bg-shopici-charcoal/90 text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
+                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
                             >
                                 <option value="recent">Plus récents</option>
                                 <option value="name">Nom A-Z</option>

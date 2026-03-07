@@ -46,7 +46,7 @@ export default function DateFilter({ start, end, onChange }: DateFilterProps) {
       {/* Main Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-shopici-charcoal/10 border-2 border-shopici-charcoal/10 rounded-xl hover:border-shopici-blue/30 transition-all duration-200 shadow-sm hover:shadow-md group"
+        className="flex items-center gap-3 px-4 py-2.5 bg-white  border-2 border-shopici-charcoal/10 rounded-xl hover:border-shopici-blue/30 transition-all duration-200 shadow-sm hover:shadow-md group"
       >
         <Calendar size={18} className="text-shopici-blue group-hover:scale-110 transition-transform" />
         <span className="text-sm font-medium text-shopici-black dark:text-shopici-foreground">
@@ -68,10 +68,10 @@ export default function DateFilter({ start, end, onChange }: DateFilterProps) {
           />
           
           {/* Panel */}
-          <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-shopici-charcoal/95 border-2 border-shopici-charcoal/10 rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="absolute right-0 mt-2 w-80 bg-white  border-2 border-shopici-charcoal/10 rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             {/* Quick Presets */}
             <div className="p-4 border-b border-shopici-charcoal/10">
-              <p className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal dark:text-shopici-gray mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal  mb-3">
                 Quick Select
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -96,13 +96,13 @@ export default function DateFilter({ start, end, onChange }: DateFilterProps) {
 
             {/* Custom Date Range */}
             <div className="p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal dark:text-shopici-gray mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal  mb-3">
                 Custom Range
               </p>
               <div className="space-y-3">
                 {/* Start Date */}
                 <div>
-                  <label className="block text-xs font-medium text-shopici-charcoal dark:text-shopici-gray mb-1.5">
+                  <label className="block text-xs font-medium text-shopici-charcoal  mb-1.5">
                     From
                   </label>
                   <div className="relative">
@@ -118,7 +118,7 @@ export default function DateFilter({ start, end, onChange }: DateFilterProps) {
 
                 {/* End Date */}
                 <div>
-                  <label className="block text-xs font-medium text-shopici-charcoal dark:text-shopici-gray mb-1.5">
+                  <label className="block text-xs font-medium text-shopici-charcoal  mb-1.5">
                     To
                   </label>
                   <div className="relative">

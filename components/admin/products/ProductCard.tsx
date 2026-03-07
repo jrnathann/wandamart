@@ -41,7 +41,7 @@ export default function ProductCard({ product, onDelete }: { product: Product, o
     };
 
     return (
-        <div className="group bg-white dark:bg-shopici-charcoal/95 rounded-2xl hover:shadow-sm border border-shopici-charcoal/10 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div className="group bg-white  rounded-2xl hover:shadow-sm border border-shopici-charcoal/10 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
             {/* Image */}
             <div className="relative aspect-square bg-shopici-gray/10 overflow-hidden">
                 {product.images[0] ? (

@@ -14,23 +14,23 @@ export interface CustomerInfo {
   callTime: "morning" | "afternoon" | "evening";
 }
 
-export type OrderStatus = "En préparation" | "En route" | "Livré";
+export type OrderStatus = "En préparation" | "En route" | "Livré" | "Annulé"; // ✅ added Annulé
 
-// NEW: Order item interface
 export interface OrderItem {
   productId: string;
   quantity: number;
-  price: number; // Price at time of order
+  price: number;
 }
 
 export interface OrderTracking {
   id: string;
-  items: OrderItem[]; // CHANGED: Now an array of items
+  items: OrderItem[];
   total: number;
   customer: CustomerInfo;
   status: OrderStatus;
   estimatedDelivery?: string;
   checkpoints: TrackingCheckpoint[];
+  isSeriousCustomer: boolean | null; // ✅ null = not reviewed | true = serious | false = unserious
   createdAt: string;
   updatedAt: string;
 }

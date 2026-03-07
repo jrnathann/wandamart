@@ -8,6 +8,8 @@ interface OrderFiltersProps {
   setSearchQuery: (query: string) => void;
   statusFilter: OrderStatus[];
   toggleStatusFilter: (status: OrderStatus) => void;
+  showUnserious: boolean;           // ✅ new
+  toggleShowUnserious: () => void;  // ✅ new
   clearFilters: () => void;
 }
 
@@ -16,6 +18,8 @@ export default function OrderFilters({
   setSearchQuery,
   statusFilter,
   toggleStatusFilter,
+  showUnserious,
+  toggleShowUnserious,
   clearFilters
 }: OrderFiltersProps) {
   return (
@@ -35,29 +39,47 @@ export default function OrderFilters({
 
         {/* Status Filters */}
         <div className="flex flex-wrap gap-2">
-          <FilterChip 
-            label="En préparation" 
+          <FilterChip
+            label="En préparation"
             active={statusFilter.includes("En préparation")}
             onClick={() => toggleStatusFilter("En préparation")}
             color="bg-orange-100 text-orange-700 border-orange-300"
           />
-          <FilterChip 
-            label="En route" 
+          <FilterChip
+            label="En route"
             active={statusFilter.includes("En route")}
             onClick={() => toggleStatusFilter("En route")}
             color="bg-blue-100 text-blue-700 border-blue-300"
           />
-          <FilterChip 
-            label="Livré" 
+          <FilterChip
+            label="Livré"
             active={statusFilter.includes("Livré")}
             onClick={() => toggleStatusFilter("Livré")}
             color="bg-green-100 text-green-700 border-green-300"
           />
+          <FilterChip
+            label="Annulé"
+            active={statusFilter.includes("Annulé")}
+            onClick={() => toggleStatusFilter("Annulé")}
+            color="bg-red-100 text-red-700 border-red-300"
+          />
+
+          {/* ✅ Show unserious toggle — visually distinct */}
+          <button
+            onClick={toggleShowUnserious}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${
+              showUnserious
+                ? "bg-red-100 border-red-400 text-red-700"
+                : "bg-white border-shopici-charcoal/20 text-shopici-charcoal/50 hover:border-red-300 hover:text-red-500"
+            }`}
+          >
+            👎 Inclure non-sérieux
+          </button>
         </div>
       </div>
 
       {/* Active Filters */}
-      {(statusFilter.length > 0 || searchQuery) && (
+      {(statusFilter.length > 0 || searchQuery || showUnserious) && (
         <div className="mt-3 flex items-center gap-2 flex-wrap">
           <span className="text-xs text-shopici-charcoal">Filtres actifs:</span>
           {statusFilter.map(status => (
@@ -70,6 +92,15 @@ export default function OrderFilters({
               <X className="w-3 h-3" />
             </button>
           ))}
+          {showUnserious && (
+            <button
+              onClick={toggleShowUnserious}
+              className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-md flex items-center gap-1 hover:bg-red-200"
+            >
+              Non-sérieux inclus
+              <X className="w-3 h-3" />
+            </button>
+          )}
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
@@ -79,10 +110,7 @@ export default function OrderFilters({
               <X className="w-3 h-3" />
             </button>
           )}
-          <button
-            onClick={clearFilters}
-            className="text-xs text-shopici-coral hover:underline"
-          >
+          <button onClick={clearFilters} className="text-xs text-shopici-coral hover:underline">
             Tout effacer
           </button>
         </div>

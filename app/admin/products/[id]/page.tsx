@@ -382,7 +382,7 @@ export default function EditProductPage() {
                         <div className="flex gap-3 flex-wrap sm:flex-nowrap mt-3 sm:mt-0">
                             <button
                                 onClick={() => router.back()}
-                                className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-shopici-charcoal/50 border-2 border-shopici-charcoal/10 text-shopici-charcoal hover:border-shopici-charcoal/30 font-bold rounded-xl transition-all"
+                                className="px-4 sm:px-6 py-2 sm:py-3 bg-white  border-2 border-shopici-charcoal/10 text-shopici-charcoal hover:border-shopici-charcoal/30 font-bold rounded-xl transition-all"
                             >
                                 Annuler
                             </button>
@@ -543,7 +543,7 @@ export default function EditProductPage() {
                                         onChange={(e) => setDeliveryAvailable(e.target.checked)}
                                         className="w-5 h-5 text-shopici-blue rounded"
                                     />
-                                    <span className="font-semibold text-shopici-black dark:text-shopici-foreground">
+                                    <span className="font-semibold text-shopici-black ">
                                         Livraison disponible
                                     </span>
                                 </label>

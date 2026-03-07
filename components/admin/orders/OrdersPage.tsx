@@ -22,6 +22,8 @@ export default function OrdersPage() {
     const [statusFilter, setStatusFilter] = useState<OrderStatus[]>([]);
     const [zoneFilter, setZoneFilter] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [showUnserious, setShowUnserious] = useState(false);
+
     // Date filter state
     const [dateRange, setDateRange] = useState<{
         start: Date;
@@ -65,10 +67,12 @@ export default function OrdersPage() {
                 order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 order.customer.phone.includes(searchQuery) ||
                 order.id.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSeriousness = showUnserious ? true : order.isSeriousCustomer !== false;
 
-            return matchesDate && matchesStatus && matchesZone && matchesSearch;
+            return matchesDate && matchesStatus && matchesZone && matchesSearch && matchesSeriousness;
+
         });
-    }, [orders, dateRange, statusFilter, zoneFilter, searchQuery]);
+    }, [orders, dateRange, statusFilter, zoneFilter, searchQuery, showUnserious]);
 
     // Stats (based on all orders, not filtered)
     const stats = {
@@ -147,11 +151,52 @@ export default function OrdersPage() {
         setStatusFilter([]);
         setSearchQuery("");
         setZoneFilter("");
+        setShowUnserious(false);
         // Reset date to last 30 days
         setDateRange({
             start: new Date(new Date().setDate(new Date().getDate() - 29)),
             end: new Date(),
         });
+    };
+    // Inside OrdersPage, add this handler:
+
+    const handleToggleSeriousness = async (orderId: string, value: boolean | null) => {
+        try {
+            const payload = value === false
+                ? { isSeriousCustomer: false, status: "Annulé" }
+                : value === true
+                    ? { isSeriousCustomer: true, status: "En préparation" } // ✅ restore
+                    : { isSeriousCustomer: null }; // null = just remove label, don't touch status
+
+            await fetch(`/api/orders/${orderId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            setOrders(prev =>
+                prev.map(o => o.id === orderId
+                    ? {
+                        ...o,
+                        isSeriousCustomer: value,
+                        ...(value === false && { status: "Annulé" as OrderStatus }),
+                        ...(value === true && { status: "En préparation" as OrderStatus }), // ✅
+                    }
+                    : o
+                )
+            );
+
+            if (selectedOrder?.id === orderId) {
+                setSelectedOrder(prev => prev ? {
+                    ...prev,
+                    isSeriousCustomer: value,
+                    ...(value === false && { status: "Annulé" as OrderStatus }),
+                    ...(value === true && { status: "En préparation" as OrderStatus }), // ✅
+                } : null);
+            }
+        } catch (err) {
+            console.error("Failed to update seriousness:", err);
+        }
     };
     if (loading) return <CustomersPageSkeleton />;
 
@@ -196,6 +241,8 @@ export default function OrdersPage() {
                     setSearchQuery={setSearchQuery}
                     statusFilter={statusFilter}
                     toggleStatusFilter={toggleStatusFilter}
+                    showUnserious={showUnserious}
+                    toggleShowUnserious={() => setShowUnserious(prev => !prev)}
                     clearFilters={clearFilters}
                 />
 
@@ -203,6 +250,7 @@ export default function OrdersPage() {
                 <OrdersTable
                     orders={filteredOrders}
                     onSelectOrder={setSelectedOrder}
+                    onToggleSeriousness={handleToggleSeriousness}
                 />
             </div>
 

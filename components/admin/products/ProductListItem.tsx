@@ -32,7 +32,7 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
         }
     };
     return (
-        <div className="bg-white dark:bg-shopici-charcoal/95 rounded-2xl hover:shadow-sm border border-shopici-charcoal/10 p-4 flex gap-4">
+        <div className="bg-white rounded-2xl hover:shadow-sm border border-shopici-charcoal/10 p-4 flex gap-4">
             <div className="w-24 h-24 bg-shopici-gray/10 rounded-xl overflow-hidden">
                 {product.images[0] ? (
                     <img

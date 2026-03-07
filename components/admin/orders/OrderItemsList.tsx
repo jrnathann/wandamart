@@ -1,6 +1,7 @@
 // components/admin/orders/OrderItemsList.tsx
 import type { OrderItem } from "@/types/OrderTracking";
-import { products } from "@/data/products";
+import { Product } from "@/types/Product";
+import { useState, useMemo, useEffect } from "react";
 
 interface OrderItemsListProps {
   items: OrderItem[];
@@ -8,6 +9,30 @@ interface OrderItemsListProps {
 }
 
 export default function OrderItemsList({ items, total }: OrderItemsListProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        setProducts(data);
+
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+  if(loading){
+    return(
+      <div>loading...</div>
+    )
+  }
   return (
     <div className="bg-white rounded-xl p-4 border border-slate-200">
       <h3 className="text-sm font-bold text-shopici-black mb-3">Articles commandés</h3>

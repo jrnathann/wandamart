@@ -304,7 +304,7 @@ export default function NewProductPage() {
                         <div className="flex gap-3 flex-wrap sm:flex-nowrap mt-3 sm:mt-0">
                             <button
                                 onClick={() => router.back()}
-                                className="px-4 sm:px-6 py-2 sm:py-3 bg-white dark:bg-shopici-charcoal/50 border-2 border-shopici-charcoal/10 text-shopici-charcoal hover:border-shopici-charcoal/30 font-bold rounded-xl transition-all"
+                                className="px-4 sm:px-6 py-2 sm:py-3 bg-white border-2 border-shopici-charcoal/10 text-shopici-charcoal hover:border-shopici-charcoal/30 font-bold rounded-xl transition-all"
                             >
                                 Annuler
                             </button>

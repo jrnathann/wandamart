@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 interface PatchOrderBody {
     status?: OrderStatus;
     newCheckpoint?: TrackingCheckpoint;
+    isSeriousCustomer?: boolean | null;
 }
 
 export async function PATCH(
@@ -24,7 +25,7 @@ export async function PATCH(
     try {
         // Type the request body
         const body: PatchOrderBody = await req.json();
-        const { status, newCheckpoint } = body;
+        const { status, newCheckpoint, isSeriousCustomer } = body;
 
         const order = await Order.findOne({ id });
         if (!order) {
@@ -41,6 +42,9 @@ export async function PATCH(
             order.checkpoints.sort((a: TrackingCheckpoint, b: TrackingCheckpoint) =>
                 new Date(b.time).getTime() - new Date(a.time).getTime()
             );
+        }
+        if (isSeriousCustomer !== undefined) {
+            order.isSeriousCustomer = isSeriousCustomer;
         }
         // ✅ Deduct stock if status changed to "Livré" and was not "Livré" before
         if (status === "Livré" && previousStatus !== "Livré") {

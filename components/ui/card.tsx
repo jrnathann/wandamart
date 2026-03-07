@@ -15,7 +15,7 @@ export const Card = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "rounded-2xl bg-white dark:bg-[#0f0f0f] shadow-sm",
+        "rounded-2xl bg-white shadow-sm",
         "border border-[var(--shopici-gray)]/40",
         "transition-all duration-200",
         "hover:shadow-md",

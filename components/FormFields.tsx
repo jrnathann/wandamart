@@ -19,7 +19,7 @@ export default function FormField({
   return (
     <div>
       <label className="block mb-2">
-        <span className="text-sm font-semibold text-shopici-charcoal dark:text-shopici-gray">
+        <span className="text-sm font-semibold text-shopici-charcoal ">
           {label}
           {required && <span className="text-shopici-coral ml-1">*</span>}
         </span>

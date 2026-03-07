@@ -192,7 +192,7 @@ useEffect(() => {
                 <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
                   Sales Overview
                 </h3>
-                <p className="text-xs text-shopici-charcoal dark:text-shopici-gray mt-1">
+                <p className="text-xs text-shopici-charcoal  mt-1">
                   Revenue trends over time
                 </p>
               </div>
@@ -270,7 +270,7 @@ useEffect(() => {
               <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
                 Top Sellers
               </h3>
-              <p className="text-xs text-shopici-charcoal dark:text-shopici-gray mt-1">
+              <p className="text-xs text-shopici-charcoal  mt-1">
                 Best performing products
               </p>
             </div>
@@ -301,7 +301,7 @@ useEffect(() => {
                         <p className="font-medium text-sm text-shopici-black dark:text-shopici-foreground truncate">
                           {p.name}
                         </p>
-                        <p className="text-xs text-shopici-charcoal dark:text-shopici-gray">
+                        <p className="text-xs text-shopici-charcoal ">
                           {p.qty} sold
                         </p>
                       </div>
@@ -316,7 +316,7 @@ useEffect(() => {
               ) : (
                 <div className="text-center py-8">
                   <Package size={32} className="mx-auto text-shopici-charcoal/30 mb-2" />
-                  <p className="text-shopici-charcoal dark:text-shopici-gray text-sm">
+                  <p className="text-shopici-charcoal  text-sm">
                     No sales data yet
                   </p>
                 </div>
@@ -334,7 +334,7 @@ useEffect(() => {
               <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
                 Recent Orders
               </h3>
-              <p className="text-xs text-shopici-charcoal dark:text-shopici-gray mt-1">
+              <p className="text-xs text-shopici-charcoal  mt-1">
                 Latest transactions from your store
               </p>
             </div>
@@ -348,7 +348,7 @@ useEffect(() => {
           </div>
           <div className="overflow-x-auto -mx-6 px-6">
             <table className="w-full text-sm">
-              <thead className="text-left text-shopici-charcoal dark:text-shopici-gray">
+              <thead className="text-left text-shopici-charcoal ">
                 <tr className="border-b-2 border-shopici-charcoal/10">
                   <th className="py-3 font-semibold">Customer</th>
                   <th className="font-semibold">Status</th>
@@ -374,7 +374,7 @@ useEffect(() => {
                         {o.status}
                       </span>
                     </td>
-                    <td className="text-shopici-charcoal dark:text-shopici-gray">
+                    <td className="text-shopici-charcoal ">
                       {new Date(o.createdAt).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'short',
@@ -402,7 +402,7 @@ function KpiCard({ title, value, icon, gradient }: any) {
     <Card className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <div className={`bg-gradient-to-br ${gradient} p-5`}>
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal dark:text-shopici-gray">
+          <span className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal ">
             {title}
           </span>
           <div className="p-2 bg-white/50 dark:bg-shopici-charcoal/10 rounded-lg">

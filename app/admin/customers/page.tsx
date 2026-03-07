@@ -239,7 +239,7 @@ export default function CustomersPage() {
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-white dark:bg-shopici-charcoal/95 rounded-2xl border border-shopici-charcoal/10 p-2 sm:p-3 lg:p-4">
+        <div className="bg-white  rounded-2xl border border-shopici-charcoal/10 p-2 sm:p-3 lg:p-4">
           <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
 
             {/* SEARCH */}
@@ -273,7 +273,7 @@ export default function CustomersPage() {
                    text-sm sm:text-base font-medium
                    border border-shopici-charcoal/10 rounded-xl
                    focus:outline-none focus:border-shopici-blue/50
-                   bg-white dark:bg-shopici-charcoal/50
+                   bg-white 
                    text-shopici-black dark:text-shopici-foreground"
               >
                 <option value="">Toutes les zones</option>
@@ -291,7 +291,7 @@ export default function CustomersPage() {
                    text-sm sm:text-base font-medium
                    border border-shopici-charcoal/10 rounded-xl
                    focus:outline-none focus:border-shopici-blue/50
-                   bg-white dark:bg-shopici-charcoal/50
+                   bg-white 
                    text-shopici-black dark:text-shopici-foreground"
               >
                 <option value="orders">+ Commandes</option>
@@ -320,8 +320,8 @@ export default function CustomersPage() {
         </div>
 
         {/* Customers Table */}
-        <div className="bg-white dark:bg-shopici-charcoal/95 rounded-2xl border-shopici-charcoal/10 overflow-hidden">
-          <div className="bg-white dark:bg-shopici-charcoal/95 rounded-2xl border-shopici-charcoal/10 overflow-hidden">
+        <div className="bg-white rounded-2xl border-shopici-charcoal/10 overflow-hidden">
+          <div className="bg-white rounded-2xl border-shopici-charcoal/10 overflow-hidden">
             <CustomersTable customers={filteredCustomers} />
           </div>
 

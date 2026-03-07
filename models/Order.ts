@@ -18,7 +18,7 @@ const CustomerInfoSchema = new Schema({
 const TrackingCheckpointSchema = new Schema({
     location: { type: String, required: true },
     time: { type: String, required: true },
-    status: { type: String, enum: ["En préparation", "En route", "Livré"], required: true },
+    status: { type: String, enum: ["En préparation", "En route", "Livré", "Annulé"], required: true },
 });
 
 const OrderSchema = new Schema(
@@ -29,11 +29,14 @@ const OrderSchema = new Schema(
         customer: { type: CustomerInfoSchema, required: true },
         status: {
             type: String,
-            enum: ["En préparation", "En route", "Livré"],
+            enum: ["En préparation", "En route", "Livré", "Annulé"],
             default: "En préparation",
         },
         estimatedDelivery: { type: String },
         checkpoints: { type: [TrackingCheckpointSchema], default: [] },
+
+        // ✅ null = not reviewed | true = serious | false = unserious (dead)
+        isSeriousCustomer: { type: Boolean, default: null },
     },
     { timestamps: true }
 );
