@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { Package, MapPin, MessageCircle, Copy } from "lucide-react";
 import type { CustomerInfo } from "@/types/OrderTracking";
@@ -10,9 +10,10 @@ interface CustomerInfoCardProps {
 export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
   const getCallTimeLabel = (time: CustomerInfo["callTime"]) => {
     const labels: Record<CustomerInfo["callTime"], string> = {
-      morning: "🌅 Matin (8h–12h)",
+      now:       "📲 Maintenant",
+      morning:   "🌅 Matin (8h–12h)",
       afternoon: "☀️ Après-midi (12h–17h)",
-      evening: "🌙 Soir (17h–20h)",
+      evening:   "🌙 Soir (17h–20h)",
     };
 
     return labels[time];

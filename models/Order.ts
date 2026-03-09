@@ -12,7 +12,7 @@ const CustomerInfoSchema = new Schema({
     phone: { type: String, required: true },
     hasWhatsApp: { type: Boolean, required: true },
     deliveryZone: { type: String, required: true },
-    callTime: { type: String, enum: ["morning", "afternoon", "evening"], required: true },
+    callTime: { type: String, enum: ["now","morning", "afternoon", "evening"], required: true },
 });
 
 const TrackingCheckpointSchema = new Schema({

@@ -11,7 +11,7 @@ export interface CustomerInfo {
   phone: string;
   hasWhatsApp: boolean;
   deliveryZone: string;
-  callTime: "morning" | "afternoon" | "evening";
+  callTime: "now"| "morning" | "afternoon" | "evening";
 }
 
 export type OrderStatus = "En préparation" | "En route" | "Livré" | "Annulé"; 
