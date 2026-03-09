@@ -122,6 +122,13 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     value: product.price * quantity,
                     currency: "XAF",
                     order_id: newOrder.id,
+                    user_data: {
+                        fn: orderForm.name.split(" ")[0]?.toLowerCase(),
+                        ln: orderForm.name.split(" ")[1]?.toLowerCase(),
+                        ph: `237${orderForm.phone.replace(/\D/g, "").replace(/^237/, "")}`,
+                        ct: orderForm.deliveryZone.toLowerCase().replace(/\s/g, ""),
+                        country: "cm"
+                    }
                 });
             }
             // Modal stays open — user closes it manually
