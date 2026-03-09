@@ -4,7 +4,7 @@ export const storeConfig = {
   description: "Votre boutique en ligne pour tous vos besoins",
   contact: {
     email: "contact@shopici.com",
-    phone: "+237 6 71 89 32 50",
+    phone: "+237 6 22 57 13 96",
     address: "Yaoundé, Cameroun"
   },
   currency: "XAF",
