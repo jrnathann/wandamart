@@ -13,6 +13,6 @@ export const storeConfig = {
   },
   tracking: {
     facebookPixelId: "735596049606757",
-    googleAnalyticsId: "UA-XXXXXXXXX-X",
+    googleAnalyticsId: "G-EH6KJZMW7W",
   },
 };

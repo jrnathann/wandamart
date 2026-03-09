@@ -23,6 +23,26 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <CartProvider>
+      {/* Google Analytics */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${storeConfig.tracking.googleAnalyticsId}`}
+        strategy="afterInteractive"
+      />
+
+      <Script
+        id="google-analytics"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${storeConfig.tracking.googleAnalyticsId}', {
+        page_path: window.location.pathname,
+      });
+    `,
+        }}
+      />
       {/* Facebook Pixel */}
       <Script
         strategy="afterInteractive"
