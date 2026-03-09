@@ -11,7 +11,8 @@ function generateOrderId() {
 
 export async function addOrder(
   items: { product: any; quantity: number }[],
-  customer: CustomerInfo
+  customer: CustomerInfo,
+  facebookTracking?: { _fbp?: string; _fbc?: string; _ua?: string }
 ): Promise<OrderTracking> {
   // Convert products to OrderItem
   const orderItems: OrderItem[] = items.map(({ product, quantity }) => ({
@@ -41,6 +42,7 @@ export async function addOrder(
       customer,
       total,
       checkpoints: [initialCheckpoint],
+      ...facebookTracking,
     }),
   });
 
@@ -50,34 +52,42 @@ export async function addOrder(
 }
 
 export async function fetchOrders(): Promise<OrderTracking[]> {
-    const res = await fetch("/api/orders");
-    if (!res.ok) throw new Error("Erreur lors de la récupération des commandes");
-    return res.json();
+  const res = await fetch("/api/orders");
+  if (!res.ok) throw new Error("Erreur lors de la récupération des commandes");
+  return res.json();
 }
-
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match?.[2];
+}
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<OrderTracking> {
-    const res = await fetch(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-    });
-    if (!res.ok) throw new Error("Failed to update order status");
-    return res.json();
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      status,
+      fbc: getCookie("_fbc"), // Facebook click ID (set when user clicks your ad)
+      fbp: getCookie("_fbp"), // Facebook browser ID (set by Meta Pixel)
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to update order status");
+  return res.json();
 }
 
 export async function addOrderCheckpoint(orderId: string, checkpoint: TrackingCheckpoint): Promise<OrderTracking> {
-    const res = await fetch(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newCheckpoint: checkpoint }),
-    });
-    if (!res.ok) throw new Error("Failed to add checkpoint");
-    return res.json();
+  const res = await fetch(`/api/orders/${orderId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newCheckpoint: checkpoint }),
+  });
+  if (!res.ok) throw new Error("Failed to add checkpoint");
+  return res.json();
 }
 
 export async function getOrderById(orderId: string): Promise<OrderTracking> {
   const res = await fetch(`/api/orders/${orderId}`);
-  
+
   if (!res.ok) {
     if (res.status === 404) {
       throw new Error(`Commande ${orderId} introuvable`);

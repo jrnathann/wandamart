@@ -15,11 +15,16 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { items, customer, id, checkpoints } = body; // expect checkpoints from frontend
+        const { items, customer, id, checkpoints, _fbp, _fbc, _ua } = body; // expect checkpoints from frontend
 
         if (!items || !customer || !id) {
             return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
         }
+        // ✅ Get customer's real IP from request headers
+        const _ip =
+            req.headers.get("x-forwarded-for")?.split(",")[0] ??
+            req.headers.get("x-real-ip") ??
+            undefined;
 
         const total = items.reduce(
             (sum: number, item: any) => sum + item.price * item.quantity,
@@ -43,6 +48,10 @@ export async function POST(req: Request) {
             total,
             customer,
             checkpoints: initialCheckpoints,
+            _fbp,
+            _fbc,
+            _ua,
+            _ip,
         });
 
         await newOrder.save();

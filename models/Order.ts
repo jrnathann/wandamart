@@ -37,6 +37,12 @@ const OrderSchema = new Schema(
 
         // ✅ null = not reviewed | true = serious | false = unserious (dead)
         isSeriousCustomer: { type: Boolean, default: null },
+
+        // ✅ Facebook CAPI: saved at order creation time from the customer's browser
+        _fbp: { type: String },   // Meta browser ID cookie
+        _fbc: { type: String },   // Meta click ID cookie (present if they came from an ad)
+        _ip: { type: String },    // Customer's IP at order time
+        _ua: { type: String },    // Customer's User-Agent at order time
     },
     { timestamps: true }
 );

@@ -4,11 +4,14 @@ import { connectDB } from "@/lib/mongodb";
 import type { OrderStatus, TrackingCheckpoint } from "@/types/OrderTracking";
 import { Product } from "@/models/Product"; // Import your Product model
 import { requireAdmin } from "@/lib/requireAdmin";
+import { sendPurchaseEvent } from "@/lib/facebook-capi";
 
 interface PatchOrderBody {
     status?: OrderStatus;
     newCheckpoint?: TrackingCheckpoint;
     isSeriousCustomer?: boolean | null;
+    fbc?: string;
+    fbp?: string;
 }
 
 export async function PATCH(
@@ -25,7 +28,7 @@ export async function PATCH(
     try {
         // Type the request body
         const body: PatchOrderBody = await req.json();
-        const { status, newCheckpoint, isSeriousCustomer } = body;
+        const { status, newCheckpoint, isSeriousCustomer, fbc, fbp } = body;
 
         const order = await Order.findOne({ id });
         if (!order) {
@@ -55,6 +58,34 @@ export async function PATCH(
                     await product.save();
                 }
             }
+
+            // ✅ Send Facebook Purchase event on confirmed delivery
+            // Fire-and-forget: don't let Facebook failure block the order update
+            sendPurchaseEvent({
+                orderId: order.id,
+                value: order.total,       // adjust to match your Order model field name
+                currency: "XAF",
+                userData: {
+                    firstName: order.customer.name.split(" ")[0],
+                    lastName: order.customer.name.split(" ").slice(1).join(" ") || undefined,
+                    phone: order.customer.phone,         // ✅ from CustomerInfoSchema
+                    city: order.customer.deliveryZone.split(",").pop()?.trim(),   // ✅ closest field to city
+                    country: "CM",
+                    // ✅ Customer's browser data saved when they placed the order
+                    fbp: order._fbp,
+                    fbc: order._fbc,
+                    ipAddress: order._ip,
+                    userAgent: order._ua,
+                },
+                // ⚠️ Uncomment to test in Meta Events Manager → Test Events tab
+                // testEventCode: "TEST60335",
+            }).then((result) => {
+                if (result.success) {
+                    console.log(`[Facebook CAPI] ✅ Purchase event sent for order ${order.id}`);
+                } else {
+                    console.error(`[Facebook CAPI] ❌ Failed for order ${order.id}:`, result.error);
+                }
+            });
         }
         await order.save();
 

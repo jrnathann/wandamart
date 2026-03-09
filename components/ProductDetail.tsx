@@ -36,6 +36,11 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     const [submitting, setSubmitting] = useState(false);
     const [createdOrderId, setCreatedOrderId] = useState("");
 
+    function getCookie(name: string): string | undefined {
+        if (typeof document === "undefined") return undefined;
+        const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+        return match?.[2];
+    }
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -111,8 +116,16 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
             deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
             callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
         };
+        // ✅ Collect Facebook tracking data from the customer's browser at order time
+        const facebookTracking = {
+            _fbp: getCookie("_fbp"),   // Meta browser ID — always present if Pixel is installed
+            _fbc: getCookie("_fbc"),   // Meta click ID — present if customer came from your ad
+            _ua: navigator.userAgent,  // Browser/device info
+            // Note: IP is collected server-side in the API route
+        };
+
         try {
-            const newOrder = await addOrder([{ product, quantity }], customer);
+            const newOrder = await addOrder([{ product, quantity }], customer, facebookTracking);
             setCreatedOrderId(newOrder.id);
             setOrderSubmitted(true);
             if (typeof window !== "undefined" && (window as any).fbq) {
