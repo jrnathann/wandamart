@@ -23,6 +23,14 @@ interface OrderModalProps {
 
 const STEPS = 4;
 
+// Injected once — coral scrollbar for all .shopici-scroll elements
+const SCROLLBAR_CSS = `
+  .shopici-scroll::-webkit-scrollbar { width: 4px; }
+  .shopici-scroll::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 999px; }
+  .shopici-scroll::-webkit-scrollbar-thumb { background: #FF6B35; border-radius: 999px; }
+  .shopici-scroll { scrollbar-width: thin; scrollbar-color: #FF6B35 #f3f4f6; }
+`;
+
 export default function OrderModalD({
     product, quantity, orderForm, orderSubmitted,
     submitting, onClose, onFormChange, onSubmit, formatPrice,
@@ -41,6 +49,7 @@ export default function OrderModalD({
 
     return (
         <>
+            <style>{SCROLLBAR_CSS}</style>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
             <div className="fixed inset-x-0 bottom-0 sm:inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
                 <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col" style={{ maxHeight: "92vh" }}>
@@ -73,8 +82,8 @@ export default function OrderModalD({
                         </div>
                     </div>
 
-                    {/* Step content */}
-                    <div className="flex-1 overflow-y-auto px-5 py-5">
+                    {/* Step content — coral scrollbar visible when content overflows */}
+                    <div className="flex-1 overflow-y-auto px-5 py-5 shopici-scroll">
                         {step === 1 && <StepCash totalPrice={totalPrice} formatPrice={formatPrice} hasCash={orderForm.hasCash} onChange={(v) => onFormChange({ ...orderForm, hasCash: v })} onClose={onClose} />}
                         {step === 2 && <StepContact orderForm={orderForm} onFormChange={onFormChange} />}
                         {step === 3 && <StepLocation orderForm={orderForm} onFormChange={onFormChange} />}
@@ -284,13 +293,15 @@ function Spinner() {
 function SuccessScreen({ orderForm, product, totalPrice, formatPrice, onClose }: any) {
     return (
         <>
+            <style>{SCROLLBAR_CSS}</style>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
             <div className="fixed inset-x-0 bottom-0 sm:inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
                 <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col" style={{ maxHeight: "92vh" }}>
                     <div className="flex-shrink-0 flex justify-end px-5 pt-5">
                         <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"><X className="w-4 h-4 text-gray-500" /></button>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2">
+                    {/* coral scrollbar on success screen too */}
+                    <div className="flex-1 overflow-y-auto px-5 pb-6 pt-2 shopici-scroll">
                         <div className="flex flex-col items-center text-center mb-6">
                             <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 shadow-xl shadow-green-200"><CheckCircle className="w-11 h-11 text-white" /></div>
                             <h3 className="text-2xl font-bold text-shopici-black">Commande confirmée 🎉</h3>
