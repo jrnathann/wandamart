@@ -35,6 +35,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [createdOrderId, setCreatedOrderId] = useState("");
+    const [checkoutTracked, setCheckoutTracked] = useState(false);
 
     function getCookie(name: string): string | undefined {
         if (typeof document === "undefined") return undefined;
@@ -48,6 +49,15 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 if (!res.ok) throw new Error("Produit non trouvé");
                 const data = await res.json();
                 setProduct(data);
+                if (typeof window !== "undefined" && (window as any).fbq) {
+                    (window as any).fbq("track", "ViewContent", {
+                        content_name: data.name,
+                        content_ids: [data._id],
+                        content_type: "product",
+                        value: data.price,
+                        currency: "XAF",
+                    });
+                }
             } catch (err) {
                 console.error(err);
                 alert("Produit non trouvé");
@@ -66,15 +76,19 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     }, []);
 
     useEffect(() => {
-        if (showOrderModal && product) {
+        if (showOrderModal && product && !checkoutTracked) { // add !checkoutTracked
             if (typeof window !== "undefined" && (window as any).fbq) {
-                (window as any).fbq("trackCustom", "FormView", {
-                    productName: product.name,
-                    productId: product._id,
+                (window as any).fbq("track", "InitiateCheckout", {
+                    content_name: product.name,
+                    content_ids: [product._id],
+                    value: product.price * quantity,
+                    currency: "XAF",
+                    num_items: quantity,
                 });
             }
+            setCheckoutTracked(true); // mark as fired
         }
-    }, [showOrderModal, product]);
+    }, [showOrderModal, product, checkoutTracked]);
 
     if (loading) return <ProductDetailsSkeleton />;
 
