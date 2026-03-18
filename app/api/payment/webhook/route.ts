@@ -14,8 +14,8 @@
  *
  * HTTP response rules:
  *   - Always 200 for skips (unknown transId, already paid, non-successful status)
- *   - 500 on DB / unexpected errors → Fapshi will retry
- *   - Never 200 a real error that needs retrying
+ *   - Always 200 even on errors — Fapshi sends only ONE webhook, no retries
+ *   - Log errors but never return 5xx (it won't help — Fapshi won't retry)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -26,7 +26,7 @@ import { sendPurchaseEvent } from "@/lib/facebook-capi";
 
 interface FapshiWebhookBody {
     transId:     string;
-    status:      "created" | "successful" | "failed" | "expired";
+    status:      "CREATED" | "PENDING" | "SUCCESSFUL" | "FAILED" | "EXPIRED";
     amount:      number;
     externalId?: string;
     medium?:     string;
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 2. Skip non-successful events immediately ─────────────────────────────
-    if (body.status !== "successful") {
+    if (body.status !== "SUCCESSFUL") {
         console.log(`Webhook: skipping status "${body.status}" for transId ${body.transId}`);
         return NextResponse.json({ received: true });
     }
@@ -75,14 +75,11 @@ export async function POST(req: NextRequest) {
 
         if (isFapshiError(verified)) {
             console.error(`Webhook: Fapshi verification failed for ${body.transId}:`, verified);
-            // 502 → Fapshi retries
-            return NextResponse.json(
-                { error: "Could not verify transaction" },
-                { status: 502 }
-            );
+            // Still 200 — Fapshi sends only ONE webhook, returning 5xx won't trigger a retry
+            return NextResponse.json({ received: true, warning: "verification_failed" });
         }
 
-        if (verified.status !== "successful") {
+        if (verified.status !== "SUCCESSFUL") {
             console.warn(`Webhook: re-check returned "${verified.status}" — ignoring`);
             return NextResponse.json({ received: true });
         }
@@ -131,7 +128,6 @@ export async function POST(req: NextRequest) {
                     fbc:       order._fbc ?? undefined,
                     fbp:       order._fbp ?? undefined,
                 },
-                // testEventCode: "TEST60335",
             });
         } catch (capiErr) {
             // Never block the webhook response on CAPI failure

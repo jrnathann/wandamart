@@ -40,7 +40,7 @@ export interface DirectPayResponse {
 export interface PaymentStatusResponse {
     ok:            true;
     transId:       string;
-    status:        "created" | "successful" | "failed" | "expired";
+    status:        "CREATED" | "PENDING" | "SUCCESSFUL" | "FAILED" | "EXPIRED";
     amount:        number;
     externalId?:   string;
     dateInitiated: string;
