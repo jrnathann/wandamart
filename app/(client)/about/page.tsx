@@ -1,5 +1,5 @@
 import { Heart, Truck, ShieldCheck, Users } from "lucide-react";
-
+import { storeConfig } from "@/data/configData";
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -7,7 +7,7 @@ export default function AboutPage() {
       <div className="bg-gradient-to-br from-shopici-black to-shopici-charcoal text-white py-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            À propos de Shopici
+            À propos de {storeConfig.name}
           </h1>
           <p className="text-lg text-shopici-gray max-w-3xl mx-auto">
             Une plateforme pensée pour simplifier vos achats en ligne, avec un
@@ -25,8 +25,7 @@ export default function AboutPage() {
               Qui sommes-nous ?
             </h2>
             <p className="text-shopici-charcoal mb-4 leading-relaxed">
-              <strong>Shopici</strong> est une boutique en ligne basée à Yaoundé,
-              Cameroun, créée avec une idée simple : rendre le e-commerce plus
+              <strong>{storeConfig.name}</strong> est une boutique en ligne basée à {storeConfig.contact.address}, créée avec une idée simple : rendre le e-commerce plus
               accessible, plus clair et plus fiable.
             </p>
             <p className="text-shopici-charcoal leading-relaxed">
@@ -41,8 +40,7 @@ export default function AboutPage() {
               Notre objectif :
             </p>
             <p className="text-shopici-charcoal mt-2">
-              Vous offrir une expérience d’achat simple, sécurisée et agréable,
-              sans stress.
+              {storeConfig.objective}
             </p>
           </div>
         </section>
@@ -80,7 +78,7 @@ export default function AboutPage() {
         {/* Why choose us */}
         <section className="bg-background border border-shopici-gray/30 rounded-2xl p-10">
           <h2 className="text-3xl font-bold text-shopici-black mb-6">
-            Pourquoi choisir Shopici ?
+            Pourquoi choisir {storeConfig.name} ?
           </h2>
           <ul className="space-y-3 text-shopici-charcoal">
             <li>✔ Suivi de commande clair et en temps réel</li>
@@ -93,7 +91,7 @@ export default function AboutPage() {
         {/* Closing */}
         <section className="text-center">
           <h2 className="text-2xl font-bold text-shopici-black mb-4">
-            Shopici, plus qu’une boutique
+            {storeConfig.name}, plus qu’une boutique
           </h2>
           <p className="text-shopici-charcoal max-w-2xl mx-auto">
             Nous construisons une plateforme de confiance, pensée pour vous

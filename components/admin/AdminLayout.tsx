@@ -15,6 +15,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
+import { i } from "framer-motion/client";
+import { storeConfig } from "@/data/configData";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -47,7 +49,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     email: session.user.email || "",
     avatar: session.user.image || "/default-avatar.png",
   };
-  console.log("here is the user",session)
+  console.log("here is the user", session)
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
   };
@@ -76,8 +78,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="p-4 border-b-2 border-shopici-charcoal/10">
           <div className="relative w-full h-12">
             <Image
-              src="/logo2.png"
-              alt="Shopici Logo"
+              src={storeConfig.logo}
+              alt={`${storeConfig.name} Logo`}
               fill
               className="object-contain"
               priority
@@ -145,8 +147,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex items-center justify-between p-4">
           <div className="relative w-32 h-8">
             <Image
-              src="/logo2.png"
-              alt="Shopici Logo"
+                            src={storeConfig.logo}
+                            alt={`${storeConfig.name} Logo`}
               fill
               className="object-contain"
               priority

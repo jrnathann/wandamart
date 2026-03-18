@@ -8,26 +8,10 @@ import { products, getFeaturedProducts } from "@/data/products";
 import ProductCard from "./ProductCart";
 import { Product } from "@/types/Product";
 import HomepageSkeleton from "./HomeSkeleton";
+import { storeConfig } from "@/data/configData";
 
 // Banner slides
-const bannerSlides = [
-    {
-        id: 1,
-        title: "Nouveautés 2026",
-        subtitle: "Découvrez nos derniers produits",
-        cta: "Acheter Maintenant",
-        image: "/banner1.png",
-        bgColor: "from-blue-500 to-purple-600",
-    },
-    {
-        id: 2,
-        title: "Offres Spéciales",
-        subtitle: "Jusqu'à 30% de réduction",
-        cta: "Voir les Offres",
-        image: "/banner2.png",
-        bgColor: "from-orange-500 to-red-600",
-    },
-];
+const bannerSlides = storeConfig.bannerSlides;
 
 // Add interface for props
 interface HomepageProps {

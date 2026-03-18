@@ -16,13 +16,13 @@ export default function Footer() {
 
             <div className="flex items-center gap-2">
               <Image
-                src="/logo2.png"
-                alt="Shopici logo"
+                src={storeConfig.logo}
+                alt={`${storeConfig.name} Logo`}
                 width={40}
                 height={40}
                 className="object-contain"
               />
-              <h3 className="text-2xl font-bold">Shopici</h3>
+              <h3 className="text-2xl font-bold">{storeConfig.name}</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
               Votre destination shopping en ligne au Cameroun. Des produits de qualité, livrés directement chez vous.
@@ -107,7 +107,7 @@ export default function Footer() {
         <div className="pt-8 border-t border-shopici-charcoal">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-300 text-sm">
-              © {currentYear} Shopici. Tous droits réservés.
+              © {currentYear} {storeConfig.name}. Tous droits réservés.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="/privacy" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300">

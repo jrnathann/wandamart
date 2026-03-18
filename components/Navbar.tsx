@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
-
+import { storeConfig } from "@/data/configData";
 
 export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
     const [open, setOpen] = useState(false);
@@ -25,11 +25,11 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
     return (
         <>
             <header className="w-full sticky top-0 z-30 backdrop-blur-sm bg-white">
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
+                <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-8 md:px-6">
                     <Link href="/" className="flex items-center gap-2 z-40">
                         <Image
-                            src="/logo.png"
-                            alt="Shopici Logo"
+                            src={storeConfig.logo}
+                            alt={`${storeConfig.name} Logo`}
                             width={120}
                             height={40}
                             priority
@@ -69,14 +69,12 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
                         >
                             <div className="relative w-6 h-6">
                                 <Menu
-                                    className={`h-6 w-6 absolute inset-0 transition-all duration-300 ${
-                                        open ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'
-                                    }`}
+                                    className={`h-6 w-6 absolute inset-0 transition-all duration-300 ${open ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'
+                                        }`}
                                 />
                                 <X
-                                    className={`h-6 w-6 absolute inset-0 transition-all duration-300 ${
-                                        open ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'
-                                    }`}
+                                    className={`h-6 w-6 absolute inset-0 transition-all duration-300 ${open ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'
+                                        }`}
                                 />
                             </div>
                         </button>
@@ -120,7 +118,7 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
                                 <span className="relative z-10">Home</span>
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-shopici-coral rounded-r transition-all duration-300 group-hover:h-8" />
                             </Link>
-                                                        <Link
+                            <Link
                                 href="/products"
                                 onClick={() => setOpen(false)}
                                 className="group relative px-4 py-3 text-base font-medium text-shopici-charcoal hover:text-shopici-black transition-colors rounded-lg hover:bg-gray-50"
