@@ -43,7 +43,10 @@ export const storeConfig = {
       blue: "#869FAD",
       coral: "#E9796F",
     }
-  }
+  },
+    features: {
+    mobileMoneyPayment: true,
+  },
 };
 
 

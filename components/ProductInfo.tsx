@@ -1,11 +1,13 @@
-import { ShoppingCart, MapPin, Shield, Package, Star, CheckCircle, TrendingUp } from "lucide-react";
+import { ShoppingCart, MapPin, Shield, Package, Star, CheckCircle, TrendingUp, Smartphone } from "lucide-react";
 import { Product } from "@/types/Product";
+import { storeConfig } from "@/data/configData";
 
 interface ProductInfoProps {
     product: Product;
     quantity: number;
     onQuantityChange: (qty: number) => void;
-    onOrderClick: () => void;
+    onOrderClick: () => void;           // COD
+    onMobileMoneyClick: () => void;         // Online payment ← NEW
     formatPrice: (price: number) => string;
     calculateDiscount: () => number;
 }
@@ -15,6 +17,7 @@ export default function ProductInfo({
     quantity,
     onQuantityChange,
     onOrderClick,
+    onMobileMoneyClick,
     formatPrice,
     calculateDiscount,
 }: ProductInfoProps) {
@@ -65,19 +68,33 @@ export default function ProductInfo({
                 </div>
             </div>
 
-            {/* CTA */}
+            {/* CTAs */}
             <div className="space-y-3">
+                {/* Primary — Cash on delivery */}
                 <button
                     onClick={onOrderClick}
                     className="w-full py-5 bg-shopici-coral hover:bg-shopici-coral/90 text-white text-lg font-bold rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] flex items-center justify-center gap-3"
                 >
                     <ShoppingCart className="w-6 h-6" />
-                    COMMANDER MAINTENANT
+                    COMMANDER — PAYER À LA LIVRAISON
                 </button>
+
+                {/* Secondary — Mobile Money */}
+                {storeConfig.features.mobileMoneyPayment && (
+                    <button
+                        onClick={onMobileMoneyClick}
+                        className="w-full py-4 bg-white border-2 border-shopici-blue hover:bg-shopici-blue text-shopici-blue hover:text-white text-base font-bold rounded-xl transition-all duration-300 hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-3"
+                    >
+                        <Smartphone className="w-5 h-5" />
+                        PAYER PAR MOBILE MONEY
+                    </button>
+                )}
+
+
                 <div className="text-center text-sm text-[#414141]">
                     <p className="flex items-center justify-center gap-2">
                         <Shield className="w-4 h-4 text-green-600" />
-                        Paiement 100% sécurisé à la livraison
+                        Paiement 100% sécurisé
                     </p>
                 </div>
             </div>

@@ -59,33 +59,38 @@ export async function PATCH(
                 }
             }
 
-            // ✅ Send Facebook Purchase event on confirmed delivery
-            // Fire-and-forget: don't let Facebook failure block the order update
-            sendPurchaseEvent({
-                orderId: order.id,
-                value: order.total,       // adjust to match your Order model field name
-                currency: "XAF",
-                userData: {
-                    firstName: order.customer.name.split(" ")[0],
-                    lastName: order.customer.name.split(" ").slice(1).join(" ") || undefined,
-                    phone: order.customer.phone,         // ✅ from CustomerInfoSchema
-                    city: order.customer.deliveryZone.split(",").pop()?.trim(),   // ✅ closest field to city
-                    country: "CM",
-                    // ✅ Customer's browser data saved when they placed the order
-                    fbp: order._fbp,
-                    fbc: order._fbc,
-                    ipAddress: order._ip,
-                    userAgent: order._ua,
-                },
-                // ⚠️ Uncomment to test in Meta Events Manager → Test Events tab
-                // testEventCode: "TEST60335",
-            }).then((result) => {
-                if (result.success) {
-                    console.log(`[Facebook CAPI] ✅ Purchase event sent for order ${order.id}`);
-                } else {
-                    console.error(`[Facebook CAPI] ❌ Failed for order ${order.id}:`, result.error);
-                }
-            });
+            // Send FB CAPI Purchase — but only if NOT already paid online.
+            // Online orders fire the Purchase event in the Fapshi webhook the
+            // moment payment is confirmed, so we must not fire it a second time.
+            if (!order.paid) {
+                sendPurchaseEvent({
+                    orderId:  order.id,
+                    value:    order.total,
+                    currency: "XAF",
+                    userData: {
+                        firstName: order.customer.name.split(" ")[0],
+                        lastName:  order.customer.name.split(" ").slice(1).join(" ") || undefined,
+                        phone:     order.customer.phone,
+                        city:      order.customer.deliveryZone.split(",").pop()?.trim(),
+                        country:   "CM",
+                        fbp:       order._fbp,
+                        fbc:       order._fbc,
+                        ipAddress: order._ip,
+                        userAgent: order._ua,
+                    },
+                    // testEventCode: "TEST60335",
+                }).then((result) => {
+                    if (result.success) {
+                        console.log(`[Facebook CAPI] ✅ Purchase event sent for order ${order.id}`);
+                    } else {
+                        console.error(`[Facebook CAPI] ❌ Failed for order ${order.id}:`, result.error);
+                    }
+                });
+            } else {
+                console.log(
+                    `[Facebook CAPI] Skipped for order ${order.id} — already fired on payment`
+                );
+            }
         }
         await order.save();
 

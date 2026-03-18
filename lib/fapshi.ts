@@ -1,9 +1,6 @@
 /**
  * lib/fapshi.ts
- *
- * Minimal typed wrapper around the Fapshi API.
- * Uses native fetch — no axios, safe in Next.js App Router edge/node runtime.
- * All methods resolve (never throw); check isFapshiError() on the result.
+ * Typed Fapshi wrapper using native fetch — no axios, safe in Next.js App Router.
  */
 
 const BASE_URL = process.env.FAPSHI_BASE_URL ?? "https://sandbox.fapshi.com";
@@ -17,37 +14,49 @@ function getHeaders(): HeadersInit {
     return { apiuser, apikey, "Content-Type": "application/json" };
 }
 
-// ── Response types ────────────────────────────────────────────────────────────
+// ── Discriminated union — ok: false = error, ok: true = success ───────────────
 
 export interface FapshiError {
+    ok:         false;
     message:    string;
     statusCode: number;
 }
 
 export interface InitiatePayResponse {
+    ok:         true;
     message:    string;
-    link:       string;      // redirect the customer here
-    transId:    string;      // save on the order — used to match the webhook
+    link:       string;
+    transId:    string;
+    statusCode: number;
+}
+
+export interface DirectPayResponse {
+    ok:         true;
+    message:    string;
+    transId:    string;     // save on order — used by webhook to find it
     statusCode: number;
 }
 
 export interface PaymentStatusResponse {
+    ok:            true;
     transId:       string;
     status:        "created" | "successful" | "failed" | "expired";
     amount:        number;
-    medium?:       string;
     externalId?:   string;
     dateInitiated: string;
     statusCode:    number;
 }
 
-// ── Internal fetch helpers ────────────────────────────────────────────────────
+// ── Internal helpers ──────────────────────────────────────────────────────────
 
 function makeError(message: string, statusCode: number): FapshiError {
-    return { message, statusCode };
+    return { ok: false, message, statusCode };
 }
 
-async function fapshiPost<T>(path: string, body: object): Promise<T | FapshiError> {
+async function fapshiPost<T extends { ok: true }>(
+    path: string,
+    body: object
+): Promise<T | FapshiError> {
     try {
         const res  = await fetch(`${BASE_URL}${path}`, {
             method:  "POST",
@@ -55,20 +64,28 @@ async function fapshiPost<T>(path: string, body: object): Promise<T | FapshiErro
             body:    JSON.stringify(body),
         });
         const data = await res.json();
-        return { ...data, statusCode: res.status };
+        if (res.status >= 400) {
+            return { ok: false, message: data?.message ?? "Fapshi error", statusCode: res.status };
+        }
+        return { ...data, ok: true, statusCode: res.status };
     } catch (e: any) {
         return makeError(e?.message ?? "Network error", 500);
     }
 }
 
-async function fapshiGet<T>(path: string): Promise<T | FapshiError> {
+async function fapshiGet<T extends { ok: true }>(
+    path: string
+): Promise<T | FapshiError> {
     try {
         const res  = await fetch(`${BASE_URL}${path}`, {
             method:  "GET",
             headers: getHeaders(),
         });
         const data = await res.json();
-        return { ...data, statusCode: res.status };
+        if (res.status >= 400) {
+            return { ok: false, message: data?.message ?? "Fapshi error", statusCode: res.status };
+        }
+        return { ...data, ok: true, statusCode: res.status };
     } catch (e: any) {
         return makeError(e?.message ?? "Network error", 500);
     }
@@ -77,28 +94,60 @@ async function fapshiGet<T>(path: string): Promise<T | FapshiError> {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Creates a Fapshi hosted payment page.
+ * Generates a hosted Fapshi payment page.
  * Redirect the customer to the returned `link`.
- * Persist the returned `transId` on the order for webhook matching.
  */
 export async function initiatePay(data: {
     amount:       number;
-    externalId?:  string;   // your orderId — comes back in the webhook
-    redirectUrl?: string;   // where Fapshi sends the user after payment
+    externalId?:  string;
+    redirectUrl?: string;
     message?:     string;
-    email?:       string;
     userId?:      string;
 }): Promise<InitiatePayResponse | FapshiError> {
     if (!data.amount)                   return makeError("amount required", 400);
     if (!Number.isInteger(data.amount)) return makeError("amount must be an integer", 400);
-    if (data.amount < 100)              return makeError("amount cannot be less than 100 XAF", 400);
-
+    if (data.amount < 100)              return makeError("minimum amount is 100 XAF", 400);
     return fapshiPost<InitiatePayResponse>("/initiate-pay", data);
 }
 
 /**
+ * Pushes a USSD payment request directly to the customer's phone.
+ * No redirect — customer stays on your site and approves on their device.
+ * Returns a transId to save on the order for webhook matching.
+ *
+ * phone must be a valid 9-digit Cameroonian number: 6XXXXXXXX
+ * medium is auto-detected from the number if omitted:
+ *   - MTN numbers (67X, 68X, 650-654) → "mobile money"
+ *   - Orange numbers (69X, 655-659)   → "orange money"
+ */
+export async function directPay(data: {
+    amount:      number;
+    phone:       string;
+    medium?:     "mobile money" | "orange money";
+    name?:       string;
+    externalId?: string;
+    message?:    string;
+}): Promise<DirectPayResponse | FapshiError> {
+    if (!data.amount)                   return makeError("amount required", 400);
+    if (!Number.isInteger(data.amount)) return makeError("amount must be an integer", 400);
+    if (data.amount < 100)              return makeError("minimum amount is 100 XAF", 400);
+    if (!data.phone)                    return makeError("phone required", 400);
+
+    // Validate Cameroonian phone format
+    const phone = data.phone.replace(/\D/g, "").replace(/^237/, "");
+    if (!/^6[0-9]{8}$/.test(phone)) {
+        return makeError("phone must be a valid 9-digit Cameroonian number (6XXXXXXXX)", 400);
+    }
+
+    return fapshiPost<DirectPayResponse>("/direct-pay", {
+        ...data,
+        phone, // normalised — no country code, no spaces
+    });
+}
+
+/**
  * Fetches the live status of a transaction.
- * Always call this inside the webhook to verify the payment before trusting it.
+ * Always call this inside the webhook to verify before trusting it.
  */
 export async function paymentStatus(
     transId: string
@@ -109,6 +158,6 @@ export async function paymentStatus(
 
 // ── Type guard ────────────────────────────────────────────────────────────────
 
-export function isFapshiError(res: any): res is FapshiError {
-    return res?.statusCode >= 400;
+export function isFapshiError(res: FapshiError | { ok: true }): res is FapshiError {
+    return res.ok === false;
 }

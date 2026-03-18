@@ -4,7 +4,6 @@ import { addOrder } from "@/helper/order";
 import type { CustomerInfo } from "@/types/OrderTracking";
 import { Product } from "@/types/Product";
 import ProductDetailsSkeleton from "./admin/products/ProductDetailSkeleton";
-
 import UrgencyBanner from "./UrgencyBanner";
 import ImageGallery from "./ImageGallery";
 import ProductInfo from "./ProductInfo";
@@ -15,33 +14,33 @@ interface ProductDetailsPageProps {
     slug: string;
 }
 
+const EMPTY_FORM = {
+    name: "", phone: "", phoneConfirmed: false,
+    deliveryZone: "", quartier: "", callTime: "",
+    hasWhatsApp: false, hasCash: null as boolean | null,
+};
+
+function getCookie(name: string): string | undefined {
+    if (typeof document === "undefined") return undefined;
+    const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+    return match?.[2];
+}
+
 export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [timeLeft, setTimeLeft] = useState(3600);
-    const [showOrderModal, setShowOrderModal] = useState(false);
-    const [orderForm, setOrderForm] = useState({
-        name: "",
-        phone: "",
-        phoneConfirmed: false,
-        deliveryZone: "",
-        quartier: "",
-        callTime: "",
-        hasWhatsApp: false,
-        hasCash: null as boolean | null,
-    });
-    const [orderSubmitted, setOrderSubmitted] = useState(false);
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [createdOrderId, setCreatedOrderId] = useState("");
+    const [orderSubmitted, setOrderSubmitted] = useState(false);
     const [checkoutTracked, setCheckoutTracked] = useState(false);
+    const [orderForm, setOrderForm] = useState(EMPTY_FORM);
 
-    function getCookie(name: string): string | undefined {
-        if (typeof document === "undefined") return undefined;
-        const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
-        return match?.[2];
-    }
+    // "cod" | "online" | null — null means modal is closed
+    const [paymentMode, setPaymentMode] = useState<"cod" | "online" | null>(null);
+
+    // ── Fetch product ─────────────────────────────────────────────────────────
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -68,6 +67,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         fetchProduct();
     }, [slug]);
 
+    // ── Countdown timer ───────────────────────────────────────────────────────
     useEffect(() => {
         const timer = setInterval(() => {
             setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -75,8 +75,9 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         return () => clearInterval(timer);
     }, []);
 
+    // ── FB InitiateCheckout (fires once when modal opens) ─────────────────────
     useEffect(() => {
-        if (showOrderModal && product && !checkoutTracked) { // add !checkoutTracked
+        if (paymentMode && product && !checkoutTracked) {
             if (typeof window !== "undefined" && (window as any).fbq) {
                 (window as any).fbq("track", "InitiateCheckout", {
                     content_name: product.name,
@@ -86,9 +87,105 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     num_items: quantity,
                 });
             }
-            setCheckoutTracked(true); // mark as fired
+            setCheckoutTracked(true);
         }
-    }, [showOrderModal, product, checkoutTracked]);
+    }, [paymentMode, product, checkoutTracked, quantity]);
+
+    const handleCloseModal = () => {
+        setPaymentMode(null);
+        setOrderSubmitted(false);
+        setOrderForm(EMPTY_FORM);
+        setCheckoutTracked(false);
+    };
+
+    // ── COD submit ────────────────────────────────────────────────────────────
+    const handleCodSubmit = async () => {
+        setSubmitting(true);
+        const customer: CustomerInfo = {
+            name: orderForm.name,
+            phone: orderForm.phone,
+            hasWhatsApp: orderForm.hasWhatsApp,
+            deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
+            callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
+        };
+        const facebookTracking = {
+            _fbp: getCookie("_fbp"),
+            _fbc: getCookie("_fbc"),
+            _ua: navigator.userAgent,
+        };
+        try {
+            const newOrder = await addOrder([{ product: product!, quantity }], customer, facebookTracking);
+            setOrderSubmitted(true);
+            if (typeof window !== "undefined" && (window as any).fbq) {
+                (window as any).fbq("track", "Lead", {
+                    content_name: product!.name,
+                    content_category: product!.category,
+                    value: product!.price * quantity,
+                    currency: "XAF",
+                    order_id: newOrder.id,
+                });
+            }
+        } catch (error) {
+            console.error("COD order error:", error);
+            alert("Une erreur s'est produite. Veuillez réessayer.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // ── Online (Mobile Money) submit ──────────────────────────────────────────
+    const handleOnlineSubmit = async () => {
+        setSubmitting(true);
+        try {
+            const customer: CustomerInfo = {
+                name: orderForm.name,
+                phone: orderForm.phone,
+                hasWhatsApp: orderForm.hasWhatsApp,
+                deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
+                callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
+            };
+
+            const res = await fetch("/api/payment/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: [{ productId: product!._id, quantity, price: product!.price }],
+                    customer,
+                    _fbp: getCookie("_fbp"),
+                    _fbc: getCookie("_fbc"),
+                    _ua: navigator.userAgent,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.detail ?? data.error ?? "Erreur lors du paiement");
+            }
+
+            // FB pixel — fires before redirect
+            if (typeof window !== "undefined" && (window as any).fbq) {
+                (window as any).fbq("track", "InitiateCheckout", {
+                    content_name: product!.name,
+                    value: product!.price * quantity,
+                    currency: "XAF",
+                    num_items: quantity,
+                    payment_type: "mobile_money",
+                });
+            }
+
+            // Redirect to Fapshi hosted payment page
+            window.location.href = `/order/${data.orderId}?payment=success`;
+
+        } catch (error) {
+            console.error("Online payment error:", error);
+            alert("Une erreur s'est produite. Veuillez réessayer.");
+            setSubmitting(false);
+        }
+        // Don't setSubmitting(false) on success — page is navigating away
+    };
+
+    // ── Render ────────────────────────────────────────────────────────────────
 
     if (loading) return <ProductDetailsSkeleton />;
 
@@ -99,10 +196,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     <Package className="w-24 h-24 mx-auto mb-4 text-[#414141]/40" />
                     <h1 className="text-2xl font-bold text-shopici-black mb-2">Produit non trouvé</h1>
                     <p className="text-[#414141] mb-6">Le produit que vous recherchez n'existe pas.</p>
-                    <a
-                        href="/products"
-                        className="inline-block px-6 py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-colors"
-                    >
+                    <a href="/products" className="inline-block px-6 py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-colors">
                         Retour aux produits
                     </a>
                 </div>
@@ -111,60 +205,9 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     }
 
     const formatPrice = (price: number) => new Intl.NumberFormat("fr-FR").format(price);
-
     const calculateDiscount = () => {
         if (!product.compareAtPrice) return 0;
         return Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100);
-    };
-
-    const handleOrderSubmit = async () => {
-        if (!orderForm.name || !orderForm.phone || !orderForm.phoneConfirmed || !orderForm.deliveryZone || !orderForm.quartier || !orderForm.callTime || !orderForm.hasCash) {
-            alert("Veuillez remplir tous les champs obligatoires");
-            return;
-        }
-        setSubmitting(true);
-        const customer: CustomerInfo = {
-            name: orderForm.name,
-            phone: orderForm.phone,
-            hasWhatsApp: orderForm.hasWhatsApp,
-            deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
-            callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
-        };
-        // ✅ Collect Facebook tracking data from the customer's browser at order time
-        const facebookTracking = {
-            _fbp: getCookie("_fbp"),   // Meta browser ID — always present if Pixel is installed
-            _fbc: getCookie("_fbc"),   // Meta click ID — present if customer came from your ad
-            _ua: navigator.userAgent,  // Browser/device info
-            // Note: IP is collected server-side in the API route
-        };
-
-        try {
-            const newOrder = await addOrder([{ product, quantity }], customer, facebookTracking);
-            setCreatedOrderId(newOrder.id);
-            setOrderSubmitted(true);
-            if (typeof window !== "undefined" && (window as any).fbq) {
-                (window as any).fbq("track", "Lead", {
-                    content_name: product.name,
-                    content_category: product.category,
-                    value: product.price * quantity,
-                    currency: "XAF",
-                    order_id: newOrder.id,
-                    user_data: {
-                        fn: orderForm.name.split(" ")[0]?.toLowerCase(),
-                        ln: orderForm.name.split(" ")[1]?.toLowerCase(),
-                        ph: `237${orderForm.phone.replace(/\D/g, "").replace(/^237/, "")}`,
-                        ct: orderForm.deliveryZone.toLowerCase().replace(/\s/g, ""),
-                        country: "cm"
-                    }
-                });
-            }
-            // Modal stays open — user closes it manually
-        } catch (error) {
-            console.error("Error creating order:", error);
-            alert("Une erreur s'est produite. Veuillez réessayer.");
-        } finally {
-            setSubmitting(false);
-        }
     };
 
     return (
@@ -185,13 +228,13 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                         product={product}
                         quantity={quantity}
                         onQuantityChange={setQuantity}
-                        onOrderClick={() => setShowOrderModal(true)}
+                        onOrderClick={() => setPaymentMode("cod")}
+                        onMobileMoneyClick={() => setPaymentMode("online")}
                         formatPrice={formatPrice}
                         calculateDiscount={calculateDiscount}
                     />
                 </div>
 
-                {/* Description */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold text-shopici-black mb-4">Description du produit</h2>
                     <div className="bg-white border border-shopici-gray/30 rounded-xl p-6">
@@ -202,21 +245,17 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 <TestimonialsSection testimonials={product.testimonials} />
             </div>
 
-            {showOrderModal && (
+            {paymentMode !== null && (
                 <OrderModal
                     product={product}
                     quantity={quantity}
                     orderForm={orderForm}
                     orderSubmitted={orderSubmitted}
                     submitting={submitting}
-                    onClose={() => {
-                        setShowOrderModal(false);
-                        setOrderSubmitted(false);
-                        setCreatedOrderId("");
-                        setOrderForm({ name: "", phone: "", phoneConfirmed: false, deliveryZone: "", quartier: "", callTime: "", hasWhatsApp: false, hasCash: null });
-                    }}
+                    paymentMode={paymentMode}
+                    onClose={handleCloseModal}
                     onFormChange={setOrderForm}
-                    onSubmit={handleOrderSubmit}
+                    onSubmit={paymentMode === "cod" ? handleCodSubmit : handleOnlineSubmit}
                     formatPrice={formatPrice}
                 />
             )}

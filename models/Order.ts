@@ -37,7 +37,19 @@ const OrderSchema = new Schema(
 
         // ✅ null = not reviewed | true = serious | false = unserious (dead)
         isSeriousCustomer: { type: Boolean, default: null },
-
+        // ── Payment ───────────────────────────────────────────────────────────
+        // Which payment method the customer chose at checkout
+        paymentMethod: {
+            type:    String,
+            enum:    ["cash_on_delivery", "online"],
+            default: "cash_on_delivery",
+        },
+        // true once Fapshi webhook confirms successful payment
+        paid:          { type: Boolean,  default: false },
+        // Fapshi transId from initiatePay — used to match the webhook
+        fapshiTransId: { type: String,   default: null  },
+        // Timestamp of confirmed payment
+        paidAt:        { type: Date,     default: null  },
         // ✅ Facebook CAPI: saved at order creation time from the customer's browser
         _fbp: { type: String },   // Meta browser ID cookie
         _fbc: { type: String },   // Meta click ID cookie (present if they came from an ad)

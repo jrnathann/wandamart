@@ -11,10 +11,11 @@ export interface CustomerInfo {
   phone: string;
   hasWhatsApp: boolean;
   deliveryZone: string;
-  callTime: "now"| "morning" | "afternoon" | "evening";
+  callTime: "now" | "morning" | "afternoon" | "evening";
 }
 
-export type OrderStatus = "En préparation" | "En route" | "Livré" | "Annulé"; 
+export type OrderStatus = "En préparation" | "En route" | "Livré" | "Annulé";
+
 export interface OrderItem {
   productId: string;
   quantity: number;
@@ -29,7 +30,13 @@ export interface OrderTracking {
   status: OrderStatus;
   estimatedDelivery?: string;
   checkpoints: TrackingCheckpoint[];
-  isSeriousCustomer: boolean | null; // ✅ null = not reviewed | true = serious | false = unserious
+  isSeriousCustomer: boolean | null;
   createdAt: string;
   updatedAt: string;
+
+  // ── Payment (online flow only) ──────────────────────────────────────────────
+  paymentMethod?: "cash_on_delivery" | "online";
+  paid?:          boolean;      // true once Fapshi webhook confirms
+  paidAt?:        string | null; // ISO timestamp of confirmed payment
+  fapshiTransId?: string | null;
 }
