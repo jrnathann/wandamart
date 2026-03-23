@@ -45,7 +45,7 @@ export const storeConfig = {
     }
   },
     features: {
-    mobileMoneyPayment: false,
+    mobileMoneyPayment: true,
   },
 };
 
