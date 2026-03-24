@@ -201,7 +201,7 @@ export default function OrdersPage() {
     if (loading) return <CustomersPageSkeleton />;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="min-h-screen">
             <div className="mx-auto space-y-4">
 
                 {/* Header with Date Filter */}
@@ -222,7 +222,7 @@ export default function OrdersPage() {
                         {/* Export Button */}
                         <button
                             onClick={exportOrdersToCSV}
-                            className="w-full sm:w-auto px-4 py-2 bg-shopici-black hover:bg-shopici-charcoal text-white text-sm font-semibold rounded-lg transition-all shadow-md flex items-center gap-2 justify-center"
+                            className="w-full sm:w-auto px-4 py-2 bg-shopici-black hover:bg-shopici-charcoal text-white text-sm font-semibold rounded-lg transition-all shadow-sm flex items-center gap-2 justify-center"
                         >
                             <Download className="w-4 h-4" />
                             Exporter

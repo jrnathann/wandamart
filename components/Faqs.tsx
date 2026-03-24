@@ -45,93 +45,73 @@ const faqs: FAQItem[] = [
 ];
 
 export default function FAQSection() {
+    // Keeping your original logic of allowing multiple open items
     const [openItems, setOpenItems] = useState<string[]>([]);
 
     const toggleItem = (id: string) => {
         setOpenItems(prev =>
-            prev.includes(id)
-                ? prev.filter(item => item !== id)
-                : [...prev, id]
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
         );
     };
 
     return (
-        <section className="w-full py-16 px-4 bg-white">
+        <section className="w-full py-12 px-4 bg-white border-t border-gray-100">
             <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-shopici-blue/10 rounded-2xl mb-4">
-                        <HelpCircle className="w-8 h-8 text-shopici-blue" />
+                {/* Compact Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-[#414141] flex items-center gap-2">
+                            <HelpCircle className="w-6 h-6 text-shopici-blue" />
+                            Questions Fréquentes
+                        </h2>
+                        <p className="text-gray-500 text-sm mt-1">
+                            Réponses rapides pour vos commandes au Cameroun.
+                        </p>
                     </div>
-                    <h2 className="text-4xl font-bold text-shopici-black mb-4">
-                        Questions Fréquentes
-                    </h2>
-                    <p className="text-lg text-[#414141] max-w-2xl mx-auto">
-                        Trouvez rapidement des réponses à vos questions. Si vous ne trouvez pas ce que vous cherchez, n'hésitez pas à nous contacter.
-                    </p>
+                    <Link href="/contact" className="text-shopici-blue text-sm font-semibold hover:underline">
+                        Besoin d'aide ? Contactez-nous →
+                    </Link>
                 </div>
 
-                {/* FAQ Items */}
-                <div className="space-y-4">
-                    {faqs.map((faq) => (
-                        <div
-                            key={faq.id}
-                            className="group bg-white border border-shopici-gray/30 rounded-xl overflow-hidden hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg"
-                        >
-                            <button
-                                onClick={() => toggleItem(faq.id)}
-                                className="w-full px-6 py-5 flex items-center justify-between gap-4 text-left transition-colors duration-300"
-                            >
-                                <div className="flex-1">
-                                    {faq.category && (
-                                        <span className="inline-block px-3 py-1 bg-shopici-blue/10 text-shopici-blue text-xs font-semibold rounded-full mb-2">
+                {/* Tightened FAQ List */}
+                <div className="divide-y divide-gray-100 border-y border-gray-100">
+                    {faqs.map((faq) => {
+                        const isOpen = openItems.includes(faq.id);
+                        return (
+                            <div key={faq.id} className="group transition-colors hover:bg-gray-50/50">
+                                <button
+                                    onClick={() => toggleItem(faq.id)}
+                                    className="w-full py-4 flex items-center justify-between gap-4 text-left"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {/* Subtle Category Tag */}
+                                        <span className="hidden sm:block text-[10px] font-bold uppercase tracking-wider text-gray-400 w-20">
                                             {faq.category}
                                         </span>
-                                    )}
-                                    <h3 className="text-lg font-semibold text-shopici-black group-hover:text-shopici-blue transition-colors duration-300">
-                                        {faq.question}
-                                    </h3>
-                                </div>
+                                        <h3 className={`text-base font-medium transition-colors ${
+                                            isOpen ? "text-shopici-blue" : "text-[#414141]"
+                                        }`}>
+                                            {faq.question}
+                                        </h3>
+                                    </div>
 
-                                <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-shopici-gray/20 flex items-center justify-center transition-all duration-300 ${openItems.includes(faq.id)
-                                    ? 'bg-shopici-blue text-white rotate-180'
-                                    : 'text-shopici-charcoal group-hover:bg-shopici-blue/10 group-hover:text-shopici-blue'
-                                    }`}>
-                                    {openItems.includes(faq.id) ? (
-                                        <Minus className="w-5 h-5" />
-                                    ) : (
-                                        <Plus className="w-5 h-5" />
-                                    )}
-                                </div>
-                            </button>
+                                    <div className={`flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180 text-shopici-blue' : 'text-gray-400'}`}>
+                                        {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    </div>
+                                </button>
 
-                            <div
-                                className={`overflow-hidden transition-all duration-300 ease-in-out ${openItems.includes(faq.id)
-                                    ? 'max-h-96 opacity-100'
-                                    : 'max-h-0 opacity-0'
-                                    }`}
-                            >
-                                <div className="px-6 pb-5 pt-0">
-                                    <div className="pt-4 border-t border-shopici-gray/30">
-                                        <p className="text-[#414141] leading-relaxed">
+                                <div className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                                    isOpen ? 'max-h-40 opacity-100 pb-4' : 'max-h-0 opacity-0'
+                                }`}>
+                                    <div className="pl-0 sm:pl-24 pr-8">
+                                        <p className="text-sm text-gray-600 leading-relaxed border-l-2 border-shopici-blue/20 pl-4">
                                             {faq.answer}
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* CTA */}
-                <div className="mt-12 text-center">
-                    <p className="text-[#414141] mb-4">
-                        Vous n'avez pas trouvé la réponse à votre question ?
-                    </p>
-                    <Link href={"/contact"} className="inline-flex items-center gap-2 px-6 py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">
-                        <HelpCircle className="w-5 h-5" />
-                        Contactez-nous
-                    </Link>
+                        );
+                    })}
                 </div>
             </div>
         </section>

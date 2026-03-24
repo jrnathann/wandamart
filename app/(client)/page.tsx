@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Homepage from "@/components/Home";
 import FAQSection from "@/components/Faqs";
+import FeaturesSection from "@/components/FeaturedSection";
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -18,6 +19,7 @@ export default function Home() {
   return (
     <div>
       <Homepage onProductAdded={showAddedToast} />
+      <FeaturesSection/>
       <FAQSection />
     </div>
   );

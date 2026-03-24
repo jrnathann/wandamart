@@ -17,7 +17,7 @@ export default function DashboardSkeleton() {
         {[...Array(4)].map((_, idx) => (
           <div
             key={idx}
-            className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 p-5 animate-pulse bg-shopici-gray/10 dark:bg-shopici-gray/20"
+            className="rounded-2xl border border-shopici-charcoal/10 p-5 animate-pulse bg-shopici-gray/10 dark:bg-shopici-gray/20"
           >
             <div className="flex justify-between items-center mb-4">
               <div className="h-4 w-20 bg-shopici-gray/30 rounded" />
@@ -36,10 +36,10 @@ export default function DashboardSkeleton() {
       {/* Charts + Top Products Skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart Skeleton */}
-        <div className="lg:col-span-2 rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 p-6 animate-pulse bg-shopici-gray/10 h-64" />
+        <div className="lg:col-span-2 rounded-2xl border border-shopici-charcoal/10 p-6 animate-pulse bg-shopici-gray/10 h-64" />
 
         {/* Top Products Skeleton */}
-        <div className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 p-6 space-y-3">
+        <div className="rounded-2xl border border-shopici-charcoal/10 p-6 space-y-3">
           {[...Array(5)].map((_, idx) => (
             <div key={idx} className="flex items-center gap-3 animate-pulse">
               <div className="w-12 h-12 bg-shopici-gray/30 rounded-lg" />
@@ -54,7 +54,7 @@ export default function DashboardSkeleton() {
       </div>
 
       {/* Recent Orders Skeleton */}
-      <div className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 p-6 overflow-hidden">
+      <div className="rounded-2xl border border-shopici-charcoal/10 p-6 overflow-hidden">
         {[...Array(5)].map((_, idx) => (
           <div
             key={idx}

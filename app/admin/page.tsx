@@ -190,7 +190,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Sales chart */}
-        <Card className="lg:col-span-2 rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden">
+        <Card className="lg:col-span-2 rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
           <div className="bg-gradient-to-br from-shopici-blue/5 via-transparent to-shopici-coral/5 p-6">
             <div className="flex items-center justify-between mb-5">
               <div>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Top Products */}
-        <Card className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden">
+        <Card className="rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
           <div className="bg-gradient-to-br from-shopici-coral/5 via-transparent to-shopici-blue/5 p-6">
             <div className="mb-5">
               <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
@@ -306,7 +306,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Orders */}
-      <Card className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden">
+      <Card className="rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
         <div className="bg-gradient-to-br from-shopici-blue/5 via-transparent to-shopici-coral/5 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -391,7 +391,7 @@ export default function DashboardPage() {
 
 function KpiCard({ title, value, icon, gradient }: any) {
   return (
-    <Card className="rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <Card className="rounded-2xl shadow-sm border border-shopici-charcoal/10 overflow-hidden hover:shadow-sm transition-all duration-300 hover:-translate-y-1">
       <div className={`bg-gradient-to-br ${gradient} p-5`}>
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal">

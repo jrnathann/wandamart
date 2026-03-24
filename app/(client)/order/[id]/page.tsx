@@ -1,7 +1,6 @@
 /**
  * app/order/[id]/page.tsx
  */
-"use client"
 import { notFound, redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Order";
@@ -9,14 +8,10 @@ import {
     CheckCircle, Package, Phone,
     MapPin, CreditCard, Truck, ShieldCheck,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 
 import { PaymentPoller } from "./PaymentPoller";
 import { Types } from "mongoose";
-const ReceiptButton = dynamic(
-  () => import("./ReceiptButton").then(mod => ({ default: mod.ReceiptButton })),
-  { ssr: false }
-);
+import { ReceiptButton } from "./ReceiptButton";
 
 interface LeanOrder {
     id: string;

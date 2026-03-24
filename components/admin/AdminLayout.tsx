@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen flex bg-gradient-to-br from-shopici-gray/20 via-shopici-blue/5 to-shopici-coral/5">
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 flex-col bg-white border-r-2 border-shopici-charcoal/10 shadow-xl z-40">
+      <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 flex-col bg-white border-r-1 border-shopici-charcoal/10 shadow-sm z-40">
 
         {/* Logo */}
         <div className="p-4 border-b-2 border-shopici-charcoal/10 flex items-center justify-center h-20">
@@ -132,7 +132,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="p-4 border-t-2 border-shopici-charcoal/10">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-shopici-coral hover:bg-shopici-coral/10 transition-all duration-200 group border-2 border-transparent hover:border-shopici-coral/20"
+            className="w-full cursor-pointer flex items-center gap-3 px-4 py-3 rounded-md text-shopici-coral hover:bg-shopici-coral/10 transition-all duration-200 group border border-transparent hover:border-shopici-coral/20"
           >
             <LogOut size={20} className="group-hover:scale-110 transition-transform" />
             <span className="font-semibold">Logout</span>
@@ -213,7 +213,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="p-4">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-shopici-coral hover:bg-shopici-coral/10 transition-all border-2 border-transparent hover:border-shopici-coral/20"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-md text-shopici-coral hover:bg-shopici-coral/10 transition-all border border-transparent hover:border-shopici-coral/20"
               >
                 <LogOut size={20} />
                 <span className="font-semibold">Logout</span>
@@ -248,11 +248,11 @@ function NavItem({
     <Link
       href={href}
       className={`
-        flex items-center justify-between gap-3 px-4 py-3 rounded-xl cursor-pointer
+        flex items-center justify-between gap-3 px-4 py-3 rounded-md cursor-pointer
         transition-all duration-200 group relative overflow-hidden
         ${isActive
-          ? 'bg-gradient-to-r from-shopici-blue/10 to-shopici-coral/10 text-shopici-blue border-2 border-shopici-blue/30 shadow-sm'
-          : 'text-shopici-charcoal hover:bg-shopici-gray/10 border-2 border-transparent hover:border-shopici-charcoal/10'
+          ? 'bg-gradient-to-r from-shopici-blue/10 to-shopici-coral/10 text-shopici-blue border border-shopici-blue/30 shadow-sm'
+          : 'text-shopici-charcoal hover:bg-shopici-gray/10 border border-transparent hover:border-shopici-charcoal/10'
         }
       `}
     >

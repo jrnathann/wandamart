@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingCart, MapPin, Shield, Package, Star, CheckCircle, TrendingUp, Smartphone, Zap } from "lucide-react";
+import { ShoppingCart, MapPin, Shield, Package, Star, CheckCircle, TrendingUp, Smartphone, Zap, Truck, Clock } from "lucide-react";
 import { Product } from "@/types/Product";
 import { useConfig } from "@/context/ConfigContext";
 
@@ -27,156 +27,169 @@ export default function ProductInfo({
     const discount = calculateDiscount();
 
     return (
-        <div className="space-y-5">
+        <div className="space-y-8 lg:sticky lg:top-24">
 
             {/* ── Title & Short Description ── */}
-            <div>
-                {/* Discount badge */}
+            <div className="space-y-3">
                 {discount > 0 && (
-                    <span className="inline-flex items-center gap-1 bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-3">
-                        <Zap className="w-3 h-3" />
-                        -{discount}% aujourd'hui
-                    </span>
+                    <div className="inline-flex items-center gap-1.5 bg-shopici-coral text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm">
+                        <Zap className="w-3 h-3 fill-current" />
+                        Save -{discount}% Today
+                    </div>
                 )}
-                <h1 className="text-2xl md:text-4xl font-bold text-shopici-black leading-tight mb-2">
+                <h1 className="text-3xl md:text-5xl font-black text-shopici-black leading-[1.1] uppercase tracking-tighter">
                     {product.name}
                 </h1>
                 {product.shortDescription && (
-                    <p className="text-[#414141] text-base leading-relaxed">{product.shortDescription}</p>
+                    <p className="text-shopici-charcoal text-base leading-relaxed font-medium opacity-80">
+                        {product.shortDescription}
+                    </p>
                 )}
             </div>
 
             {/* ── Price Section ── */}
-            <div className="relative bg-gradient-to-br from-shopici-blue/10 to-shopici-coral/10 rounded-2xl p-5 border border-shopici-blue/20 overflow-hidden">
-                {/* Subtle pattern overlay */}
-                <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] bg-[length:20px_20px] pointer-events-none" />
-                <div className="relative">
-                    <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-3xl md:text-4xl font-bold text-shopici-black tabular-nums">
+            <div className="space-y-3">
+                {/* ── The Main Price Line ── */}
+                <div className="flex items-center gap-3">
+                    {/* Large, Bold Main Price */}
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-5xl font-black text-shopici-black tracking-tighter tabular-nums leading-none">
                             {formatPrice(product.price)}
                         </span>
-                        <span className="text-lg font-semibold text-shopici-black/70">XAF</span>
-                        {product.compareAtPrice && (
-                            <span className="text-base text-[#414141]/60 line-through ml-1">
-                                {formatPrice(product.compareAtPrice)}
-                            </span>
-                        )}
+                        <span className="text-sm font-black text-shopici-blue uppercase tracking-widest self-end pb-1">
+                            XAF
+                        </span>
                     </div>
-                    {product.compareAtPrice && (
-                        <p className="text-sm text-green-700 font-semibold flex items-center gap-1.5">
-                            <TrendingUp className="w-3.5 h-3.5" />
-                            Économisez {formatPrice(product.compareAtPrice - product.price)} XAF aujourd'hui !
-                        </p>
-                    )}
+
+                    {/* Vertical Separator */}
+                    <div className="h-8 w-px bg-shopici-gray/20 rotate-[15deg]" />
+
+                    {/* Savings Badge - Clean & Circular */}
+                    {product.compareAtPrice && (() => {
+                        const oldPrice = product.compareAtPrice; // TypeScript "narrows" this to just a number here
+                        const savings = oldPrice - product.price;
+
+                        return (
+                            <span className="text-xs font-black text-green-600">
+                                Économisez {formatPrice(savings)} XAF
+                            </span>
+                        );
+                    })()}
                 </div>
+
+                {/* ── The "Trust & Value" Ribbon ── */}
+                {product.compareAtPrice && (
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-shopici-coral/5 border border-shopici-coral/10 rounded-xl">
+                        <Zap className="w-3.5 h-3.5 text-shopici-coral fill-shopici-coral" />
+                        <p className="text-[11px] font-bold text-shopici-coral uppercase tracking-tight">
+                            Offre Spéciale : Économisez {formatPrice(product.compareAtPrice - product.price)} XAF
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* ── Quantity Selector ── */}
-            <div className="flex items-center gap-4">
-                <span className="font-semibold text-shopici-black text-sm">Quantité :</span>
-                <div className="flex items-center gap-1 bg-shopici-gray/20 rounded-xl p-1.5">
+            <div className="flex items-center justify-between bg-white border border-shopici-gray/20 rounded-2xl p-4">
+                <span className="font-black text-shopici-black text-xs uppercase tracking-widest">Quantité</span>
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-                        className="w-9 h-9 rounded-lg bg-white text-shopici-black hover:bg-shopici-blue hover:text-white
-                            flex items-center justify-center font-bold text-lg transition-all active:scale-95 shadow-sm"
+                        className="w-10 h-10 rounded-xl bg-shopici-gray/10 text-shopici-black hover:bg-shopici-coral hover:text-white flex items-center justify-center font-bold transition-all active:scale-90"
                     >
                         −
                     </button>
-                    <span className="w-10 text-center font-bold text-base text-shopici-black tabular-nums">
+                    <span className="text-lg font-black text-shopici-black w-6 text-center tabular-nums">
                         {quantity}
                     </span>
                     <button
                         onClick={() => onQuantityChange(Math.min(product.stock, quantity + 1))}
-                        className="w-9 h-9 rounded-lg bg-white text-shopici-black hover:bg-shopici-blue hover:text-white
-                            flex items-center justify-center font-bold text-lg transition-all active:scale-95 shadow-sm"
+                        className="w-10 h-10 rounded-xl bg-shopici-gray/10 text-shopici-black hover:bg-shopici-blue hover:text-white flex items-center justify-center font-bold transition-all active:scale-90"
                     >
                         +
                     </button>
                 </div>
-                <span className="text-xs text-[#414141]/60 font-medium">
-                    {product.stock} en stock
-                </span>
             </div>
 
             {/* ── CTAs ── */}
-            <div className="space-y-3">
-                {/* Primary — Cash on delivery */}
+            <div className="space-y-4">
                 <button
                     onClick={onOrderClick}
-                    className="relative w-full px-4 py-4 bg-shopici-coral text-white font-bold rounded-2xl
-                        flex items-center justify-center gap-2.5 text-sm leading-tight
-                        transition-all active:scale-[0.98] shadow-lg shadow-shopici-coral/30
-                        hover:brightness-105 overflow-hidden group"
+                    className="relative w-full py-6 bg-shopici-coral text-white font-black flex items-center justify-center gap-3 text-sm uppercase tracking-[0.1em] transition-all active:scale-[0.98] shadow-xl shadow-shopici-coral/25 hover:brightness-110 overflow-hidden group"
                 >
-                    {/* Shine sweep on hover */}
-                    <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500
-                        bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                    <ShoppingCart className="w-5 h-5 flex-shrink-0" />
-                    <span>COMMANDER — PAYER À LA LIVRAISON</span>
+                    <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
+                    <ShoppingCart className="w-5 h-5" />
+                    <span>Payer à la livraison</span>
                 </button>
 
-                {/* Secondary — Mobile Money */}
                 {storeConfig?.features.mobileMoneyPayment && (
                     <button
                         onClick={onMobileMoneyClick}
-                        className="relative w-full px-4 py-4 bg-white border-2 border-shopici-blue text-shopici-blue font-bold rounded-2xl
-                            flex items-center justify-center gap-2.5 text-sm leading-tight
-                            transition-all active:scale-[0.98] hover:bg-shopici-blue hover:text-white
-                            shadow-sm overflow-hidden group"
+                        className="w-full py-6 bg-white border-2 border-shopici-blue text-shopici-blue font-black flex items-center justify-center gap-3 text-sm uppercase tracking-[0.1em] transition-all active:scale-[0.98] hover:bg-shopici-blue hover:text-white group"
                     >
-                        <span className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500
-                            bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" />
-                        <Smartphone className="w-5 h-5 flex-shrink-0" />
-                        <span>PAYER PAR MOBILE MONEY</span>
+                        <Smartphone className="w-5 h-5 group-hover:animate-bounce" />
+                        <span>Payer par Mobile Money</span>
                     </button>
                 )}
 
-                <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                    <Shield className="w-3.5 h-3.5 text-green-600" />
-                    <p className="text-xs font-medium text-[#414141]/70">Paiement 100% sécurisé</p>
+                <div className="flex items-center justify-center gap-2 opacity-60">
+                    <Shield className="w-4 h-4 text-green-600" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-shopici-black">Transaction 100% Sécurisée</p>
                 </div>
             </div>
 
-            {/* ── Delivery Info ── */}
-            {product.delivery.available && (
-                <div className="bg-white border border-shopici-gray/30 rounded-2xl p-4">
-                    <h3 className="font-semibold text-shopici-black mb-3 flex items-center gap-2 text-sm">
-                        <span className="p-1.5 bg-shopici-blue/10 rounded-lg">
-                            <MapPin className="w-4 h-4 text-shopici-blue" />
-                        </span>
-                        Informations de livraison
-                    </h3>
-                    <div className="space-y-2">
-                        {[
-                            `Livraison : ${product.delivery.estimatedDays}`,
-                            `Zones : ${product.delivery.areas.join(", ")}`,
-                            "Livraison gratuite dans certaines zones de Yaoundé.",
-                        ].map((text) => (
-                            <p key={text} className="flex items-start gap-2 text-sm text-[#414141]">
-                                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                                {text}
-                            </p>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Trust Badges ── */}
-            <div className="grid grid-cols-3 gap-2.5">
-                {[
-                    { icon: Shield,  label: "Paiement Sécurisé" },
-                    { icon: Package, label: "Livraison Rapide" },
-                    { icon: Star,    label: "Top Qualité" },
-                ].map(({ icon: Icon, label }) => (
-                    <div key={label}
-                        className="flex flex-col items-center gap-1.5 p-3 bg-shopici-gray/10
-                            rounded-xl border border-shopici-gray/20 hover:border-shopici-blue/30
-                            hover:bg-shopici-blue/5 transition-colors">
-                        <Icon className="w-5 h-5 text-shopici-blue" />
-                        <p className="text-[11px] font-semibold text-shopici-black text-center leading-tight">{label}</p>
-                    </div>
-                ))}
+<div className="relative group border-l-2 border-shopici-coral pl-6 py-2 space-y-6">
+    {/* ── Delivery "Power-Row" ── */}
+    {product.delivery.available && (
+        <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-shopici-coral italic animate-pulse">
+                    Logistique Live
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-shopici-coral/20 to-transparent" />
             </div>
+            
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-shopici-black" />
+                    <span className="text-xl font-black text-shopici-black tracking-tighter uppercase italic">
+                        {product.delivery.estimatedDays}
+                    </span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-shopici-blue/5 rounded-md border border-shopici-blue/10">
+                    <Truck className="w-3 h-3 text-shopici-blue" />
+                    <span className="text-[10px] font-black text-shopici-blue uppercase tracking-tight">
+                        Cameroun Entier
+                    </span>
+                </div>
+            </div>
+            
+            {/* <p className="text-[10px] font-bold text-shopici-gray uppercase tracking-widest opacity-60 truncate">
+                {product.delivery.areas.join(" • ")}
+            </p> */}
+        </div>
+    )}
+
+    {/* ── Trust "Micro-Grid" ── */}
+    <div className="flex items-center gap-6 border-t border-shopici-gray/10 pt-4">
+        {[
+            { icon: Shield, label: "Sécurisé" },
+            { icon: Package, label: "Premium" },
+            { icon: Star, label: "Certifié" },
+        ].map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-2 group/badge cursor-default">
+                <div className="p-1.5 rounded-lg bg-shopici-black text-white group-hover/badge:bg-shopici-coral transition-colors">
+                    <Icon className="w-3 h-3" />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-tighter text-shopici-black group-hover/badge:text-shopici-coral transition-colors">
+                    {label}
+                </span>
+            </div>
+        ))}
+    </div>
+
+    {/* Decorative Bottom Corner (Optional) */}
+    <div className="absolute top-0 right-0 w-24 h-24 bg-shopici-blue/5 rounded-full blur-3xl -z-10" />
+</div>
         </div>
     );
 }

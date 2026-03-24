@@ -46,7 +46,7 @@ export default function DateFilter({ start, end, onChange }: DateFilterProps) {
       {/* Main Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2.5 bg-white  border-2 border-shopici-charcoal/10 rounded-xl hover:border-shopici-blue/30 transition-all duration-200 shadow-sm hover:shadow-md group"
+        className="flex items-center gap-3 px-4 py-2.5 bg-white  border border-shopici-charcoal/10 rounded-xl hover:border-shopici-blue/30 transition-all duration-200 hover:shadow-md group"
       >
         <Calendar size={18} className="text-shopici-blue group-hover:scale-110 transition-transform" />
         <span className="text-sm font-medium text-shopici-black dark:text-shopici-foreground">

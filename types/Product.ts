@@ -1,3 +1,31 @@
+export type ProductImage = {
+  id: string;
+  url: string;
+  alt?: string;
+};
+
+export type Testimonial = {
+  id: string;
+  imageUrl: string;
+  city: string;
+};
+
+export type DeliveryInfo = {
+  available: boolean;
+  areas: string[];
+  estimatedDays: string;
+};
+
+// ── NEW: one image+text block for the alternating content section ──────────
+export type ContentBlock = {
+  id: string;
+  image: ProductImage;
+  eyebrow?: string;
+  heading: string;
+  body: string;
+  highlights?: string[];
+};
+
 export type Product = {
   _id: string;
   slug: string;
@@ -10,11 +38,7 @@ export type Product = {
   compareAtPrice?: number;
   currency: "XAF";
 
-  images: {
-    id: string;
-    url: string;
-    alt?: string;
-  }[];
+  images: ProductImage[];
 
   category: string;
   tags?: string[];
@@ -22,44 +46,17 @@ export type Product = {
   stock: number;
   isAvailable: boolean;
 
-  testimonials?: {
-    id: string;
-    imageUrl: string;
-    city: string;
-  }[];
+  testimonials?: Testimonial[];
 
-  delivery: {
-    available: boolean;
-    areas: string[];
-    estimatedDays: string;
-  };
+  delivery: DeliveryInfo;
+
+  /** Rich alternating image + text blocks shown on the product detail page */
+  contentBlocks?: ContentBlock[];
 
   createdAt: string;
   updatedAt: string;
 };
 
-// Optional: Export CartItem type as well for reusability
 export type CartItem = Product & {
   quantity: number;
-};
-
-// Optional: Helper type for product images
-export type ProductImage = {
-  id: string;
-  url: string;
-  alt?: string;
-};
-
-// Optional: Helper type for testimonials
-export type Testimonial = {
-  id: string;
-  imageUrl: string;
-  city: string;
-};
-
-// Optional: Helper type for delivery info
-export type DeliveryInfo = {
-  available: boolean;
-  areas: string[];
-  estimatedDays: string;
 };

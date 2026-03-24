@@ -80,7 +80,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
       {/* Table */}
       <div className="relative -mx-4 sm:mx-0 overflow-x-auto">
         <table className="w-full min-w-[640px]">
@@ -116,7 +116,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                 {/* CLIENT */}
                 <td className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-shopici-blue to-shopici-coral flex items-center justify-center text-white font-bold text-xs sm:text-sm border-2 border-white shadow-md">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-shopici-blue to-shopici-coral flex items-center justify-center text-white font-bold text-xs sm:text-sm border border-white shadow-md">
                       {customer.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="leading-tight">
@@ -217,7 +217,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
               <select
                 value={itemsPerPage}
                 onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-3 py-2 border-2 border-shopici-charcoal/10 rounded-lg bg-white text-shopici-black font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-shopici-coral/30 transition-all"
+                className="px-3 py-2 border border-shopici-charcoal/10 rounded-lg bg-white text-shopici-black font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-shopici-coral/30 transition-all"
               >
                 {ITEMS_PER_PAGE_OPTIONS.map(option => (
                   <option key={option} value={option}>{option}</option>
@@ -234,7 +234,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
               <button
                 onClick={() => goToPage(1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 title="Première page"
               >
                 <ChevronsLeft size={18} className="text-shopici-charcoal" />
@@ -244,7 +244,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 title="Page précédente"
               >
                 <ChevronLeft size={18} className="text-shopici-charcoal" />
@@ -264,7 +264,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                       className={`min-w-[40px] px-3 py-2 rounded-lg font-bold text-sm transition-all ${
                         currentPage === page
                           ? 'bg-gradient-to-r from-shopici-coral to-shopici-blue text-white shadow-md scale-105'
-                          : 'border-2 border-shopici-charcoal/10 text-shopici-charcoal hover:bg-shopici-coral/10 hover:border-shopici-coral/30'
+                          : 'border border-shopici-charcoal/10 text-shopici-charcoal hover:bg-shopici-coral/10 hover:border-shopici-coral/30'
                       }`}
                     >
                       {page}
@@ -284,7 +284,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 title="Page suivante"
               >
                 <ChevronRight size={18} className="text-shopici-charcoal" />
@@ -294,7 +294,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
               <button
                 onClick={() => goToPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 title="Dernière page"
               >
                 <ChevronsRight size={18} className="text-shopici-charcoal" />

@@ -1,129 +1,123 @@
-import { ShoppingCart, MapPin, Clock } from "lucide-react";
+import React, { useMemo } from "react";
+import { ShoppingCart, MapPin, Clock, Star } from "lucide-react";
 import { Product } from "@/types/Product";
 import { useCart } from "@/context/CartContext";
 
-interface ProductCardProps {
-  product: Product;
-  onProductAdded?: (productName: string) => void;
-}
+export default function ProductCard({ product, onProductAdded }: { product: Product, onProductAdded?: (n: string) => void }) {
+  const { addToCart } = useCart();
 
-export default function ProductCard({ product, onProductAdded }: ProductCardProps) {
-    const { addToCart } = useCart();
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price);
-  };
-
-  const calculateDiscount = (price: number, comparePrice?: number) => {
-    if (!comparePrice) return 0;
-    return Math.round(((comparePrice - price) / comparePrice) * 100);
-  };
-
-  const handleCardClick = () => {
-    // Navigate to product detail page
-    window.location.href = `/product-details/${product.slug}`;
-  };
+  const ratingData = useMemo(() => {
+    const period = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 3));
+    const seed = product.name.length;
+    const rating = (4.6 + ((period + seed) % 4) / 10).toFixed(1);
+    const reviews = 85 + (seed * 4) + (period % 12);
+    return { rating: Number(rating), reviews };
+  }, [product.name]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    // Prevent card click when clicking the button
     e.stopPropagation();
-      addToCart(product);
-
-    if (onProductAdded) {
-      onProductAdded(product.name);
-    } else {
-      // Default behavior: add to cart and show feedback
-      console.log('Added to cart:', product);
-      // You can add toast notification here
-    }
+    addToCart(product);
+    onProductAdded?.(product.name);
   };
+
+  const discountPercent = product.compareAtPrice 
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100) 
+    : 0;
 
   return (
     <div 
-      onClick={handleCardClick}
-      className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-shopici-gray/30 cursor-pointer"
+      onClick={() => window.location.href = `/product-details/${product.slug}`}
+      /* UPDATED: Uses var(--shopici-background) and theme gray */
+      className="group flex flex-col bg-[var(--shopici-background)] border border-shopici-gray/20 hover:border-shopici-blue transition-all duration-500 cursor-pointer overflow-hidden rounded-none"
     >
-      {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden bg-shopici-gray/20">
-        {product.images && product.images.length > 0 ? (
+      {/* 1. Visual Stage */}
+      {/* UPDATED: bg-shopici-gray/10 ensures visibility against any background */}
+      <div className="relative aspect-square bg-shopici-gray/10 overflow-hidden p-6">
+        {product.images?.[0] ? (
           <img 
             src={product.images[0].url} 
-            alt={product.images[0].alt || product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            alt={product.name}
+            className="w-full h-full object-contain mix-blend-multiply transition-transform duration-1000 ease-in-out group-hover:scale-110"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-shopici-gray to-shopici-blue/20 flex items-center justify-center">
-            <ShoppingCart className="w-16 h-16 text-shopici-charcoal/40" />
+          <div className="flex items-center justify-center h-full">
+            <ShoppingCart className="text-shopici-gray/30" />
           </div>
         )}
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-          {product.compareAtPrice && (
-            <span className="px-3 py-1 bg-shopici-coral text-white text-xs font-bold rounded-full shadow-lg">
-              -{calculateDiscount(product.price, product.compareAtPrice)}%
-            </span>
-          )}
-          {product.stock < 10 && product.isAvailable && (
-            <span className="px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-full shadow-lg">
-              Stock limité
-            </span>
-          )}
-        </div>
 
-        {/* Quick View on Hover */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
+        {/* Discount Badge - Uses shopici-coral */}
+        {discountPercent > 0 && (
+          <div className="absolute top-0 left-0 bg-shopici-coral text-white text-[10px] font-black px-3 py-1.5 uppercase tracking-widest">
+            -{discountPercent}% OFF
+          </div>
+        )}
       </div>
 
-      {/* Product Info */}
-      <div className="p-4">
-        <h3 className="font-semibold text-[#414141] mb-2 line-clamp-2 group-hover:text-shopici-blue transition-colors">
+      {/* 2. Brand & Content Area */}
+      <div className="p-4 sm:p-6 flex flex-col flex-1">
+        {/* Star Rating - Uses shopici-black & shopici-gray */}
+        <div className="flex items-center gap-1.5 mb-3">
+          <div className="flex">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                className={`w-2.5 h-2.5 ${i < Math.floor(ratingData.rating) ? 'fill-shopici-black text-shopici-black' : 'text-shopici-gray/50'}`} 
+              />
+            ))}
+          </div>
+          <span className="text-[9px] font-bold text-shopici-charcoal uppercase tracking-widest">
+            {ratingData.rating} ({ratingData.reviews})
+          </span>
+        </div>
+
+        {/* Title - Uses shopici-black & shopici-blue on hover */}
+        <h3 className="text-[14px] sm:text-[16px] font-bold text-shopici-black uppercase tracking-tight leading-tight mb-4 group-hover:text-shopici-blue transition-colors">
           {product.name}
         </h3>
-        
-        {product.shortDescription && (
-          <p className="text-sm text-[#414141] mb-3 line-clamp-1">
-            {product.shortDescription}
-          </p>
-        )}
 
-        {/* Price */}
-        <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-2xl font-bold text-shopici-black">
-            {formatPrice(product.price)}
-          </span>
-          <span className="text-sm font-medium text-shopici-black">
-            {product.currency}
+        {/* Price Block - Uses shopici-coral & shopici-charcoal */}
+        <div className="flex items-baseline gap-3 mb-6">
+          <span className="text-2xl font-black text-shopici-coral leading-none tracking-tighter">
+            {new Intl.NumberFormat('fr-FR').format(product.price)}
+            <span className="text-xs font-bold ml-1 text-shopici-blue uppercase tracking-tighter">FCFA</span>
           </span>
           {product.compareAtPrice && (
-            <span className="text-sm text-[#414141] line-through">
-              {formatPrice(product.compareAtPrice)}
+            <span className="text-sm font-medium text-shopici-gray line-through decoration-shopici-coral/40">
+              {new Intl.NumberFormat('fr-FR').format(product.compareAtPrice)}
             </span>
           )}
         </div>
 
-        {/* Delivery Info */}
-        {product.delivery.available && (
-          <div className="flex items-center gap-4 text-xs text-[#414141] mb-3 pb-3 border-b border-shopici-gray/50">
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span>{product.delivery.areas[0]}</span>
+        {/* 3. Delivery Specs Grid - Uses shopici-blue/charcoal/gray */}
+        {product.delivery?.available && (
+          <div className="mt-auto pt-4 border-t border-shopici-gray/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3 h-3 text-shopici-blue" />
+              <div className="flex flex-col">
+                <span className="text-[8px] uppercase font-bold text-shopici-gray tracking-widest">Region</span>
+                <span className="text-[10px] font-bold text-shopici-black truncate max-w-[80px] sm:max-w-none">{product.delivery.areas[0]}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{product.delivery.estimatedDays}</span>
+            <div className="flex items-center gap-2 border-l border-shopici-gray/20 pl-4">
+              <Clock className="w-3 h-3 text-shopici-blue" />
+              <div className="flex flex-col">
+                <span className="text-[8px] uppercase font-bold text-shopici-gray tracking-widest">Arrival</span>
+                <span className="text-[10px] font-bold text-shopici-black">{product.delivery.estimatedDays}</span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Add to Cart Button */}
-        <button 
-          onClick={handleAddToCart}
-          className="w-full py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 group/btn"
-        >
-          <ShoppingCart className="w-4 h-4 group-hover/btn:rotate-12 transition-transform duration-300" />
-          Ajouter au panier
-        </button>
+        {/* 4. Action Bar - Uses shopici-black & shopici-blue hover */}
+        <div className="mt-6">
+          <button 
+            onClick={handleAddToCart}
+            className="w-full flex items-center justify-center gap-3 bg-shopici-black text-white py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 hover:bg-shopici-blue active:scale-[0.98]"
+          >
+            <ShoppingCart className="w-4 h-4 text-shopici-coral" />
+            <span>Add to Cart</span>
+          </button>
+        </div>
       </div>
     </div>
   );

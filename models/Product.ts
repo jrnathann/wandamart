@@ -32,6 +32,21 @@ const ProductSchema = new Schema({
     areas: [String],
     estimatedDays: String,
   },
+    // ── NEW: rich alternating content blocks ───────────────────────────────
+  contentBlocks: [
+    {
+      id:       { type: String, required: true },
+      image: {
+        id:  String, // Cloudinary publicId (optional – useful for deletion)
+        url: { type: String, required: true },
+        alt: String,
+      },
+      eyebrow:    String,
+      heading:    { type: String, required: true },
+      body:       { type: String, required: true },
+      highlights: [String],
+    },
+  ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

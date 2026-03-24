@@ -20,13 +20,13 @@ export default function StatCard({
   trend 
 }: StatCardProps) {
   return (
-    <div className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 shadow-lg border-2 border-white/20 overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300`}>
+    <div className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 border border-white/20 overflow-hidden group hover:shadow-md transition-all duration-300`}>
       {/* Vintage pattern overlay */}
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] bg-[length:24px_24px]" />
       
       {/* Decorative corner elements */}
-      <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-white/30 rounded-tr-lg" />
-      <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-white/30 rounded-bl-lg" />
+      <div className="absolute top-2 right-2 w-8 h-8 border-t-1 border-r-1 border-white/30 rounded-tr-lg" />
+      <div className="absolute bottom-2 left-2 w-8 h-8 border-b-1 border-l-1 border-white/30 rounded-bl-lg" />
       
       <div className="relative z-10">
         {/* Header with icon */}
@@ -43,7 +43,7 @@ export default function StatCard({
         
         {/* Value */}
         <div className="flex items-end justify-between">
-          <p className="text-3xl font-bold text-white drop-shadow-md">
+          <p className="text-3xl font-bold text-white drop-shadow-sm">
             {value}
           </p>
           

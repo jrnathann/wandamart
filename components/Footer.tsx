@@ -1,5 +1,4 @@
-"use client"
-import { Facebook, Phone, MapPin } from "lucide-react";
+import { Facebook, MapPin, ArrowUpRight, Instagram } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 import Image from "next/image";
 
@@ -9,144 +8,133 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-shopici-black text-white">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+    <footer className="bg-shopici-black text-white relative overflow-hidden">
+      {/* 1. The Brand Accent Line */}
+      <div className="absolute top-0 left-0 w-full h-1 flex">
+        <div className="h-full w-1/3 bg-shopici-blue opacity-60" />
+        <div className="h-full w-1/12 bg-shopici-coral opacity-60" />
+        <div className="h-full flex-1 bg-white/5" />
+      </div>
 
-          {/* Brand Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
+      <div className="max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-12">
+        
+        {/* 2. Top Section: Large Editorial Typography */}
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-16 mb-20 md:mb-32">
+          <div className="max-w-xl space-y-8 md:space-y-10">
+            <div className="flex items-center gap-4 md:gap-6">
               {loading ? (
-                <>
-                  <div className="w-10 h-10 bg-white/20 animate-pulse rounded-full flex-shrink-0" />
-                  <div className="h-7 w-28 bg-white/20 animate-pulse rounded" />
-                </>
-              ) : storeConfig.logo ? (
-                <>
-                  <Image
-                    src={storeConfig.logo}
-                    alt={`${storeConfig.name} Logo`}
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                    unoptimized
-                  />
-                  <h3 className="text-2xl font-bold">{storeConfig.name}</h3>
-                </>
-              ) : (
-                <h3 className="text-2xl font-bold">{storeConfig.name}</h3>
+                <div className="w-10 h-10 bg-white/5 animate-pulse rounded-full" />
+              ) : storeConfig.logo && (
+                <Image
+                  src={storeConfig.logo}
+                  alt={`${storeConfig.name} Logo`}
+                  width={32}
+                  height={32}
+                  className="object-contain brightness-0 invert opacity-80 md:w-10 md:h-10"
+                  unoptimized
+                />
               )}
+              <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter leading-none">
+                {loading ? "..." : storeConfig.name}
+              </h3>
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              Votre destination shopping en ligne au Cameroun. Des produits de qualité, livrés directement chez vous.
+            
+            <p className="text-lg md:text-2xl font-medium leading-snug tracking-tight text-white/70">
+              L'excellence du shopping <span className="italic font-black text-white">digital</span> au Cameroun. <br />
+              <span className="text-white/30 text-[10px] md:text-lg uppercase tracking-widest font-bold block mt-2">Sourcing premium • Livraison sécurisée</span>
             </p>
-            <div className="flex gap-3">
-              {loading ? (
-                <div className="w-10 h-10 bg-white/20 animate-pulse rounded-full" />
-              ) : (
-                <a
-                  href={`${storeConfig.social.facebook}?ref=footer`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-shopici-charcoal hover:bg-shopici-blue flex items-center justify-center transition-all duration-300 transform hover:scale-110"
-                >
-                  <Facebook className="w-5 h-5" />
-                </a>
-              )}
-            </div>
           </div>
 
-          {/* Quick Links — static, no skeleton needed */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Liens Rapides</h4>
-            <ul className="space-y-2">
-              <li>
-                <a href="/products" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
-                  Nos Produits
-                </a>
-              </li>
-              <li>
-                <a href="/about" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
-                  À Propos
-                </a>
-              </li>
-              <li>
-                <a href="/contact" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Customer Service — static, no skeleton needed */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Service Client</h4>
-            <ul className="space-y-2">
-              <li>
-                <a href="/shipping" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
-                  Suivre ma commande
-                </a>
-              </li>
-              <li>
-                <a href="/terms" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300 text-sm">
-                  Conditions d'utilisation
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-shopici-coral mt-0.5 flex-shrink-0" />
-                {loading ? (
-                  <div className="h-4 w-40 bg-white/20 animate-pulse rounded" />
-                ) : (
-                  <span className="text-gray-300">{storeConfig.contact.address}</span>
-                )}
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Phone className="w-4 h-4 text-shopici-coral flex-shrink-0" />
-                {loading ? (
-                  <div className="h-4 w-32 bg-white/20 animate-pulse rounded" />
-                ) : (
-                  <a
-                    href={`tel:${storeConfig.contact.phone}`}
-                    className="text-gray-300 hover:text-shopici-coral transition-colors duration-300"
-                  >
-                    {storeConfig.contact.phone}
-                  </a>
-                )}
-              </li>
-            </ul>
+          <div className="w-full lg:w-auto lg:text-right border-l-2 lg:border-l-0 lg:border-r-2 border-shopici-coral/30 pl-6 lg:pl-0 lg:pr-8 py-2 md:py-4">
+            <h4 className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-shopici-blue mb-2 md:mb-4">Conciergerie</h4>
+            <a 
+              href={`tel:${storeConfig?.contact.phone}`}
+              className="group flex items-center lg:justify-end gap-4 md:gap-6 text-2xl md:text-5xl font-black tracking-tighter hover:text-shopici-coral transition-colors duration-500"
+            >
+              {loading ? "..." : storeConfig.contact.phone}
+              <ArrowUpRight className="w-5 h-5 md:w-8 md:h-8 text-white/10 group-hover:text-shopici-coral group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+            </a>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-shopici-charcoal">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-300 text-sm">
-              © {currentYear}{" "}
-              {loading ? (
-                <span className="inline-block w-20 h-4 bg-white/20 animate-pulse rounded align-middle" />
-              ) : (
-                storeConfig.name
-              )}
-              . Tous droits réservés.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <a href="/privacy" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300">
-                Politique de confidentialité
-              </a>
-              <a href="/cookies" className="text-gray-300 hover:text-shopici-coral transition-colors duration-300">
-                Cookies
-              </a>
+        {/* 3. The Responsive Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12 md:gap-24 border-t border-white/5 pt-16 pb-16 md:pb-20">
+          <FooterColumn 
+            title="Catalogue" 
+            links={[
+              { label: "Nos Produits", href: "/products" },
+              { label: "Nouveautés", href: "/products?filter=new" },
+              { label: "Promotions", href: "/products?filter=sale" }
+            ]} 
+          />
+          <FooterColumn 
+            title="La Maison" 
+            links={[
+              { label: "À Propos", href: "/about" },
+              { label: "Contact", href: "/contact" },
+              { label: "Nos Boutiques", href: "/about#locations" }
+            ]} 
+          />
+          <FooterColumn 
+            title="Assistance" 
+            links={[
+              { label: "Suivi Commande", href: "/shipping" },
+              { label: "Livraison", href: "/shipping#delivery" },
+              { label: "Retours", href: "/shipping#returns" }
+            ]} 
+          />
+          
+          <div className="col-span-2 md:col-span-1 space-y-6 md:space-y-8">
+            <h4 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-white/20">Siège Social</h4>
+            <div className="flex items-start gap-3 md:gap-4 text-xs md:text-sm font-bold uppercase tracking-tight text-white/50 leading-relaxed">
+              <MapPin className="w-4 h-4 text-shopici-blue shrink-0 mt-0.5" />
+              <span>
+                {loading ? "Chargement..." : storeConfig.contact.address}
+              </span>
             </div>
+          </div>
+        </div>
+
+        {/* 4. Bottom Bar: Mobile-Optimized Legal & Socials */}
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
+              © {currentYear} {storeConfig?.name}
+            </p>
+            <div className="flex gap-4 md:gap-6">
+              <a href="/terms" className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-shopici-coral transition-colors">Terms</a>
+              <a href="/privacy" className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-shopici-coral transition-colors">Privacy</a>
+              <a href="/cookies" className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-shopici-coral transition-colors">Cookies</a>
+            </div>
+          </div>
+          
+          <div className="flex gap-6">
+            {!loading && (
+              <a href={storeConfig.social.facebook} target="_blank" rel="noopener noreferrer" className="text-white/20 hover:text-white transition-colors">
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
+            <Instagram className="w-5 h-5 text-white/20" />
           </div>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+  return (
+    <div className="space-y-6 md:space-y-8">
+      <h4 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-white/20">{title}</h4>
+      <ul className="space-y-3 md:space-y-4">
+        {links.map((item) => (
+          <li key={item.label}>
+            <a href={item.href} className="text-[11px] md:text-sm font-bold uppercase tracking-tight text-white/60 hover:text-shopici-blue hover:pl-2 transition-all duration-300">
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

@@ -1,5 +1,8 @@
+"use client"
+
 import { useState, useEffect } from "react";
-import { Package } from "lucide-react";
+import { Package, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { addOrder } from "@/helper/order";
 import type { CustomerInfo } from "@/types/OrderTracking";
 import { Product } from "@/types/Product";
@@ -9,6 +12,8 @@ import ImageGallery from "./ImageGallery";
 import ProductInfo from "./ProductInfo";
 import TestimonialsSection from "./TestimonialsSection";
 import OrderModal from "./OrderModal";
+import AlternatingContentSection from "./AlternatingContentSection";
+import ShippingTicker from "./ShipperTicker";
 
 interface ProductDetailsPageProps {
     slug: string;
@@ -36,15 +41,10 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     const [orderSubmitted, setOrderSubmitted] = useState(false);
     const [checkoutTracked, setCheckoutTracked] = useState(false);
     const [orderForm, setOrderForm] = useState(EMPTY_FORM);
-
-    // "cod" | "online" | null — null means modal is closed
     const [paymentMode, setPaymentMode] = useState<"cod" | "online" | null>(null);
-
-    // Retry state — persists the failed order so backend can reuse it
     const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
-    const [paymentError, setPaymentError]   = useState<string | null>(null);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
-    // ── Fetch product ─────────────────────────────────────────────────────────
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -63,7 +63,6 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 }
             } catch (err) {
                 console.error(err);
-                alert("Produit non trouvé");
             } finally {
                 setLoading(false);
             }
@@ -71,7 +70,6 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         fetchProduct();
     }, [slug]);
 
-    // ── Countdown timer ───────────────────────────────────────────────────────
     useEffect(() => {
         const timer = setInterval(() => {
             setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
@@ -79,7 +77,6 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         return () => clearInterval(timer);
     }, []);
 
-    // ── FB InitiateCheckout (fires once when modal opens) ─────────────────────
     useEffect(() => {
         if (paymentMode && product && !checkoutTracked) {
             if (typeof window !== "undefined" && (window as any).fbq) {
@@ -104,7 +101,6 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         setPaymentError(null);
     };
 
-    // ── Clear payment error when user edits the phone field ───────────────────
     const handleFormChange = (form: typeof EMPTY_FORM) => {
         if (paymentError && form.phone !== orderForm.phone) {
             setPaymentError(null);
@@ -112,9 +108,6 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         setOrderForm(form);
     };
 
-    // ── COD submit ────────────────────────────────────────────────────────────
-    // normalizedPhone is the 237XXXXXXXXX value computed synchronously in the
-    // modal before calling this — no state race possible.
     const handleCodSubmit = async (normalizedPhone: string) => {
         setSubmitting(true);
         const customer: CustomerInfo = {
@@ -149,13 +142,9 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         }
     };
 
-    // ── Online (Mobile Money) submit — retry-safe ─────────────────────────────
-    // normalizedPhone is the 237XXXXXXXXX value computed synchronously in the
-    // modal before calling this — no state race possible.
     const handleOnlineSubmit = async (normalizedPhone: string) => {
         setSubmitting(true);
         setPaymentError(null);
-
         try {
             const customer: CustomerInfo = {
                 name: orderForm.name,
@@ -174,14 +163,11 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     _fbp: getCookie("_fbp"),
                     _fbc: getCookie("_fbc"),
                     _ua: navigator.userAgent,
-                    // Pass back the failed order ID on retry so the backend
-                    // reuses the existing document instead of creating a duplicate
                     existingOrderId: failedOrderId ?? undefined,
                 }),
             });
 
             const data = await res.json();
-
             if (!res.ok) {
                 if (data.orderId) setFailedOrderId(data.orderId);
                 const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
@@ -190,45 +176,26 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 return;
             }
 
-            // Success — clear retry state
             setFailedOrderId(null);
             setPaymentError(null);
-
-            // FB pixel before redirect
-            if (typeof window !== "undefined" && (window as any).fbq) {
-                (window as any).fbq("track", "InitiateCheckout", {
-                    content_name: product!.name,
-                    value: product!.price * quantity,
-                    currency: "XAF",
-                    num_items: quantity,
-                    payment_type: "mobile_money",
-                });
-            }
-
             window.location.href = `/order/${data.orderId}?payment=success`;
-            // Don't setSubmitting(false) — page is navigating away
-
         } catch (error: any) {
-            console.error("Online payment error:", error);
-            setPaymentError(error.message ?? "Une erreur s'est produite. Veuillez réessayer.");
+            setPaymentError(error.message ?? "Une erreur s'est produite.");
             setSubmitting(false);
         }
     };
-
-    // ── Render ────────────────────────────────────────────────────────────────
 
     if (loading) return <ProductDetailsSkeleton />;
 
     if (!product) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <Package className="w-24 h-24 mx-auto mb-4 text-[#414141]/40" />
-                    <h1 className="text-2xl font-bold text-shopici-black mb-2">Produit non trouvé</h1>
-                    <p className="text-[#414141] mb-6">Le produit que vous recherchez n'existe pas.</p>
-                    <a href="/products" className="inline-block px-6 py-3 bg-shopici-black hover:bg-shopici-blue text-white font-semibold rounded-lg transition-colors">
-                        Retour aux produits
-                    </a>
+            <div className="min-h-screen bg-[var(--shopici-background)] flex items-center justify-center p-6">
+                <div className="text-center max-w-sm">
+                    <Package className="w-16 h-16 mx-auto mb-6 text-shopici-gray opacity-20" />
+                    <h1 className="text-3xl font-black text-shopici-black uppercase tracking-tighter mb-4">Produit non trouvé</h1>
+                    <Link href="/products" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-shopici-blue border-b-2 border-shopici-blue pb-1">
+                        <ArrowLeft className="w-4 h-4" /> Retour à la boutique
+                    </Link>
                 </div>
             </div>
         );
@@ -241,11 +208,27 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-[var(--shopici-background)]">
             <UrgencyBanner timeLeft={timeLeft} />
+            <ShippingTicker/>
+            <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
+                {/* Back Link */}
+                <Link
+                    href="/products"
+                    className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 hover:text-shopici-blue transition-colors duration-300 mb-10"
+                >
+                    {/* The arrow now has a subtle move animation to feel "light" */}
+                    <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <span className="relative py-1">
+                        Retour Boutique
+                        {/* A very thin, light underline that only appears on hover */}
+                        <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-shopici-blue/40 transition-all duration-300 group-hover:w-full" />
+                    </span>
+                </Link>
+
+                {/* Hero Section: Gallery & Purchase */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 mb-24 md:mb-32">
                     <ImageGallery
                         product={product}
                         selectedImage={selectedImage}
@@ -265,16 +248,35 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     />
                 </div>
 
-                <div className="mb-12">
-                    <h2 className="text-2xl font-bold text-shopici-black mb-4">Description du produit</h2>
-                    <div className="bg-white border border-shopici-gray/30 rounded-xl p-6">
-                        <p className="text-[#414141] leading-relaxed whitespace-pre-line">{product.description}</p>
+                {/* Description Section */}
+                <div className="mb-24 md:mb-32">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-1 bg-shopici-coral" />
+                        <h2 className="text-3xl md:text-5xl font-black text-shopici-black uppercase tracking-tighter">
+                            Description du <span className="text-shopici-blue">Produit.</span>
+                        </h2>
+                    </div>
+                    <div className="bg-white border border-shopici-gray/10 p-8 md:p-12 shadow-sm">
+                        <p className=" whitespace-pre-line max-w-4xl text-shopici-black/70 leading-relaxed text-sm md:text-base font-medium">
+                            {product.description}
+                        </p>
                     </div>
                 </div>
 
+                {/* Visual Content Blocks */}
+                {product.contentBlocks && product.contentBlocks.length > 0 && (
+                    <div className="mb-24 md:mb-32">
+                        <AlternatingContentSection
+                            blocks={product.contentBlocks}
+                        />
+                    </div>
+                )}
+
+                {/* Testimonials */}
                 <TestimonialsSection testimonials={product.testimonials} />
             </div>
 
+            {/* Modal Logic */}
             {paymentMode !== null && (
                 <OrderModal
                     product={product}

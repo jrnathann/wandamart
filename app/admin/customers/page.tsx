@@ -193,7 +193,7 @@ export default function CustomersPage() {
             />
             <button
               onClick={exportCustomers}
-              className="px-6 py-3 bg-gradient-to-r from-shopici-coral to-shopici-blue text-white text-sm font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-105 flex items-center gap-2 justify-center border-2 border-white/20"
+              className="px-6 py-3 bg-gradient-to-r from-shopici-coral to-shopici-blue text-white text-sm font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-105 flex items-center gap-2 justify-center border border-white/20"
             >
               <Download className="w-4 h-4" />
               Exporter les clients
@@ -360,7 +360,7 @@ function StatCard({
   trend?: 'up' | 'down';
 }) {
   return (
-    <div className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 shadow-lg border-2 border-white/20 overflow-hidden group hover:shadow-xl hover:scale-[1.02] transition-all duration-300`}>
+    <div className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 shadow-sm border border-white/20 overflow-hidden group hover:shadow-md transition-all duration-300`}>
       {/* Vintage pattern overlay */}
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] bg-[length:24px_24px]" />
 

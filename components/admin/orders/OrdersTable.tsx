@@ -69,7 +69,7 @@ export default function OrdersTable({ orders, onSelectOrder, onToggleSeriousness
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border-2 border-shopici-charcoal/10 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[700px]">
           <thead className="bg-gradient-to-r from-shopici-blue/10 via-shopici-coral/5 to-shopici-blue/10 border-b-2 border-shopici-charcoal/10">
@@ -229,7 +229,7 @@ export default function OrdersTable({ orders, onSelectOrder, onToggleSeriousness
               <select
                 value={itemsPerPage}
                 onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-3 py-2 border-2 border-shopici-charcoal/10 rounded-lg bg-white text-shopici-black font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
+                className="px-3 py-2 border border-shopici-charcoal/10 rounded-lg bg-white text-shopici-black font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
               >
                 {ITEMS_PER_PAGE_OPTIONS.map((option) => (
                   <option key={option} value={option}>{option}</option>
@@ -241,10 +241,10 @@ export default function OrdersTable({ orders, onSelectOrder, onToggleSeriousness
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => goToPage(1)} disabled={currentPage === 1} className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <button onClick={() => goToPage(1)} disabled={currentPage === 1} className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                 <ChevronsLeft size={18} className="text-shopici-charcoal" />
               </button>
-              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                 <ChevronLeft size={18} className="text-shopici-charcoal" />
               </button>
               <div className="hidden sm:flex items-center gap-1">
@@ -257,7 +257,7 @@ export default function OrdersTable({ orders, onSelectOrder, onToggleSeriousness
                       onClick={() => goToPage(page as number)}
                       className={`min-w-[40px] px-3 py-2 rounded-lg font-bold text-sm transition-all ${currentPage === page
                         ? "bg-gradient-to-r from-shopici-blue to-shopici-coral text-white shadow-md scale-105"
-                        : "border-2 border-shopici-charcoal/10 text-shopici-charcoal hover:bg-shopici-blue/10 hover:border-shopici-blue/30"
+                        : "border border-shopici-charcoal/10 text-shopici-charcoal hover:bg-shopici-blue/10 hover:border-shopici-blue/30"
                         }`}
                     >
                       {page}
@@ -270,10 +270,10 @@ export default function OrdersTable({ orders, onSelectOrder, onToggleSeriousness
                   {currentPage} / {totalPages}
                 </span>
               </div>
-              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                 <ChevronRight size={18} className="text-shopici-charcoal" />
               </button>
-              <button onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-lg border-2 border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              <button onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages} className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-blue/10 hover:border-shopici-blue/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                 <ChevronsRight size={18} className="text-shopici-charcoal" />
               </button>
             </div>

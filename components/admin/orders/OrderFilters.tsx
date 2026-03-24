@@ -23,7 +23,7 @@ export default function OrderFilters({
   clearFilters
 }: OrderFiltersProps) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 border border-slate-200">
+    <div className="bg-white rounded-xl p-4 border border-slate-200">
       <div className="flex flex-col lg:flex-row gap-3">
         {/* Search */}
         <div className="flex-1 relative">
@@ -67,7 +67,7 @@ export default function OrderFilters({
           {/* ✅ Show unserious toggle — visually distinct */}
           <button
             onClick={toggleShowUnserious}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
               showUnserious
                 ? "bg-red-100 border-red-400 text-red-700"
                 : "bg-white border-shopici-charcoal/20 text-shopici-charcoal/50 hover:border-red-300 hover:text-red-500"

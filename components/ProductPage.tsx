@@ -113,76 +113,120 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-shopici-blue to-shopici-coral text-white py-8 sm:py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
-            Nos Produits
-          </h1>
-          <p className="text-base sm:text-lg opacity-90">
-            Découvrez notre collection de {allProducts.length} produits de qualité
-          </p>
+{/* 1. Atelier Header: Editorial Style Alignment */}
+      <div className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 px-6 bg-white overflow-hidden">
+        {/* The "Brand Accent" - A thin, sophisticated dual-tone line */}
+        <div className="absolute top-0 left-0 w-full h-1 flex">
+          <div className="h-full w-1/3 bg-shopici-blue opacity-80" />
+          <div className="h-full w-1/12 bg-shopici-coral opacity-80" />
+          <div className="h-full flex-1 bg-shopici-gray/5" />
+        </div>
+
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4 max-w-2xl">
+            {/* Small Eyebrow Label */}
+            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-shopici-blue">
+              Conciergerie Shopici
+            </span>
+
+            {/* Main Title: Black, Sharp, and Statue-like */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-shopici-black uppercase tracking-tighter leading-[0.9]">
+              Contactez <br className="hidden sm:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-shopici-black to-shopici-charcoal/40">
+                L'Équipe
+              </span>
+            </h1>
+          </div>
+
+          {/* Metadata / Description: Pushed to the right for asymmetric balance */}
+          <div className="md:text-right space-y-2 border-l-2 md:border-l-0 md:border-r-2 border-shopici-coral/30 pl-6 md:pl-0 md:pr-6 py-2">
+            <p className="text-lg sm:text-xl font-medium text-shopici-black tracking-tight leading-snug">
+              Une assistance <span className="font-black italic text-shopici-coral">personnalisée</span>.
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-shopici-charcoal/40 uppercase tracking-[0.1em]">
+              Support Réactif • Expérience Premium • Cameroun
+            </p>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         {/* Search and Filter Bar */}
-        <div className="mb-6 sm:mb-8 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-shopici-charcoal/50" />
+        <div className="mb-10 space-y-6">
+          {/* 1. Search Bar: Minimalist with focus-line animation */}
+          <div className="relative group">
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-shopici-charcoal/30 group-focus-within:text-shopici-blue transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un produit..."
-              className="w-full pl-12 pr-4 py-3 sm:py-4 text-base sm:text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
+              placeholder="RECHERCHER UN PRODUIT..."
+              className="w-full pl-8 pr-12 py-5 text-sm font-bold tracking-widest uppercase border-b border-shopici-gray/20 focus:border-shopici-black focus:outline-none bg-transparent text-shopici-black placeholder:text-shopici-charcoal/30 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full hover:bg-shopici-gray/20 flex items-center justify-center"
+                className="absolute right-0 top-1/2 -translate-y-1/2 p-2 hover:bg-shopici-gray/5 rounded-full transition-all"
               >
-                <X className="w-4 h-4 text-shopici-charcoal" />
+                <X className="w-4 h-4 text-shopici-black" />
               </button>
             )}
           </div>
 
-          {/* Filter and Sort Bar */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Filter Button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-white border-2 border-shopici-gray/30 hover:border-shopici-blue rounded-xl font-semibold text-shopici-black transition-all"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span>Filtres</span>
-              {activeFiltersCount > 0 && (
-                <span className="ml-1 px-2 py-0.5 bg-shopici-coral text-white text-xs font-bold rounded-full">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
+          {/* 2. Controls & Metadata Bar */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
 
-            {/* Sort Dropdown */}
-            <div className="relative flex-1 sm:max-w-xs">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-3 pr-10 border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black font-semibold appearance-none cursor-pointer"
+            <div className="flex items-center gap-3">
+              {/* Filter Button: Ghost Style */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-3 px-6 py-3 border transition-all duration-300 ${showFilters
+                  ? 'bg-shopici-black border-shopici-black text-white'
+                  : 'bg-white border-shopici-gray/20 hover:border-shopici-black text-shopici-black'
+                  }`}
               >
-                <option value="featured">En vedette</option>
-                <option value="newest">Nouveautés</option>
-                <option value="price-low">Prix: Bas → Élevé</option>
-                <option value="price-high">Prix: Élevé → Bas</option>
-                <option value="name">Nom A-Z</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-shopici-charcoal pointer-events-none" />
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Filtres</span>
+                {activeFiltersCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-shopici-blue text-[10px] font-bold text-white ml-1">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Results Count: Subtle Typographic Detail */}
+              <div className="hidden sm:block pl-4 border-l border-shopici-gray/20">
+                <span className="text-[10px] font-bold text-shopici-charcoal/40 uppercase tracking-[0.15em]">
+                  Affichage de <span className="text-shopici-black">{filteredProducts.length}</span> résultats
+                </span>
+              </div>
             </div>
 
-            {/* Results Count */}
-            <div className="flex items-center justify-center sm:justify-start px-4 py-3 bg-shopici-gray/10 rounded-xl">
-              <span className="text-sm sm:text-base font-semibold text-shopici-black">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'produit' : 'produits'}
+            {/* Sort Dropdown: Elegant Select */}
+            <div className="relative min-w-[240px]">
+              <label className="absolute -top-2 left-3 px-1 bg-white text-[9px] font-black text-shopici-charcoal/40 uppercase tracking-widest z-10">
+                Trier par
+              </label>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full pl-4 pr-10 py-3.5 border border-shopici-gray/20 focus:border-shopici-black bg-white text-shopici-black text-[11px] font-bold uppercase tracking-widest appearance-none cursor-pointer outline-none transition-colors"
+                >
+                  <option value="featured">En vedette</option>
+                  <option value="newest">Nouveautés</option>
+                  <option value="price-low">Prix: Bas → Élevé</option>
+                  <option value="price-high">Prix: Élevé → Bas</option>
+                  <option value="name">Nom A-Z</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-shopici-black pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Mobile Only: Results Count */}
+            <div className="sm:hidden text-center py-2 border-t border-shopici-gray/10">
+              <span className="text-[10px] font-bold text-shopici-charcoal/40 uppercase tracking-[0.15em]">
+                {filteredProducts.length} produits trouvés
               </span>
             </div>
           </div>
