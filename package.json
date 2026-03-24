@@ -11,8 +11,11 @@
   "dependencies": {
     "@auth/core": "^0.34.3",
     "apexcharts": "^5.3.6",
+    "canvg": "^4.0.3",
     "cloudinary": "^2.9.0",
+    "fast-png": "^8.0.0",
     "framer-motion": "^12.26.2",
+    "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.562.0",
@@ -24,7 +27,8 @@
     "react": "19.2.3",
     "react-apexcharts": "^1.9.0",
     "react-dom": "19.2.3",
-    "recharts": "^3.6.0"
+    "recharts": "^3.6.0",
+    "swr": "^2.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

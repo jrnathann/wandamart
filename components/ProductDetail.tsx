@@ -40,6 +40,10 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     // "cod" | "online" | null — null means modal is closed
     const [paymentMode, setPaymentMode] = useState<"cod" | "online" | null>(null);
 
+    // Retry state — persists the failed order so backend can reuse it
+    const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
+    const [paymentError, setPaymentError]   = useState<string | null>(null);
+
     // ── Fetch product ─────────────────────────────────────────────────────────
     useEffect(() => {
         const fetchProduct = async () => {
@@ -96,14 +100,26 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         setOrderSubmitted(false);
         setOrderForm(EMPTY_FORM);
         setCheckoutTracked(false);
+        setFailedOrderId(null);
+        setPaymentError(null);
+    };
+
+    // ── Clear payment error when user edits the phone field ───────────────────
+    const handleFormChange = (form: typeof EMPTY_FORM) => {
+        if (paymentError && form.phone !== orderForm.phone) {
+            setPaymentError(null);
+        }
+        setOrderForm(form);
     };
 
     // ── COD submit ────────────────────────────────────────────────────────────
-    const handleCodSubmit = async () => {
+    // normalizedPhone is the 237XXXXXXXXX value computed synchronously in the
+    // modal before calling this — no state race possible.
+    const handleCodSubmit = async (normalizedPhone: string) => {
         setSubmitting(true);
         const customer: CustomerInfo = {
             name: orderForm.name,
-            phone: orderForm.phone,
+            phone: normalizedPhone,
             hasWhatsApp: orderForm.hasWhatsApp,
             deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
             callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
@@ -133,13 +149,17 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         }
     };
 
-    // ── Online (Mobile Money) submit ──────────────────────────────────────────
-    const handleOnlineSubmit = async () => {
+    // ── Online (Mobile Money) submit — retry-safe ─────────────────────────────
+    // normalizedPhone is the 237XXXXXXXXX value computed synchronously in the
+    // modal before calling this — no state race possible.
+    const handleOnlineSubmit = async (normalizedPhone: string) => {
         setSubmitting(true);
+        setPaymentError(null);
+
         try {
             const customer: CustomerInfo = {
                 name: orderForm.name,
-                phone: orderForm.phone,
+                phone: normalizedPhone,
                 hasWhatsApp: orderForm.hasWhatsApp,
                 deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
                 callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
@@ -154,16 +174,27 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     _fbp: getCookie("_fbp"),
                     _fbc: getCookie("_fbc"),
                     _ua: navigator.userAgent,
+                    // Pass back the failed order ID on retry so the backend
+                    // reuses the existing document instead of creating a duplicate
+                    existingOrderId: failedOrderId ?? undefined,
                 }),
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.detail ?? data.error ?? "Erreur lors du paiement");
+                if (data.orderId) setFailedOrderId(data.orderId);
+                const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
+                setPaymentError(msg);
+                setSubmitting(false);
+                return;
             }
 
-            // FB pixel — fires before redirect
+            // Success — clear retry state
+            setFailedOrderId(null);
+            setPaymentError(null);
+
+            // FB pixel before redirect
             if (typeof window !== "undefined" && (window as any).fbq) {
                 (window as any).fbq("track", "InitiateCheckout", {
                     content_name: product!.name,
@@ -174,15 +205,14 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 });
             }
 
-            // Redirect to Fapshi hosted payment page
             window.location.href = `/order/${data.orderId}?payment=success`;
+            // Don't setSubmitting(false) — page is navigating away
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Online payment error:", error);
-            alert("Une erreur s'est produite. Veuillez réessayer.");
+            setPaymentError(error.message ?? "Une erreur s'est produite. Veuillez réessayer.");
             setSubmitting(false);
         }
-        // Don't setSubmitting(false) on success — page is navigating away
     };
 
     // ── Render ────────────────────────────────────────────────────────────────
@@ -253,9 +283,11 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     orderSubmitted={orderSubmitted}
                     submitting={submitting}
                     paymentMode={paymentMode}
+                    paymentError={paymentError}
                     onClose={handleCloseModal}
-                    onFormChange={setOrderForm}
+                    onFormChange={handleFormChange}
                     onSubmit={paymentMode === "cod" ? handleCodSubmit : handleOnlineSubmit}
+                    onRetry={handleOnlineSubmit}
                     formatPrice={formatPrice}
                 />
             )}

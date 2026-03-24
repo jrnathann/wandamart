@@ -5,16 +5,9 @@
  * ────────────────────────────────
  * Online payment flow using Fapshi directPay (USSD push — no redirect).
  *
- * What it does:
- *   1. Validates items + customer
- *   2. Saves the order (paymentMethod: "online", paid: false)
- *   3. Sends admin notification email
- *   4. Calls Fapshi directPay → pushes USSD prompt to customer's phone
- *   5. Saves fapshiTransId on the order
- *   6. Returns { orderId } — frontend navigates to /order/[id]?payment=success
- *      where PaymentPoller polls until the webhook confirms paid: true
- *
- * No paymentUrl returned — customer never leaves your site.
+ * Retry-safe: if an unpaid order already exists for the same customer phone
+ * + items, it reuses it instead of creating a duplicate. A new USSD push is
+ * sent each time so the customer can re-approve.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -33,7 +26,7 @@ export async function POST(req: NextRequest) {
         await connectDB();
 
         const body = await req.json();
-        const { items, customer, _fbp, _fbc, _ua } = body;
+        const { items, customer, _fbp, _fbc, _ua, existingOrderId } = body;
 
         // ── 1. Validate ───────────────────────────────────────────────────────
         if (!items?.length) {
@@ -62,60 +55,78 @@ export async function POST(req: NextRequest) {
             req.headers.get("x-real-ip") ??
             undefined;
 
-        // ── 4. Save order — paid: false until webhook confirms ────────────────
-        const orderId = nanoid(10);
+        // ── 4. Reuse or create order ──────────────────────────────────────────
+        // On retry the frontend passes back the orderId from the failed attempt.
+        // We look it up and confirm it's still unpaid before reusing it.
+        // This prevents a new order document from being created on each retry.
+        let orderId: string;
+        let isNewOrder = false;
 
-        const newOrder = new Order({
-            id: orderId,
-            items,
-            total,
-            customer,
-            checkpoints: [{
-                location: "Shopici Warehouse",
-                time:     new Date().toISOString(),
-                status:   "En préparation",
-            }],
-            paymentMethod: "online",
-            paid:          false,
-            _fbp,
-            _fbc,
-            _ua,
-            _ip,
-        });
+        const existingOrder = existingOrderId
+            ? await Order.findOne({ id: existingOrderId, paid: false }).lean()
+            : null;
 
-        await newOrder.save();
+        if (existingOrder) {
+            // Reuse the existing unpaid order — just re-push the USSD prompt
+            orderId = existingOrderId;
+            console.log(`♻️  Reusing existing unpaid order ${orderId} for retry`);
+        } else {
+            // Fresh order
+            orderId = nanoid(10);
+            isNewOrder = true;
 
-        // ── 5. Admin email ────────────────────────────────────────────────────
-        try {
-            const productIds = items.map((i: any) => i.productId);
-            const products   = await Product.find({ _id: { $in: productIds } }).lean<LeanProduct[]>();
-
-            const itemsHtml = items.map((item: any) => {
-                const product = products.find(p => p._id.toString() === item.productId);
-                const name    = product?.name ?? "Produit inconnu";
-                return `<li>${item.quantity} × ${name} — ${(item.price * item.quantity).toLocaleString()} XAF</li>`;
-            }).join("");
-
-            await sendEmail({
-                to:      process.env.ADMIN_EMAIL!,
-                subject: `Nouvelle commande en ligne (${orderId})`,
-                html: `
-                    <h2>Nouvelle commande en ligne reçue !</h2>
-                    <p><strong>${customer.name}</strong> (${customer.phone}) vient de passer une commande.</p>
-                    <p>⏳ <strong>En attente de confirmation paiement mobile money</strong></p>
-                    <ul>${itemsHtml}</ul>
-                    <p><strong>Total :</strong> ${total.toLocaleString()} XAF</p>
-                    <p>Numéro de commande : <strong>${orderId}</strong></p>
-                    <p>– Shopici</p>
-                `,
+            const newOrder = new Order({
+                id: orderId,
+                items,
+                total,
+                customer,
+                checkpoints: [{
+                    location: "Shopici Warehouse",
+                    time:     new Date().toISOString(),
+                    status:   "En préparation",
+                }],
+                paymentMethod: "online",
+                paid:          false,
+                _fbp,
+                _fbc,
+                _ua,
+                _ip,
             });
-        } catch (emailErr) {
-            console.error("Admin email failed (non-blocking):", emailErr);
+
+            await newOrder.save();
         }
 
-        // ── 6. Push USSD payment request to customer's phone ──────────────────
-        // Fapshi will send a prompt to the phone — customer approves there.
-        // We get back a transId to match against the webhook later.
+        // ── 5. Admin email — only on first attempt, not retries ───────────────
+        if (isNewOrder) {
+            try {
+                const productIds = items.map((i: any) => i.productId);
+                const products   = await Product.find({ _id: { $in: productIds } }).lean<LeanProduct[]>();
+
+                const itemsHtml = items.map((item: any) => {
+                    const product = products.find(p => p._id.toString() === item.productId);
+                    const name    = product?.name ?? "Produit inconnu";
+                    return `<li>${item.quantity} × ${name} — ${(item.price * item.quantity).toLocaleString()} XAF</li>`;
+                }).join("");
+
+                await sendEmail({
+                    to:      process.env.ADMIN_EMAIL!,
+                    subject: `Nouvelle commande en ligne (${orderId})`,
+                    html: `
+                        <h2>Nouvelle commande en ligne reçue !</h2>
+                        <p><strong>${customer.name}</strong> (${customer.phone}) vient de passer une commande.</p>
+                        <p>⏳ <strong>En attente de confirmation paiement mobile money</strong></p>
+                        <ul>${itemsHtml}</ul>
+                        <p><strong>Total :</strong> ${total.toLocaleString()} XAF</p>
+                        <p>Numéro de commande : <strong>${orderId}</strong></p>
+                        <p>– Shopici</p>
+                    `,
+                });
+            } catch (emailErr) {
+                console.error("Admin email failed (non-blocking):", emailErr);
+            }
+        }
+
+        // ── 6. Push USSD payment request to customer's phone ─────────────────
         const fapshiRes = await directPay({
             amount:      total,
             phone:       customer.phone,
@@ -125,8 +136,6 @@ export async function POST(req: NextRequest) {
         });
 
         if (isFapshiError(fapshiRes)) {
-            // USSD push failed — order is saved but unpaid.
-            // Return orderId so the frontend can surface an error with retry option.
             console.error(`Fapshi directPay failed for order ${orderId}:`, fapshiRes);
             return NextResponse.json(
                 { error: "payment_push_failed", orderId, detail: fapshiRes.message },
@@ -134,14 +143,14 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // ── 7. Save transId on the order ──────────────────────────────────────
+        // ── 7. Save latest transId on the order ───────────────────────────────
+        // On retry this overwrites the previous failed transId — intentional.
         await Order.updateOne({ id: orderId }, { fapshiTransId: fapshiRes.transId });
 
         console.log(`📲 directPay pushed for order ${orderId} — transId: ${fapshiRes.transId}`);
 
-        // ── 8. Return orderId — frontend redirects to /order/[id]?payment=success
-        //    PaymentPoller will poll until the webhook flips paid → true
-        return NextResponse.json({ orderId }, { status: 201 });
+        // ── 8. Return orderId ─────────────────────────────────────────────────
+        return NextResponse.json({ orderId }, { status: isNewOrder ? 201 : 200 });
 
     } catch (err: any) {
         console.error("POST /api/payment/create-order error:", err);

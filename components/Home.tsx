@@ -3,29 +3,27 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ShoppingCart, Star, MapPin, Clock } from "lucide-react";
-import { products, getFeaturedProducts } from "@/data/products";
+import { ChevronLeft, ChevronRight, Star, MapPin, Clock } from "lucide-react";
 import ProductCard from "./ProductCart";
 import { Product } from "@/types/Product";
 import HomepageSkeleton from "./HomeSkeleton";
-import { storeConfig } from "@/data/configData";
+import { useConfig } from "@/context/ConfigContext";
 
-// Banner slides
-const bannerSlides = storeConfig.bannerSlides;
-
-// Add interface for props
 interface HomepageProps {
     onProductAdded?: (productName: string) => void;
 }
 
 export default function Homepage({ onProductAdded }: HomepageProps) {
+    const storeConfig = useConfig();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [productsLoading, setProductsLoading] = useState(true);
 
     const POPULAR_PRODUCTS_LIMIT = 8;
+    const bannerSlides = storeConfig?.bannerSlides ?? [];
+    const configLoading = !storeConfig;
 
-    // Fetch products from backend API
+    // Fetch products
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -36,77 +34,66 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
             } catch (err) {
                 console.error(err);
             } finally {
-                setLoading(false);
+                setProductsLoading(false);
             }
         };
         fetchProducts();
     }, []);
 
-
-    // Auto-slide effect
+    // Auto-slide — only runs once we have slides
     useEffect(() => {
+        if (bannerSlides.length === 0) return;
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % bannerSlides.length);
         }, 5000);
         return () => clearInterval(timer);
-    }, []);
+    }, [bannerSlides.length]);
 
-    const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % bannerSlides.length);
-    };
+    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % bannerSlides.length);
+    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + bannerSlides.length) % bannerSlides.length);
 
-    const prevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + bannerSlides.length) % bannerSlides.length);
-    };
-
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('fr-FR').format(price);
-    };
-
-    const calculateDiscount = (price: number, comparePrice?: number) => {
-        if (!comparePrice) return 0;
-        return Math.round(((comparePrice - price) / comparePrice) * 100);
-    };
-    if (loading) {
+    if (productsLoading || configLoading) {
         return <HomepageSkeleton />;
     }
+
     return (
         <main className="min-h-screen bg-gray-50">
             {/* Hero Banner Slider */}
             <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
                 {bannerSlides.map((slide, index) => (
                     <div
-                        key={slide.id}
-                        className={`absolute inset-0 transition-all duration-700 ease-in-out ${index === currentSlide
-                            ? 'opacity-100 translate-x-0'
-                            : index < currentSlide
-                                ? 'opacity-0 -translate-x-full'
-                                : 'opacity-0 translate-x-full'
-                            }`}
+                        key={slide.id ?? index}
+                        className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                            index === currentSlide
+                                ? 'opacity-100 translate-x-0'
+                                : index < currentSlide
+                                    ? 'opacity-0 -translate-x-full'
+                                    : 'opacity-0 translate-x-full'
+                        }`}
                     >
-                        {/* Background Image */}
                         <Image
                             src={slide.image}
                             alt={slide.title}
                             fill
                             className="object-cover"
                             priority={index === 0}
+                            unoptimized
                         />
-
-                        {/* Gradient Overlay */}
                         <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} opacity-80`}>
                             <div className="absolute inset-0 bg-black/30" />
                         </div>
-
                         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-6 flex items-center">
                             <div className="text-white max-w-2xl">
-                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in">
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
                                     {slide.title}
                                 </h1>
                                 <p className="text-lg md:text-xl lg:text-2xl mb-8 text-white/90">
                                     {slide.subtitle}
                                 </p>
-                                <Link href={"/products"} className="px-8 py-4 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                                <Link
+                                    href="/products"
+                                    className="px-8 py-4 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+                                >
                                     {slide.cta}
                                 </Link>
                             </div>
@@ -136,8 +123,9 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
                         <button
                             key={index}
                             onClick={() => setCurrentSlide(index)}
-                            className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8 md:w-12' : 'bg-white/50'
-                                }`}
+                            className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all ${
+                                index === currentSlide ? 'bg-white w-8 md:w-12' : 'bg-white/50'
+                            }`}
                             aria-label={`Go to slide ${index + 1}`}
                         />
                     ))}
@@ -157,8 +145,6 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
                         Voir tout →
                     </Link>
                 </div>
-
-                {/* Product Grid - Pass onProductAdded to ProductCard */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {products.slice(0, POPULAR_PRODUCTS_LIMIT).map((product) => (
                         <ProductCard

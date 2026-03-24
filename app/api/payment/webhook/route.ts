@@ -19,14 +19,15 @@ import { Order } from "@/models/Order";
 import { paymentStatus, isFapshiError } from "@/lib/fapshi";
 import { sendPurchaseEvent } from "@/lib/facebook-capi";
 import { sendEmail } from "@/helper/sendEmail";
+import { sendWhatsAppMessage } from "@/lib/sendWhatsAppMessage";
 
 interface FapshiWebhookBody {
-    transId:     string;
-    status:      "CREATED" | "PENDING" | "SUCCESSFUL" | "FAILED" | "EXPIRED";
-    amount:      number;
+    transId: string;
+    status: "CREATED" | "PENDING" | "SUCCESSFUL" | "FAILED" | "EXPIRED";
+    amount: number;
     externalId?: string;
-    medium?:     string;
-    name?:       string;
+    medium?: string;
+    name?: string;
 }
 
 function formatDate(date: Date) {
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
 
                 try {
                     await sendEmail({
-                        to:      process.env.ADMIN_EMAIL!,
+                        to: process.env.ADMIN_EMAIL!,
                         subject: `⏳ Payment Pending — Order ${order.id}`,
                         html: `
                             <h2>Payment In Progress</h2>
@@ -149,8 +150,8 @@ export async function POST(req: NextRequest) {
                 await Order.updateOne(
                     { id: order.id },
                     {
-                        paid:              true,
-                        paidAt:            new Date(),
+                        paid: true,
+                        paidAt: new Date(),
                         isSeriousCustomer: true,
                     }
                 );
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
                 // Notify admin
                 try {
                     await sendEmail({
-                        to:      process.env.ADMIN_EMAIL!,
+                        to: process.env.ADMIN_EMAIL!,
                         subject: `✅ Payment Confirmed — Order ${order.id}`,
                         html: `
                             <h2>Payment Received</h2>
@@ -174,25 +175,35 @@ export async function POST(req: NextRequest) {
                 } catch (e) {
                     console.error("Admin SUCCESSFUL email failed (non-blocking):", e);
                 }
+                // try {
+                //     await sendWhatsAppMessage(
+                //         order.customer.phone,
+                //         order.customer.name ?? "Customer",
+                //         order.id
+                //     );
 
+                //     console.log(`📲 WhatsApp sent to ${order.customer.phone}`);
+                // } catch (err) {
+                //     console.error("WhatsApp send failed (non-blocking):", err);
+                // }
                 // FB CAPI Purchase event
                 try {
                     const nameParts = (order.customer.name ?? "").trim().split(/\s+/);
                     const firstName = nameParts[0];
-                    const lastName  = nameParts.slice(1).join(" ") || undefined;
+                    const lastName = nameParts.slice(1).join(" ") || undefined;
 
                     await sendPurchaseEvent({
-                        orderId:  order.id,
-                        value:    order.total,
+                        orderId: order.id,
+                        value: order.total,
                         currency: "XAF",
                         userData: {
-                            phone:     order.customer.phone,
+                            phone: order.customer.phone,
                             firstName,
                             lastName,
-                            ipAddress: order._ip  ?? undefined,
-                            userAgent: order._ua  ?? undefined,
-                            fbc:       order._fbc ?? undefined,
-                            fbp:       order._fbp ?? undefined,
+                            ipAddress: order._ip ?? undefined,
+                            userAgent: order._ua ?? undefined,
+                            fbc: order._fbc ?? undefined,
+                            fbp: order._fbp ?? undefined,
                         },
                     });
                 } catch (capiErr) {
@@ -215,7 +226,7 @@ export async function POST(req: NextRequest) {
 
                 try {
                     await sendEmail({
-                        to:      process.env.ADMIN_EMAIL!,
+                        to: process.env.ADMIN_EMAIL!,
                         subject: `❌ Payment Failed — Order ${order.id}`,
                         html: `
                             <h2>Payment Failed</h2>
@@ -246,7 +257,7 @@ export async function POST(req: NextRequest) {
 
                 try {
                     await sendEmail({
-                        to:      process.env.ADMIN_EMAIL!,
+                        to: process.env.ADMIN_EMAIL!,
                         subject: `⌛ Payment Expired — Order ${order.id}`,
                         html: `
                             <h2>Payment Session Expired</h2>

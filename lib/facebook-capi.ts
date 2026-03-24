@@ -2,37 +2,32 @@
 // Facebook Conversions API service
 // Docs: https://developers.facebook.com/docs/marketing-api/conversions-api
 
-
 import crypto from "crypto";
-import { storeConfig } from "@/data/configData";
-
-const PIXEL_ID = storeConfig.tracking.facebookPixelId;
-const ACCESS_TOKEN = process.env.FACEBOOK_CAPI_TOKEN!;
-const API_VERSION = "v19.0";
-const CAPI_URL = `https://graph.facebook.com/${API_VERSION}/${PIXEL_ID}/events`;
+import { getStoreConfig } from "./server-config";
+import type { StoreConfigType } from "@/types/StoreConfig";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CAPIUserData {
-  email?: string;       // will be hashed automatically
-  phone?: string;       // will be hashed automatically
+  email?: string;
+  phone?: string;
   firstName?: string;
   lastName?: string;
   city?: string;
-  country?: string;     // ISO 2-letter, e.g. "CM" for Cameroon
+  country?: string;     // ISO 2-letter, e.g. "CM"
   ipAddress?: string;
   userAgent?: string;
-  fbc?: string;         // Facebook click ID cookie (_fbc)
-  fbp?: string;         // Facebook browser ID cookie (_fbp)
+  fbc?: string;         // _fbc cookie
+  fbp?: string;         // _fbp cookie
 }
 
 export interface PurchaseEventData {
   orderId: string;
-  value: number;        // order total in XAF (or your currency)
+  value: number;
   currency?: string;    // default "XAF"
   userData: CAPIUserData;
   eventSourceUrl?: string;
-  testEventCode?: string; // Use during testing: "TEST12345"
+  testEventCode?: string;
 }
 
 // ─── Hashing ──────────────────────────────────────────────────────────────────
@@ -45,7 +40,6 @@ function hash(value: string): string {
 }
 
 function hashPhone(phone: string): string {
-  // Normalize: remove spaces, dashes, and ensure + prefix
   const normalized = phone.replace(/[\s\-().]/g, "");
   return hash(normalized);
 }
@@ -62,7 +56,7 @@ function buildUserData(userData: CAPIUserData): Record<string, string> {
   if (userData.city) data.ct = hash(userData.city);
   if (userData.country) data.country = hash(userData.country.toLowerCase());
 
-  // These are NOT hashed
+  // Not hashed
   if (userData.ipAddress) data.client_ip_address = userData.ipAddress;
   if (userData.userAgent) data.client_user_agent = userData.userAgent;
   if (userData.fbc) data.fbc = userData.fbc;
@@ -78,7 +72,23 @@ export async function sendPurchaseEvent(eventData: PurchaseEventData): Promise<{
   events_received?: number;
   error?: string;
 }> {
-  const eventTime = Math.floor(Date.now() / 1000); // Unix timestamp
+  const storeConfig: StoreConfigType = await getStoreConfig();
+  const PIXEL_ID = storeConfig.tracking.facebookPixelId;
+  const ACCESS_TOKEN = process.env.FACEBOOK_CAPI_TOKEN;
+
+  // Guard: bail early with a clear error if credentials are missing
+  if (!PIXEL_ID) {
+    console.error("[Facebook CAPI] Missing facebookPixelId in store config.");
+    return { success: false, error: "Missing Facebook Pixel ID" };
+  }
+  if (!ACCESS_TOKEN) {
+    console.error("[Facebook CAPI] Missing FACEBOOK_CAPI_TOKEN env variable.");
+    return { success: false, error: "Missing CAPI access token" };
+  }
+
+  const API_VERSION = "v19.0";
+  const CAPI_URL = `https://graph.facebook.com/${API_VERSION}/${PIXEL_ID}/events`;
+  const eventTime = Math.floor(Date.now() / 1000);
 
   const payload = {
     data: [
@@ -86,20 +96,18 @@ export async function sendPurchaseEvent(eventData: PurchaseEventData): Promise<{
         event_name: "Purchase",
         event_time: eventTime,
         action_source: "website",
-        event_id: `purchase_${eventData.orderId}`, // deduplication key
+        event_id: `purchase_${eventData.orderId}`,
         event_source_url: eventData.eventSourceUrl ?? "https://yourstore.cm/orders",
         user_data: buildUserData(eventData.userData),
         custom_data: {
           currency: eventData.currency ?? "XAF",
           value: eventData.value,
           order_id: eventData.orderId,
-          // COD-specific: tells Facebook this is a confirmed delivered order
           content_type: "product",
           delivery_category: "home_delivery",
         },
       },
     ],
-    // Only include test_event_code when testing
     ...(eventData.testEventCode
       ? { test_event_code: eventData.testEventCode }
       : {}),

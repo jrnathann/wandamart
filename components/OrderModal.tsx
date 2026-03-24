@@ -4,7 +4,18 @@
  * Supports two modes passed via `paymentMode` prop:
  *   "cod"    → cash on delivery — all 4 steps including the cash gate (Step 1)
  *   "online" → mobile money    — Step 1 skipped, starts at Step 2 (contact)
- *              on submit: calls /api/payment/create-order → redirects to Fapshi
+ *              on submit: calls /api/payment/create-order → pushes USSD to phone
+ *
+ * Payment failure:
+ *   When `paymentError` is set, renders <PaymentFailedScreen> instead of the
+ *   normal steps. "Réessayer" calls onRetry directly. "Modifier le numéro"
+ *   clears the error and jumps back to the contact step.
+ *
+ * Phone normalization:
+ *   The phone is normalized to full 237XXXXXXXXX format synchronously inside
+ *   handleSubmit before calling onSubmit(normalizedPhone). This avoids the
+ *   React state-update race where onSubmit would fire before onFormChange
+ *   had propagated the updated phone value.
  */
 
 import { useState } from "react";
@@ -26,10 +37,13 @@ interface OrderModalProps {
     orderForm:      OrderForm;
     orderSubmitted: boolean;
     submitting:     boolean;
-    paymentMode:    "cod" | "online";   // ← NEW
+    paymentMode:    "cod" | "online";
+    paymentError:   string | null;
     onClose:        () => void;
     onFormChange:   (form: OrderForm) => void;
-    onSubmit:       () => void;
+    /** Receives the 237-prefixed normalized phone so no state race occurs */
+    onSubmit:       (normalizedPhone: string) => void;
+    onRetry:        (normalizedPhone: string) => void;
     formatPrice:    (price: number) => string;
 }
 
@@ -40,22 +54,58 @@ const SCROLLBAR_CSS = `
   .shopici-scroll { scrollbar-width: thin; scrollbar-color: #FF6B35 #f3f4f6; }
 `;
 
-// Step numbers visible to the user always start at 1 regardless of mode.
-// Internally "cod" uses steps [1,2,3,4], "online" uses steps [2,3,4].
+// ── Cameroon phone helpers ────────────────────────────────────────────────────
+
+function parseCMPhone(raw: string): string | null {
+    const digits = raw.replace(/\s+/g, "").replace(/[^0-9]/g, "");
+    if (digits.startsWith("237") && digits.length === 12 && digits[3] === "6") {
+        return digits.slice(3);
+    }
+    if (digits.length === 9 && digits.startsWith("6")) {
+        return digits;
+    }
+    return null;
+}
+
+function detectOperator(local9: string): "orange" | "mtn" | null {
+    const prefix = parseInt(local9.slice(0, 3), 10);
+    const orangePrefixes = [655, 656, 657, 658, 659, 690, 691, 692, 693, 694, 695, 696, 697, 698, 699];
+    const mtnPrefixes    = [650, 651, 652, 653, 654, 670, 671, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684];
+    if (orangePrefixes.includes(prefix)) return "orange";
+    if (mtnPrefixes.includes(prefix))    return "mtn";
+    return null;
+}
+
+function toFullCMPhone(local9: string): string {
+    return "237" + local9;
+}
+
+/** Normalize any CM phone input to the 237XXXXXXXXX format synchronously */
+function normalizePhone(raw: string): string {
+    const local9 = parseCMPhone(raw);
+    return local9 ? toFullCMPhone(local9) : raw;
+}
+
+// ── Step navigation ───────────────────────────────────────────────────────────
+
 function useSteps(paymentMode: "cod" | "online") {
-    const steps     = paymentMode === "cod" ? [1, 2, 3, 4] : [2, 3, 4];
-    const TOTAL     = steps.length;
-    const [idx, setIdx] = useState(0); // index into steps[]
+    const steps = paymentMode === "cod" ? [1, 2, 3, 4] : [2, 3, 4];
+    const TOTAL = steps.length;
+    const [idx, setIdx] = useState(0);
 
     return {
-        step:     steps[idx],          // actual step number (1-4)
-        display:  idx + 1,             // what the user sees (1 of N)
-        total:    TOTAL,
-        canBack:  idx > 0,
-        canNext:  idx < TOTAL - 1,
-        isLast:   idx === TOTAL - 1,
-        next:     () => setIdx(i => i + 1),
-        back:     () => setIdx(i => i - 1),
+        step:    steps[idx],
+        display: idx + 1,
+        total:   TOTAL,
+        canBack: idx > 0,
+        canNext: idx < TOTAL - 1,
+        isLast:  idx === TOTAL - 1,
+        next:    () => setIdx(i => i + 1),
+        back:    () => setIdx(i => i - 1),
+        goToStep: (stepValue: number) => {
+            const i = steps.indexOf(stepValue);
+            if (i !== -1) setIdx(i);
+        },
     };
 }
 
@@ -63,20 +113,51 @@ function stepLabel(step: number) {
     return ["Êtes-vous prêt(e) ?", "Vos coordonnées", "Votre adresse", "Créneau & confirmation"][step - 1] ?? "";
 }
 
+// ── Main modal ────────────────────────────────────────────────────────────────
+
 export default function OrderModal({
     product, quantity, orderForm, orderSubmitted,
-    submitting, paymentMode, onClose, onFormChange, onSubmit, formatPrice,
+    submitting, paymentMode, paymentError,
+    onClose, onFormChange, onSubmit, onRetry, formatPrice,
 }: OrderModalProps) {
     const totalPrice = product.price * quantity;
     const nav        = useSteps(paymentMode);
 
+    const local9 = parseCMPhone(orderForm.phone);
+
     const stepValid: Record<number, boolean> = {
         1: orderForm.hasCash === true,
-        2: orderForm.name.trim() !== "" && orderForm.phone.trim() !== "" && orderForm.phoneConfirmed,
+        2: orderForm.name.trim() !== "" && local9 !== null && orderForm.phoneConfirmed,
         3: orderForm.deliveryZone !== "" && orderForm.quartier.trim() !== "",
         4: orderForm.callTime !== "",
     };
 
+    // Normalize phone synchronously — no state update needed before calling onSubmit
+    const handleSubmit = () => {
+        const normalizedPhone = normalizePhone(orderForm.phone);
+        onSubmit(normalizedPhone);
+    };
+
+    // ── Payment failed screen ─────────────────────────────────────────────────
+    if (paymentError) {
+        return (
+            <PaymentFailedScreen
+                error={paymentError}
+                phone={orderForm.phone}
+                totalPrice={totalPrice}
+                formatPrice={formatPrice}
+                submitting={submitting}
+                onRetry={onRetry}
+                onEditPhone={() => {
+                    nav.goToStep(2);
+                    onFormChange({ ...orderForm, phone: "", phoneConfirmed: false });
+                }}
+                onClose={onClose}
+            />
+        );
+    }
+
+    // ── Success screen ────────────────────────────────────────────────────────
     if (orderSubmitted) {
         return (
             <SuccessScreen
@@ -112,7 +193,7 @@ export default function OrderModal({
                             </button>
                         </div>
 
-                        {/* Dot progress — based on visible steps only */}
+                        {/* Dot progress */}
                         <div className="flex items-center justify-center gap-2">
                             {Array.from({ length: nav.total }).map((_, i) => (
                                 <div key={i} className={`rounded-full transition-all duration-300 ${
@@ -123,7 +204,6 @@ export default function OrderModal({
                             ))}
                         </div>
 
-                        {/* Online payment badge */}
                         {paymentMode === "online" && (
                             <div className="mt-3 flex items-center justify-center gap-1.5 bg-blue-50 rounded-xl py-1.5">
                                 <Smartphone className="w-3.5 h-3.5 text-blue-500" />
@@ -143,7 +223,7 @@ export default function OrderModal({
                                 onClose={onClose}
                             />
                         )}
-                        {nav.step === 2 && <StepContact orderForm={orderForm} onFormChange={onFormChange} />}
+                        {nav.step === 2 && <StepContact orderForm={orderForm} onFormChange={onFormChange} paymentMode={paymentMode} />}
                         {nav.step === 3 && <StepLocation orderForm={orderForm} onFormChange={onFormChange} />}
                         {nav.step === 4 && (
                             <StepCallAndConfirm
@@ -173,7 +253,7 @@ export default function OrderModal({
                             </button>
                         ) : (
                             <button
-                                onClick={onSubmit}
+                                onClick={handleSubmit}
                                 disabled={submitting || !stepValid[4]}
                                 className={`w-full py-4 text-white text-base font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${
                                     !stepValid[4]
@@ -184,7 +264,7 @@ export default function OrderModal({
                                 }`}
                             >
                                 {submitting ? (
-                                    <><Spinner /> {paymentMode === "online" ? "Redirection..." : "Envoi..."}</>
+                                    <><Spinner /> {paymentMode === "online" ? "Envoi en cours..." : "Envoi..."}</>
                                 ) : paymentMode === "online" ? (
                                     <><Smartphone className="w-4 h-4" /> PAYER PAR MOBILE MONEY</>
                                 ) : (
@@ -200,6 +280,93 @@ export default function OrderModal({
                                     : "Paiement à la livraison — zéro risque"}
                             </p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
+
+// ── Payment failed screen ─────────────────────────────────────────────────────
+
+function PaymentFailedScreen({ error, phone, totalPrice, formatPrice, submitting, onRetry, onEditPhone, onClose }: {
+    error: string; phone: string; totalPrice: number;
+    formatPrice: (n: number) => string;
+    submitting: boolean;
+    onRetry: (normalizedPhone: string) => void;
+    onEditPhone: () => void;
+    onClose: () => void;
+}) {
+    // Normalize here too so retry always sends 237XXXXXXXXX
+    const normalizedPhone = normalizePhone(phone);
+
+    return (
+        <>
+            <style>{SCROLLBAR_CSS}</style>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
+            <div className="fixed inset-x-0 bottom-0 sm:inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
+                <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl">
+
+                    {/* Header */}
+                    <div className="flex justify-end px-5 pt-5 pb-2">
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                            <X className="w-4 h-4 text-gray-500" />
+                        </button>
+                    </div>
+
+                    {/* Icon + message */}
+                    <div className="px-5 pb-5 text-center">
+                        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                            <AlertCircle className="w-8 h-8 text-red-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-shopici-black mb-2">Paiement échoué</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed">{error}</p>
+                    </div>
+
+                    {/* No duplicate reassurance */}
+                    <div className="mx-5 mb-4 bg-red-50 border border-red-100 rounded-2xl p-3.5 flex items-start gap-2.5">
+                        <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-red-700 font-medium leading-relaxed">
+                            Votre commande est conservée — aucun doublon ne sera créé si vous réessayez.
+                        </p>
+                    </div>
+
+                    {/* Recap */}
+                    <div className="mx-5 mb-5 bg-gray-50 rounded-2xl divide-y divide-gray-100 overflow-hidden">
+                        <div className="flex justify-between items-center px-4 py-2.5">
+                            <span className="text-xs text-gray-400">Téléphone</span>
+                            <span className="text-xs font-semibold text-shopici-black">{normalizedPhone}</span>
+                        </div>
+                        <div className="flex justify-between items-center px-4 py-2.5">
+                            <span className="text-xs text-gray-400">Montant</span>
+                            <span className="text-xs font-semibold text-shopici-coral">{formatPrice(totalPrice)} XAF</span>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="px-5 pb-6 space-y-3">
+                        <button
+                            onClick={() => onRetry(normalizedPhone)}
+                            disabled={submitting}
+                            className={`w-full py-4 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${
+                                submitting
+                                    ? "bg-red-400 opacity-70 animate-pulse cursor-not-allowed"
+                                    : "bg-red-500 hover:brightness-105 active:scale-[0.98] shadow-lg shadow-red-200"
+                            }`}
+                        >
+                            {submitting ? (
+                                <><Spinner /> Envoi en cours...</>
+                            ) : (
+                                <><Smartphone className="w-4 h-4" /> Réessayer le paiement</>
+                            )}
+                        </button>
+                        <button
+                            onClick={onEditPhone}
+                            disabled={submitting}
+                            className="w-full py-3 border-2 border-gray-200 text-gray-600 font-semibold rounded-2xl hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Modifier le numéro
+                        </button>
                     </div>
                 </div>
             </div>
@@ -250,33 +417,110 @@ function StepCash({ totalPrice, formatPrice, hasCash, onChange, onClose }: {
 
 // ── Step 2: Contact ───────────────────────────────────────────────────────────
 
-function StepContact({ orderForm, onFormChange }: { orderForm: OrderForm; onFormChange: (f: OrderForm) => void }) {
+function StepContact({ orderForm, onFormChange, paymentMode }: {
+    orderForm: OrderForm; onFormChange: (f: OrderForm) => void; paymentMode: "cod" | "online";
+}) {
+    const local9   = parseCMPhone(orderForm.phone);
+    const operator = local9 ? detectOperator(local9) : null;
+    const isValid  = local9 !== null;
+    const isDirty  = orderForm.phone.trim() !== "";
+
     return (
         <div className="flex flex-col gap-4">
             <div>
                 <label className="block text-sm font-bold text-shopici-black mb-2">Votre nom complet</label>
-                <input type="text" value={orderForm.name}
+                <input
+                    type="text"
+                    value={orderForm.name}
                     onChange={(e) => onFormChange({ ...orderForm, name: e.target.value })}
                     placeholder="Ex: Jean Dupont"
-                    className="w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black placeholder:text-gray-300 transition-colors" />
+                    className="w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black placeholder:text-gray-300 transition-colors"
+                />
             </div>
+
             <div>
-                <label className="block text-sm font-bold text-shopici-black mb-2">Votre numéro de téléphone (ORANGE/MTN Mobile Money)</label>
-                <input type="tel" value={orderForm.phone}
-                    onChange={(e) => onFormChange({ ...orderForm, phone: e.target.value, phoneConfirmed: false })}
-                    placeholder="Ex: 677 123 456"
-                    className="w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black placeholder:text-gray-300 transition-colors" />
-                <label className={`mt-2 flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all ${
-                    orderForm.phoneConfirmed ? "border-green-400 bg-green-50" : "border-orange-200 bg-orange-50"
-                }`}>
-                    <input type="checkbox" checked={orderForm.phoneConfirmed}
-                        onChange={(e) => onFormChange({ ...orderForm, phoneConfirmed: e.target.checked })}
-                        className="w-5 h-5 accent-green-500 flex-shrink-0" />
-                    <span className="text-xs font-semibold text-shopici-black">
-                        Je confirme que <span className="text-shopici-coral font-bold">{orderForm.phone || "mon numéro"}</span> est correct
-                    </span>
+                <label className="block text-sm font-bold text-shopici-black mb-2">
+                    {paymentMode === "online" ? "Votre numéro Mobile Money (Orange / MTN)" : "Votre numéro de téléphone"}
                 </label>
+
+                <div className="relative flex items-center">
+                    {operator && (
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full overflow-hidden z-10 pointer-events-none shadow-sm">
+                            <img
+                                src={operator === "orange" ? "/orange.png" : "/mtn.png"}
+                                alt={operator === "orange" ? "Orange Money" : "MTN MoMo"}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                    )}
+                    <input
+                        type="tel"
+                        value={orderForm.phone}
+                        onChange={(e) => onFormChange({
+                            ...orderForm,
+                            phone: e.target.value,
+                            phoneConfirmed: false,
+                        })}
+                        placeholder="Ex: 677 123 456"
+                        style={{ paddingLeft: operator ? "3.25rem" : undefined }}
+                        className={`w-full py-3.5 text-base border-2 rounded-xl focus:outline-none bg-white text-shopici-black placeholder:text-gray-300 transition-colors pr-10
+                            ${!operator ? "pl-4" : ""}
+                            ${!isDirty
+                                ? "border-gray-200 focus:border-shopici-blue"
+                                : isValid
+                                ? "border-green-400 focus:border-green-500"
+                                : "border-red-400 focus:border-red-500"
+                            }`}
+                    />
+                    {isDirty && (
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                            {isValid
+                                ? <CheckCircle className="w-5 h-5 text-green-500" />
+                                : <AlertCircle className="w-5 h-5 text-red-400" />
+                            }
+                        </div>
+                    )}
+                </div>
+
+                {isDirty && !isValid && (
+                    <p className="text-xs text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        Format invalide — entrez 9 chiffres commençant par 6 (ex: 677 123 456)
+                    </p>
+                )}
+                {isValid && operator === "orange" && (
+                    <p className="text-xs text-orange-500 font-semibold mt-1.5">
+                        🟠 {paymentMode === "online" ? "Numéro Orange Money détecté" : "Numéro Orange détecté(paiement à la livraison)"}
+                    </p>
+                )}
+                {isValid && operator === "mtn" && (
+                    <p className="text-xs text-yellow-600 font-semibold mt-1.5">
+                        🟡 {paymentMode === "online" ? "Numéro MTN MoMo détecté" : "Numéro MTN détecté (paiement à la livraison)"}
+                    </p>
+                )}
+                {isValid && !operator && (
+                    <p className="text-xs text-gray-400 font-medium mt-1.5">
+                        ℹ️ Opérateur non reconnu — vérifiez que ce numéro supporte Mobile Money
+                    </p>
+                )}
+
+                {isValid && (
+                    <label className={`mt-2 flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all ${
+                        orderForm.phoneConfirmed ? "border-green-400 bg-green-50" : "border-orange-200 bg-orange-50"
+                    }`}>
+                        <input
+                            type="checkbox"
+                            checked={orderForm.phoneConfirmed}
+                            onChange={(e) => onFormChange({ ...orderForm, phoneConfirmed: e.target.checked })}
+                            className="w-5 h-5 accent-green-500 flex-shrink-0"
+                        />
+                        <span className="text-xs font-semibold text-shopici-black">
+                            Je confirme que <span className="text-shopici-coral font-bold">{orderForm.phone || "mon numéro"}</span> est correct
+                        </span>
+                    </label>
+                )}
             </div>
+
             <div>
                 <label className="block text-sm font-bold text-shopici-black mb-2">Ce numéro est sur WhatsApp ?</label>
                 <div className="grid grid-cols-2 gap-2.5">
@@ -337,6 +581,9 @@ function StepCallAndConfirm({ orderForm, product, totalPrice, formatPrice, payme
     formatPrice: (n: number) => string; paymentMode: "cod" | "online";
     onFormChange: (f: OrderForm) => void;
 }) {
+    // Show normalized phone in the recap so user sees what will actually be sent
+    const displayPhone = normalizePhone(orderForm.phone);
+
     return (
         <div className="flex flex-col gap-5">
             <div>
@@ -344,14 +591,13 @@ function StepCallAndConfirm({ orderForm, product, totalPrice, formatPrice, payme
                 <CallTimeSelector value={orderForm.callTime} onChange={(val) => onFormChange({ ...orderForm, callTime: val })} />
             </div>
 
-            {/* Recap */}
             <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100 overflow-hidden">
                 {[
-                    { label: "Produit",    value: product.name },
-                    { label: "Nom",        value: orderForm.name },
-                    { label: "Téléphone",  value: orderForm.phone },
-                    { label: "Adresse",    value: `${orderForm.quartier}, ${orderForm.deliveryZone}` },
-                    { label: "À payer",    value: `${formatPrice(totalPrice)} XAF` },
+                    { label: "Produit",   value: product.name },
+                    { label: "Nom",       value: orderForm.name },
+                    { label: "Téléphone", value: displayPhone },
+                    { label: "Adresse",   value: `${orderForm.quartier}, ${orderForm.deliveryZone}` },
+                    { label: "À payer",   value: `${formatPrice(totalPrice)} XAF` },
                 ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between items-start gap-3 px-4 py-2.5">
                         <span className="text-xs text-gray-400 flex-shrink-0">{label}</span>
@@ -364,7 +610,8 @@ function StepCallAndConfirm({ orderForm, product, totalPrice, formatPrice, payme
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3.5 flex items-start gap-2.5">
                     <Smartphone className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-blue-700 font-medium leading-relaxed">
-                        Vous allez être redirigé vers la page de paiement Fapshi pour régler <span className="font-bold">{formatPrice(totalPrice)} XAF</span> par Mobile Money.
+                        Une invite USSD sera envoyée au <span className="font-bold">{displayPhone}</span>. Approuvez-la pour finaliser le paiement de{" "}
+                        <span className="font-bold">{formatPrice(totalPrice)} XAF</span>.
                     </p>
                 </div>
             ) : (
@@ -415,7 +662,7 @@ function CallTimeSelector({ value, onChange }: { value: string; onChange: (val: 
     );
 }
 
-// ── Success screen (COD only — online redirects away) ─────────────────────────
+// ── Success screen (COD only — online flow gets USSD prompt) ──────────────────
 
 function SuccessScreen({ orderForm, product, totalPrice, formatPrice, onClose }: any) {
     return (

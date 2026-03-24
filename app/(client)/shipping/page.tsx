@@ -1,398 +1,475 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
-import { Search, Package, Truck, CheckCircle, Clock, MapPin, Phone, MessageCircle, User, Calendar, AlertCircle } from "lucide-react";
-// import { getOrderById } from "@/data/orders";
-// import { products } from "@/data/products";
+import {
+    Search, Package, Truck, CheckCircle, Clock,
+    MapPin, Phone, MessageCircle, User, Calendar,
+    AlertCircle, ArrowRight, ChevronRight,
+} from "lucide-react";
 import type { OrderTracking, OrderStatus } from "@/types/OrderTracking";
 import { getOrderById } from "@/helper/order";
 import { Product } from "@/types/Product";
+import { useConfig } from "@/context/ConfigContext";
+
+// ── Skeleton atoms ────────────────────────────────────────────────────────────
+
+function Skeleton({ className = "" }: { className?: string }) {
+    return (
+        <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+    );
+}
+
+function PageSkeleton() {
+    return (
+        <div className="max-w-2xl mx-auto px-4 pt-6 pb-16 space-y-4">
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-48 w-full rounded-2xl" />
+            <Skeleton className="h-64 w-full rounded-2xl" />
+            <Skeleton className="h-40 w-full rounded-2xl" />
+        </div>
+    );
+}
+
+function OrderSkeleton() {
+    return (
+        <div className="space-y-4 max-w-2xl mx-auto">
+            <Skeleton className="h-36 w-full rounded-2xl" />
+            <Skeleton className="h-52 w-full rounded-2xl" />
+            <Skeleton className="h-72 w-full rounded-2xl" />
+            <Skeleton className="h-44 w-full rounded-2xl" />
+        </div>
+    );
+}
+
+// ── Status helpers ────────────────────────────────────────────────────────────
+
+const STATUS_CONFIG: Record<OrderStatus, { color: string; bg: string; icon: React.ReactNode; dot: string }> = {
+    "En préparation": {
+        color: "text-amber-700",
+        bg: "bg-amber-50 border-amber-200",
+        dot: "bg-amber-400",
+        icon: <Package className="w-4 h-4" />,
+    },
+    "En route": {
+        color: "text-blue-700",
+        bg: "bg-blue-50 border-blue-200",
+        dot: "bg-blue-500",
+        icon: <Truck className="w-4 h-4" />,
+    },
+    "Livré": {
+        color: "text-green-700",
+        bg: "bg-green-50 border-green-200",
+        dot: "bg-green-500",
+        icon: <CheckCircle className="w-4 h-4" />,
+    },
+    "Annulé": {
+        color: "text-red-700",
+        bg: "bg-red-50 border-red-200",
+        dot: "bg-red-400",
+        icon: <AlertCircle className="w-4 h-4" />,
+    },
+};
+
+const STEPS: OrderStatus[] = ["En préparation", "En route", "Livré"];
+
+function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleString("fr-FR", {
+        day: "numeric", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+    });
+}
+
+function formatCallTime(callTime: string) {
+    const map: Record<string, string> = {
+        now: "Dès maintenant",
+        morning: "Matin (8h–12h)",
+        afternoon: "Après-midi (12h–17h)",
+        evening: "Soir (17h–20h)",
+    };
+    return map[callTime] ?? callTime;
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function OrderTrackingPage() {
-  const [trackingId, setTrackingId] = useState("");
-  const [order, setOrder] = useState<OrderTracking | null>(null);
-  const [error, setError] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Fetch products from backend
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/products");
-        const data = await res.json();
-        setProducts(data);
+    const storeConfig = useConfig();
 
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
+    const [trackingId, setTrackingId]   = useState("");
+    const [order, setOrder]             = useState<OrderTracking | null>(null);
+    const [error, setError]             = useState("");
+    const [isSearching, setIsSearching] = useState(false);
+    const [products, setProducts]       = useState<Product[]>([]);
+    const [productsLoading, setProductsLoading] = useState(true);
+    const [orderLoading, setOrderLoading]       = useState(false);
 
-  }, []);
-  const handleSearch = async () => {
-    setError("");
-    setIsSearching(true);
+    // Safe phone — only render contact links when config is ready
+    const phone = storeConfig?.contact?.phone ?? null;
 
-    setTimeout(async () => {
-      const foundOrder = await getOrderById(trackingId.trim());
+    useEffect(() => {
+        fetch("/api/products")
+            .then((r) => r.json())
+            .then(setProducts)
+            .catch((e) => console.error("Failed to fetch products:", e))
+            .finally(() => setProductsLoading(false));
+    }, []);
 
-      if (!foundOrder) {
+    const handleSearch = async () => {
+        if (!trackingId.trim()) return;
+        setError("");
         setOrder(null);
-        setError("Commande introuvable. Vérifiez votre numéro de suivi.");
-      } else {
-        setOrder(foundOrder);
-      }
-      setIsSearching(false);
-    }, 500);
-  };
+        setIsSearching(true);
+        setOrderLoading(true);
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case "En préparation": return "bg-yellow-500";
-      case "En route": return "bg-blue-500";
-      case "Livré": return "bg-green-600";
-      default: return "bg-gray-400";
-    }
-  };
+        // Small UX delay so the loader is visible
+        await new Promise((r) => setTimeout(r, 500));
 
-  const getStatusIcon = (status: OrderStatus) => {
-    switch (status) {
-      case "En préparation": return <Package className="w-5 h-5" />;
-      case "En route": return <Truck className="w-5 h-5" />;
-      case "Livré": return <CheckCircle className="w-5 h-5" />;
-      default: return <Clock className="w-5 h-5" />;
-    }
-  };
+        const foundOrder = await getOrderById(trackingId.trim());
+        if (!foundOrder) {
+            setError("Commande introuvable. Vérifiez votre numéro de suivi.");
+        } else {
+            setOrder(foundOrder);
+        }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+        setIsSearching(false);
+        setOrderLoading(false);
+    };
 
-  const formatCallTime = (callTime: string) => {
-    switch (callTime) {
-      case "morning": return "Matin (8h - 12h)";
-      case "afternoon": return "Après-midi (12h - 17h)";
-      case "evening": return "Soir (17h - 20h)";
-      default: return callTime;
-    }
-  };
+    const getProduct = (productId: string) =>
+        products.find((p) => p._id === productId);
 
-  // Get product details
-  const getProductDetails = (productId: string) => {
-    return products.find(p => p._id === productId);
-  };
+    const currentStepIndex = order ? STEPS.indexOf(order.status) : -1;
 
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-shopici-black to-shopici-charcoal text-white py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full mb-4">
-            <Package className="w-10 h-10" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold">Suivez votre commande</h1>
-          <p className="text-lg text-white/80 max-w-2xl mx-auto">
-            Entrez votre numéro de suivi pour voir où se trouve votre colis en temps réel
-          </p>
-        </div>
-      </div>
+    return (
+        <div className="min-h-screen bg-gray-50">
 
-      <div className="max-w-4xl mx-auto px-4 -mt-8 pb-16">
-        {/* Search Box */}
-        <div className="bg-white rounded-2xl shadow-2xl p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-shopici-charcoal" />
-              <input
-                type="text"
-                placeholder="Entrez votre numéro de suivi (ex: order_001)"
-                value={trackingId}
-                onChange={(e) => setTrackingId(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-4 text-lg border-2 border-shopici-gray/30 rounded-xl focus:outline-none focus:border-shopici-blue bg-white text-shopici-black"
-              />
-            </div>
-            <button
-              onClick={handleSearch}
-              disabled={isSearching || !trackingId.trim()}
-              className="px-8 py-4 bg-shopici-coral hover:bg-shopici-coral/90 text-white text-lg font-bold rounded-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
-            >
-              {isSearching ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Recherche...
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  Suivre
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-8 flex items-center gap-3">
-            <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-            <p className="text-red-800 font-medium">{error}</p>
-          </div>
-        )}
-
-        {/* Order Details */}
-        {order && (
-          <div className="space-y-6">
-            {/* Current Status Card */}
-            <div className="bg-gradient-to-br from-shopici-blue to-shopici-coral text-white rounded-2xl shadow-2xl p-8">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-white/80 text-sm mb-1">Statut actuel</p>
-                  <h2 className="text-3xl font-bold">{order.status}</h2>
-                </div>
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  {getStatusIcon(order.status)}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
-                <div>
-                  <p className="text-white/80 text-sm">Commande passée</p>
-                  <p className="font-semibold">{new Date(order.createdAt).toLocaleDateString('fr-FR')}</p>
-                </div>
-                <div>
-                  <p className="text-white/80 text-sm">Livraison estimée</p>
-                  <p className="font-semibold">
-                    {order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleDateString('fr-FR') : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Product Info - Multiple Products */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-shopici-black mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5 text-shopici-coral" />
-                Produits commandés ({order.items.length})
-              </h3>
-
-              <div className="space-y-4">
-                {order.items.map((item, index) => {
-                  const product = getProductDetails(item.productId);
-
-                  if (!product) {
-                    return (
-                      <div key={index} className="text-center py-4 text-shopici-charcoal border border-shopici-gray/30 rounded-xl">
-                        Produit introuvable (ID: {item.productId})
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={index} className="flex flex-col md:flex-row gap-4 p-4 bg-shopici-gray/5 rounded-xl border border-shopici-gray/20 hover:border-shopici-blue/30 transition-colors">
-                      <div className="w-full md:w-24 h-24 bg-shopici-gray/10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {product.images && product.images.length > 0 ? (
-                          <img
-                            src={product.images[0].url}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Package className="w-10 h-10 text-shopici-charcoal/40" />
-                        )}
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <h4 className="text-base font-semibold text-shopici-black">{product.name}</h4>
-                        {product.shortDescription && (
-                          <p className="text-sm text-shopici-charcoal line-clamp-1">{product.shortDescription}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm">
-                          <div>
-                            <span className="text-shopici-charcoal">Quantité: </span>
-                            <span className="font-semibold text-shopici-black">{item.quantity}</span>
-                          </div>
-                          <div>
-                            <span className="text-shopici-charcoal">Prix unitaire: </span>
-                            <span className="font-semibold text-shopici-black">{item.price.toLocaleString()} XAF</span>
-                          </div>
-                        </div>
-                        <div className="pt-2 border-t border-shopici-gray/20">
-                          <span className="text-sm text-shopici-charcoal">Sous-total: </span>
-                          <span className="font-bold text-shopici-coral">{(item.price * item.quantity).toLocaleString()} XAF</span>
-                        </div>
-                      </div>
+            {/* ── Hero ───────────────────────────────────────────────────────── */}
+            <div className="bg-shopici-black text-white">
+                <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-shopici-coral/20 mb-5">
+                        <Package className="w-7 h-7 text-shopici-coral" />
                     </div>
-                  );
-                })}
-
-                {/* Order Total */}
-                <div className="flex justify-between items-center p-4 bg-shopici-coral/10 rounded-xl border-2 border-shopici-coral/30">
-                  <span className="text-lg font-bold text-shopici-black">Total de la commande</span>
-                  <span className="text-2xl font-bold text-shopici-coral">
-                    {order.total.toLocaleString()} XAF
-                  </span>
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
+                        Suivez votre commande
+                    </h1>
+                    <p className="text-white/50 text-sm sm:text-base">
+                        Entrez votre numéro de suivi pour localiser votre colis
+                    </p>
                 </div>
-              </div>
             </div>
 
-            {/* Tracking Timeline */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-shopici-black mb-6 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-shopici-coral" />
-                Suivi de livraison
-              </h3>
+            {/* ── Search bar ─────────────────────────────────────────────────── */}
+            <div className="max-w-2xl mx-auto px-4 -mt-5 mb-6">
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-3 flex gap-2">
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Numéro de suivi (ex: ORD-XXXXXXXX)"
+                            value={trackingId}
+                            onChange={(e) => setTrackingId(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                            className="w-full pl-10 pr-4 py-3 text-sm border-0 outline-none bg-gray-50 rounded-xl text-shopici-black placeholder:text-gray-400 focus:bg-white transition-colors"
+                        />
+                    </div>
+                    <button
+                        onClick={handleSearch}
+                        disabled={isSearching || !trackingId.trim()}
+                        className="px-5 py-3 bg-shopici-coral hover:brightness-105 active:scale-[0.97] text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-shrink-0"
+                    >
+                        {isSearching ? (
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                            </svg>
+                        ) : (
+                            <ArrowRight className="w-4 h-4" />
+                        )}
+                        <span className="hidden sm:inline">
+                            {isSearching ? "Recherche..." : "Suivre"}
+                        </span>
+                    </button>
+                </div>
+            </div>
 
-              <div className="relative">
-                {/* Timeline Line */}
-                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-shopici-gray/30" />
+            {/* ── Content ────────────────────────────────────────────────────── */}
+            <div className="max-w-2xl mx-auto px-4 pb-16">
 
-                {/* Checkpoints */}
-                <div className="space-y-8">
-                  {order.checkpoints.map((checkpoint, index) => {
-                    const isCompleted = index < order.checkpoints.length - 1 || order.status === "Livré";
-                    const isCurrent = !isCompleted && index === order.checkpoints.length - 1;
+                {/* Error */}
+                {error && (
+                    <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl p-4 mb-5">
+                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700 font-medium">{error}</p>
+                    </div>
+                )}
 
-                    return (
-                      <div key={index} className="relative pl-16">
-                        {/* Status Icon */}
-                        <div className={`absolute left-0 w-12 h-12 rounded-full flex items-center justify-center ${isCompleted
-                            ? `${getStatusColor(checkpoint.status)} text-white shadow-lg`
-                            : 'bg-white border-2 border-shopici-gray/30 text-shopici-charcoal'
-                          }`}>
-                          {getStatusIcon(checkpoint.status)}
-                        </div>
+                {/* Order loading skeleton */}
+                {orderLoading && <OrderSkeleton />}
 
-                        {/* Content */}
-                        <div className={`pb-2 ${!isCompleted ? 'opacity-50' : ''}`}>
-                          <div className="flex items-center gap-3 mb-1">
-                            <h4 className="font-bold text-shopici-black text-lg">
-                              {checkpoint.status}
-                            </h4>
-                            {isCurrent && (
-                              <span className="px-3 py-1 bg-shopici-coral text-white text-xs font-bold rounded-full">
-                                En cours
-                              </span>
+                {/* Products still loading but order found — rare, handle gracefully */}
+                {order && productsLoading && !orderLoading && <OrderSkeleton />}
+
+                {/* Order results */}
+                {order && !orderLoading && !productsLoading && (
+                    <div className="space-y-4">
+
+                        {/* ── Status hero card ─────────────────────────────── */}
+                        <div className="bg-shopici-black rounded-2xl p-5 text-white">
+                            {/* Stepper */}
+                            <div className="flex items-center mb-6">
+                                {STEPS.map((step, idx) => {
+                                    const cfg       = STATUS_CONFIG[step];
+                                    const done      = idx < currentStepIndex;
+                                    const active    = idx === currentStepIndex;
+                                    const cancelled = order.status === "Annulé";
+
+                                    return (
+                                        <div key={step} className="flex items-center flex-1 last:flex-none">
+                                            <div className="flex flex-col items-center">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                    cancelled          ? "bg-red-500/20 text-red-400"
+                                                    : done || active   ? `${cfg.dot} text-white`
+                                                    : "bg-white/10 text-white/30"
+                                                }`}>
+                                                    {cfg.icon}
+                                                </div>
+                                                <p className={`text-xs mt-1.5 font-medium whitespace-nowrap ${
+                                                    active ? "text-white" : "text-white/40"
+                                                }`}>
+                                                    {step === "En préparation" ? "Préparation"
+                                                    : step === "En route" ? "En route"
+                                                    : "Livré"}
+                                                </p>
+                                            </div>
+                                            {idx < STEPS.length - 1 && (
+                                                <div className={`flex-1 h-px mx-2 transition-all ${
+                                                    done ? "bg-shopici-coral" : "bg-white/15"
+                                                }`} />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Status label */}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs text-white/40 mb-1">Statut actuel</p>
+                                    <p className="text-xl font-bold">{order.status}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-white/40 mb-1">Commande passée</p>
+                                    <p className="text-sm font-medium text-white/80">
+                                        {new Date(order.createdAt).toLocaleDateString("fr-FR")}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Cancelled banner */}
+                            {order.status === "Annulé" && (
+                                <div className="mt-4 px-3 py-2 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-300 font-medium text-center">
+                                    Cette commande a été annulée
+                                </div>
                             )}
-                          </div>
-                          <p className="text-shopici-charcoal mb-1">{checkpoint.location}</p>
-                          <div className="flex items-center gap-2 text-sm text-shopici-charcoal">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatDate(checkpoint.time)}</span>
-                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+
+                        {/* ── Products ─────────────────────────────────────── */}
+                        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                                <h3 className="text-sm font-bold text-shopici-black flex items-center gap-2">
+                                    <Package className="w-4 h-4 text-shopici-coral" />
+                                    Produits ({order.items.length})
+                                </h3>
+                                <span className="text-xs text-gray-400">#{order.id}</span>
+                            </div>
+
+                            <div className="divide-y divide-gray-50">
+                                {order.items.map((item, idx) => {
+                                    const product = getProduct(item.productId);
+                                    if (!product) return (
+                                        <div key={idx} className="px-5 py-4 text-xs text-gray-400">
+                                            Produit introuvable (ID: {item.productId})
+                                        </div>
+                                    );
+                                    return (
+                                        <div key={idx} className="flex gap-4 px-5 py-4">
+                                            <div className="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100">
+                                                {product.images?.[0]?.url ? (
+                                                    <img
+                                                        src={product.images[0].url}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <Package className="w-6 h-6 text-gray-300" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-shopici-black line-clamp-1 mb-1">
+                                                    {product.name}
+                                                </p>
+                                                <p className="text-xs text-gray-400 mb-2">Qté : {item.quantity}</p>
+                                                <p className="text-sm font-bold text-shopici-coral">
+                                                    {(item.price * item.quantity).toLocaleString()} XAF
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Total */}
+                            <div className="flex items-center justify-between px-5 py-4 bg-gray-50 border-t border-gray-100">
+                                <p className="text-sm font-semibold text-shopici-black">Total</p>
+                                <p className="text-lg font-bold text-shopici-coral">
+                                    {order.total.toLocaleString()} XAF
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* ── Tracking timeline ─────────────────────────────── */}
+                        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100">
+                                <h3 className="text-sm font-bold text-shopici-black flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-shopici-coral" />
+                                    Historique de livraison
+                                </h3>
+                            </div>
+
+                            {order.checkpoints.length === 0 ? (
+                                <div className="px-5 py-10 text-center text-gray-400 text-sm">
+                                    Aucun point de suivi pour l'instant
+                                </div>
+                            ) : (
+                                <div className="px-5 py-4 space-y-0">
+                                    {[...order.checkpoints]
+                                        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                                        .map((checkpoint, idx, arr) => {
+                                            const cfg     = STATUS_CONFIG[checkpoint.status] ?? STATUS_CONFIG["En préparation"];
+                                            const isFirst = idx === 0;
+                                            const isLast  = idx === arr.length - 1;
+
+                                            return (
+                                                <div key={idx} className="flex gap-4">
+                                                    {/* Line + dot */}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1 ${cfg.dot}`} />
+                                                        {!isLast && (
+                                                            <div className="w-px flex-1 bg-gray-100 my-1" />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Content */}
+                                                    <div className={`flex-1 pb-5 ${isLast ? "pb-0" : ""}`}>
+                                                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                                            <p className="text-sm font-semibold text-shopici-black">
+                                                                {checkpoint.location}
+                                                            </p>
+                                                            {isFirst && (
+                                                                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${cfg.bg} ${cfg.color}`}>
+                                                                    {checkpoint.status}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                                                            <Calendar className="w-3 h-3" />
+                                                            {formatDate(checkpoint.time)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Customer info ─────────────────────────────────── */}
+                        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                            <div className="px-5 py-4 border-b border-gray-100">
+                                <h3 className="text-sm font-bold text-shopici-black flex items-center gap-2">
+                                    <User className="w-4 h-4 text-shopici-coral" />
+                                    Informations de livraison
+                                </h3>
+                            </div>
+                            <div className="divide-y divide-gray-50">
+                                {[
+                                    { icon: <User className="w-3.5 h-3.5" />,     label: "Nom",              value: order.customer.name },
+                                    { icon: <Phone className="w-3.5 h-3.5" />,    label: "Téléphone",        value: order.customer.phone },
+                                    { icon: <MapPin className="w-3.5 h-3.5" />,   label: "Zone de livraison",value: order.customer.deliveryZone },
+                                    { icon: <Clock className="w-3.5 h-3.5" />,    label: "Créneau d'appel",  value: formatCallTime(order.customer.callTime) },
+                                ].map(({ icon, label, value }) => (
+                                    <div key={label} className="flex items-center gap-4 px-5 py-3.5">
+                                        <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                                            {icon}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-gray-400">{label}</p>
+                                            <p className="text-sm font-semibold text-shopici-black truncate">{value}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {order.customer.hasWhatsApp && (
+                                <div className="mx-5 mb-4 mt-1 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                                    <MessageCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                    <p className="text-xs font-medium text-green-700">
+                                        Ce client est disponible sur WhatsApp
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Contact card ─────────────────────────────────── */}
+                        {/* Only renders when storeConfig is available and phone is set */}
+                        {phone && (
+                            <div className="bg-shopici-black rounded-2xl p-5">
+                                <p className="text-xs text-white/40 mb-1">Besoin d'aide ?</p>
+                                <p className="text-sm font-semibold text-white mb-4">
+                                    Notre équipe est disponible pour vous aider.
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <a
+                                        href={`tel:${phone}`}
+                                        className="flex items-center justify-center gap-2 py-3 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-xl transition-colors"
+                                    >
+                                        <Phone className="w-4 h-4" />
+                                        Appeler
+                                    </a>
+                                    <a
+                                        href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-xl transition-colors"
+                                    >
+                                        <MessageCircle className="w-4 h-4" />
+                                        WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Empty state ───────────────────────────────────────────── */}
+                {!order && !error && !isSearching && !orderLoading && (
+                    <div className="flex flex-col items-center text-center py-16 px-4">
+                        <div className="w-16 h-16 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-5 shadow-sm">
+                            <Search className="w-7 h-7 text-gray-300" />
+                        </div>
+                        <p className="text-base font-bold text-shopici-black mb-2">
+                            Entrez votre numéro de suivi
+                        </p>
+                        <p className="text-sm text-gray-400 max-w-xs mb-6">
+                            Localisez votre colis en temps réel grâce à votre numéro de commande.
+                        </p>
+                        <div className="inline-flex items-center gap-2 text-xs text-gray-400 bg-gray-100 px-3 py-2 rounded-lg">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            Le numéro vous a été envoyé par SMS
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* Customer Info */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-shopici-black mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-shopici-coral" />
-                Informations de livraison
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-shopici-gray/10 rounded-xl">
-                  <p className="text-sm text-shopici-charcoal mb-1">Nom du client</p>
-                  <p className="font-semibold text-shopici-black">{order.customer.name}</p>
-                </div>
-
-                <div className="p-4 bg-shopici-gray/10 rounded-xl">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Phone className="w-4 h-4 text-shopici-charcoal" />
-                    <p className="text-sm text-shopici-charcoal">Téléphone</p>
-                  </div>
-                  <p className="font-semibold text-shopici-black">{order.customer.phone}</p>
-                </div>
-
-                <div className="p-4 bg-shopici-gray/10 rounded-xl">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="w-4 h-4 text-shopici-charcoal" />
-                    <p className="text-sm text-shopici-charcoal">Zone de livraison</p>
-                  </div>
-                  <p className="font-semibold text-shopici-black">{order.customer.deliveryZone}</p>
-                </div>
-
-                <div className="p-4 bg-shopici-gray/10 rounded-xl">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Clock className="w-4 h-4 text-shopici-charcoal" />
-                    <p className="text-sm text-shopici-charcoal">Créneau d'appel</p>
-                  </div>
-                  <p className="font-semibold text-shopici-black">{formatCallTime(order.customer.callTime)}</p>
-                </div>
-              </div>
-
-              {/* WhatsApp Badge */}
-              {order.customer.hasWhatsApp && (
-                <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
-                  <MessageCircle className="w-5 h-5 text-green-600" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-green-800">Client disponible sur WhatsApp</p>
-                    <p className="text-sm text-green-700">Notre équipe peut le contacter via WhatsApp</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Help Section */}
-            <div className="bg-gradient-to-br from-shopici-blue/10 to-shopici-coral/10 rounded-2xl p-6 border-2 border-shopici-blue/20">
-              <h3 className="text-lg font-bold text-shopici-black mb-3">Besoin d'aide ?</h3>
-              <p className="text-shopici-charcoal mb-4">
-                Si vous avez des questions sur votre commande, n'hésitez pas à nous contacter.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a
-                  href="tel:+237"
-                  className="flex-1 px-4 py-3 bg-shopici-black hover:bg-shopici-charcoal text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-5 h-5" />
-                  Appeler
-                </a>
-                <a
-                  href="https://wa.me/237"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  WhatsApp
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* No Search Yet State */}
-        {!order && !error && !isSearching && (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <div className="w-24 h-24 bg-shopici-gray/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search className="w-12 h-12 text-shopici-charcoal" />
-            </div>
-            <h3 className="text-2xl font-bold text-shopici-black mb-3">
-              Suivez votre colis en temps réel
-            </h3>
-            <p className="text-shopici-charcoal mb-6 max-w-md mx-auto">
-              Entrez votre numéro de suivi ci-dessus pour voir l'état actuel de votre livraison
-            </p>
-            <div className="inline-flex items-center gap-2 text-sm text-shopici-charcoal bg-shopici-gray/10 px-4 py-2 rounded-lg">
-              <AlertCircle className="w-4 h-4" />
-              Le numéro de suivi vous a été envoyé par SMS
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+    );
 }

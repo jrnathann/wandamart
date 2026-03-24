@@ -9,14 +9,14 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
-import { i } from "framer-motion/client";
-import { storeConfig } from "@/data/configData";
+import { useConfig } from "@/context/ConfigContext";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -26,6 +26,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const storeConfig = useConfig();
+  const logoLoading = !storeConfig;
 
   if (status === "loading") {
     return (
@@ -43,13 +45,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  // ✅ Type-safe user object
   const user = {
     name: session.user.name || "Admin",
     email: session.user.email || "",
     avatar: session.user.image || "/default-avatar.png",
   };
-  console.log("here is the user", session)
+
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
   };
@@ -59,33 +60,34 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { icon: <ShoppingBag size={20} />, label: "Orders", href: "/admin/orders" },
     { icon: <Package size={20} />, label: "Products", href: "/admin/products" },
     { icon: <Users size={20} />, label: "Customers", href: "/admin/customers" },
+    { icon: <Settings size={20} />, label: "Settings", href: "/admin/settings" },
   ];
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-shopici-gray/20 via-shopici-blue/5 to-shopici-coral/5">
+
       {/* Desktop Sidebar */}
-      <aside className="
-  hidden md:flex
-  fixed top-0 left-0
-  h-screen w-72
-  flex-col
-  bg-white
-  border-r-2 border-shopici-charcoal/10
-  shadow-xl
-  z-40
-">
-        {/* Logo & Brand */}
-        <div className="p-4 border-b-2 border-shopici-charcoal/10">
-          <div className="relative w-full h-12">
-            <Image
-              src={storeConfig.logo}
-              alt={`${storeConfig.name} Logo`}
-              fill
-              className="object-contain"
-              priority
-              draggable="false"
-            />
-          </div>
+      <aside className="hidden md:flex fixed top-0 left-0 h-screen w-72 flex-col bg-white border-r-2 border-shopici-charcoal/10 shadow-xl z-40">
+
+        {/* Logo */}
+        <div className="p-4 border-b-2 border-shopici-charcoal/10 flex items-center justify-center h-20">
+          {logoLoading ? (
+            <div className="w-full h-12 bg-gray-200 animate-pulse rounded-lg" />
+          ) : storeConfig.logo ? (
+            <div className="relative w-full h-12">
+              <Image
+                src={storeConfig.logo}
+                alt={`${storeConfig.name} Logo`}
+                fill
+                className="object-contain"
+                priority
+                draggable={false}
+                unoptimized
+              />
+            </div>
+          ) : (
+            <span className="font-bold text-xl text-shopici-black">{storeConfig.name}</span>
+          )}
         </div>
 
         {/* User Profile */}
@@ -100,12 +102,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-shopici-black truncate">
-                {user.name}
-              </p>
-              <p className="text-xs text-shopici-charcoal  truncate">
-                {user.email}
-              </p>
+              <p className="font-semibold text-sm text-shopici-black truncate">{user.name}</p>
+              <p className="text-xs text-shopici-charcoal truncate">{user.email}</p>
             </div>
           </div>
         </div>
@@ -123,14 +121,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               href={item.href}
               isActive={
                 item.exact
-                  ? pathname === item.href              // Dashboard: only exact match
-                  : pathname === item.href || pathname.startsWith(item.href + '/')  // Others: exact + nested
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(item.href + '/')
               }
             />
           ))}
         </nav>
 
-        {/* Logout Button */}
+        {/* Logout */}
         <div className="p-4 border-t-2 border-shopici-charcoal/10">
           <button
             onClick={handleLogout}
@@ -143,16 +141,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white  border-b-2 border-shopici-charcoal/10 shadow-lg">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b-2 border-shopici-charcoal/10 shadow-lg">
         <div className="flex items-center justify-between p-4">
           <div className="relative w-32 h-8">
-            <Image
-                            src={storeConfig.logo}
-                            alt={`${storeConfig.name} Logo`}
-              fill
-              className="object-contain"
-              priority
-            />
+            {logoLoading ? (
+              <div className="w-32 h-8 bg-gray-200 animate-pulse rounded" />
+            ) : storeConfig.logo ? (
+              <Image
+                src={storeConfig.logo}
+                alt={`${storeConfig.name} Logo`}
+                fill
+                className="object-contain"
+                priority
+                unoptimized
+              />
+            ) : (
+              <span className="font-bold text-lg text-shopici-black">{storeConfig.name}</span>
+            )}
           </div>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -170,22 +175,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="md:hidden fixed top-[73px] left-0 right-0 bottom-0 bg-white  z-40 overflow-y-auto animate-in slide-in-from-left duration-300">
+          <div className="md:hidden fixed top-[73px] left-0 right-0 bottom-0 bg-white z-40 overflow-y-auto animate-in slide-in-from-left duration-300">
             {/* Mobile User Profile */}
             <div className="p-4 border-b-2 border-shopici-charcoal/10 bg-gradient-to-br from-shopici-blue/5 to-shopici-coral/5">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-shopici-charcoal/20">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50">
                 <img
                   src={user.avatar}
                   alt={user.name}
                   className="w-12 h-12 rounded-full border-2 border-shopici-blue/30"
                 />
                 <div>
-                  <p className="font-semibold text-sm text-shopici-black dark:text-shopici-foreground">
-                    {user.name}
-                  </p>
-                  <p className="text-xs text-shopici-charcoal">
-                    {user.email}
-                  </p>
+                  <p className="font-semibold text-sm text-shopici-black">{user.name}</p>
+                  <p className="text-xs text-shopici-charcoal">{user.email}</p>
                 </div>
               </div>
             </div>
@@ -200,8 +201,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     href={item.href}
                     isActive={
                       item.exact
-                        ? pathname === item.href              // Dashboard: only exact match
-                        : pathname === item.href || pathname.startsWith(item.href + '/')  // Others: exact + nested
+                        ? pathname === item.href
+                        : pathname === item.href || pathname.startsWith(item.href + '/')
                     }
                   />
                 </div>
@@ -247,11 +248,11 @@ function NavItem({
     <Link
       href={href}
       className={`
-        flex items-center justify-between gap-3 px-4 py-3 rounded-xl cursor-pointer 
+        flex items-center justify-between gap-3 px-4 py-3 rounded-xl cursor-pointer
         transition-all duration-200 group relative overflow-hidden
         ${isActive
           ? 'bg-gradient-to-r from-shopici-blue/10 to-shopici-coral/10 text-shopici-blue border-2 border-shopici-blue/30 shadow-sm'
-          : 'text-shopici-charcoal  hover:bg-shopici-gray/10 border-2 border-transparent hover:border-shopici-charcoal/10'
+          : 'text-shopici-charcoal hover:bg-shopici-gray/10 border-2 border-transparent hover:border-shopici-charcoal/10'
         }
       `}
     >
@@ -259,13 +260,11 @@ function NavItem({
         <div className={`${isActive ? 'scale-110' : 'group-hover:scale-110'} transition-transform`}>
           {icon}
         </div>
-        <span className={`font-semibold ${isActive ? 'text-shopici-black dark:text-shopici-foreground' : ''}`}>
+        <span className={`font-semibold ${isActive ? 'text-shopici-black' : ''}`}>
           {label}
         </span>
       </div>
-      {isActive && (
-        <ChevronRight size={18} className="animate-pulse" />
-      )}
+      {isActive && <ChevronRight size={18} className="animate-pulse" />}
       {isActive && (
         <div className="absolute inset-0 bg-gradient-to-r from-shopici-blue/5 to-shopici-coral/5 animate-pulse" />
       )}

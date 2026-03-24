@@ -4,43 +4,52 @@
  * app/order/[id]/PaymentPoller.tsx
  *
  * Polls GET /api/payment/status/[id] every 2s.
- * - While paid === false: shows a branded waiting screen
- * - Once paid === true: renders the full success UI passed as children
  *
- * Max wait: 2 minutes (60 attempts × 2s). After that, shows a fallback
- * with a manual refresh button — the webhook may still arrive.
+ * Screens:
+ *   CREATED / PENDING / null  → spinner (waiting for customer to confirm)
+ *   SUCCESSFUL / paid: true   → success UI (children)
+ *   FAILED                    → payment failed screen
+ *   EXPIRED                   → session expired screen
+ *   timeout (2 min)           → manual refresh fallback
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { getOrderById } from "@/helper/order";
-import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, RefreshCw, AlertCircle, XCircle, Clock } from "lucide-react";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_ATTEMPTS     = 60; // 2 minutes
 
+type FapshiStatus = "CREATED" | "PENDING" | "SUCCESSFUL" | "FAILED" | "EXPIRED" | null;
+
 interface Props {
-    orderId:    string;
+    orderId:     string;
     initialPaid: boolean;
-    children:   React.ReactNode; // the full success UI
+    children:    React.ReactNode;
 }
 
 export function PaymentPoller({ orderId, initialPaid, children }: Props) {
-    const [paid,     setPaid]     = useState(initialPaid);
-    const [attempts, setAttempts] = useState(0);
-    const [timedOut, setTimedOut] = useState(false);
+    const [paid,          setPaid]          = useState(initialPaid);
+    const [fapshiStatus,  setFapshiStatus]  = useState<FapshiStatus>(null);
+    const [attempts,      setAttempts]      = useState(0);
+    const [timedOut,      setTimedOut]      = useState(false);
 
     const poll = useCallback(async () => {
         try {
-            const order = await getOrderById(orderId);
-            if (order.paid) setPaid(true);
+            const res  = await fetch(`/api/payment/status/${orderId}`);
+            const data = await res.json();
+
+            setFapshiStatus(data.fapshiStatus ?? null);
+            if (data.paid) setPaid(true);
         } catch {
             // network hiccup — keep trying
         }
     }, [orderId]);
 
     useEffect(() => {
-        // Already confirmed on server — no need to poll
         if (paid) return;
+
+        // Stop polling on terminal statuses — no point continuing
+        if (fapshiStatus === "FAILED" || fapshiStatus === "EXPIRED") return;
 
         const interval = setInterval(() => {
             setAttempts((prev) => {
@@ -55,12 +64,82 @@ export function PaymentPoller({ orderId, initialPaid, children }: Props) {
         }, POLL_INTERVAL_MS);
 
         return () => clearInterval(interval);
-    }, [paid, poll]);
+    }, [paid, fapshiStatus, poll]);
 
-    // ── Already paid — show success UI ───────────────────────────────────────
+    // ── SUCCESSFUL ────────────────────────────────────────────────────────────
     if (paid) return <>{children}</>;
 
-    // ── Timed out — show fallback ─────────────────────────────────────────────
+    // ── FAILED ────────────────────────────────────────────────────────────────
+    if (fapshiStatus === "FAILED") {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="max-w-sm w-full bg-white rounded-3xl shadow-sm p-8 text-center space-y-5">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                        <XCircle className="w-8 h-8 text-red-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900">
+                            Paiement échoué
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                            Votre paiement n'a pas abouti. Cela peut être dû à un code PIN
+                            incorrect, un solde insuffisant ou un refus de votre part.
+                        </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-2xl px-4 py-3">
+                        <p className="text-xs text-gray-400">Commande</p>
+                        <p className="text-sm font-bold font-mono text-gray-800">#{orderId}</p>
+                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full py-3.5 bg-shopici-coral hover:brightness-105 text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all"
+                    >
+                        <RefreshCw className="w-4 h-4" /> Réessayer le paiement
+                    </button>
+                    <p className="text-xs text-gray-400">
+                        Contactez-nous si le montant a été débité par erreur.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // ── EXPIRED ───────────────────────────────────────────────────────────────
+    if (fapshiStatus === "EXPIRED") {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="max-w-sm w-full bg-white rounded-3xl shadow-sm p-8 text-center space-y-5">
+                    <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
+                        <Clock className="w-8 h-8 text-orange-400" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900">
+                            Session expirée
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                            Le délai de paiement est dépassé. Aucun montant n'a été débité.
+                            Retournez au panier pour relancer une nouvelle session de paiement.
+                        </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-2xl px-4 py-3">
+                        <p className="text-xs text-gray-400">Commande</p>
+                        <p className="text-sm font-bold font-mono text-gray-800">#{orderId}</p>
+                    </div>
+                    <button
+                        onClick={() => window.location.href = "/"}
+                        className="w-full py-3.5 bg-shopici-coral hover:brightness-105 text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all"
+                    >
+                        <RefreshCw className="w-4 h-4" /> Retour à l'accueil
+                    </button>
+                    <p className="text-xs text-gray-400">
+                        Contactez-nous avec votre numéro de commande si vous avez besoin d'aide.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // ── TIMED OUT (2 min, still no terminal status) ───────────────────────────
     if (timedOut) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -96,7 +175,7 @@ export function PaymentPoller({ orderId, initialPaid, children }: Props) {
         );
     }
 
-    // ── Waiting — spinner screen ──────────────────────────────────────────────
+    // ── CREATED / PENDING / null — spinner ────────────────────────────────────
     const elapsed = attempts * 2;
 
     return (
@@ -105,9 +184,7 @@ export function PaymentPoller({ orderId, initialPaid, children }: Props) {
 
                 {/* Animated ring */}
                 <div className="relative w-24 h-24 mx-auto">
-                    {/* Outer pulse */}
                     <div className="absolute inset-0 rounded-full bg-shopici-coral/10 animate-ping" />
-                    {/* Inner circle */}
                     <div className="relative w-24 h-24 bg-shopici-black rounded-full flex items-center justify-center shadow-xl shadow-shopici-coral/20">
                         <Loader2 className="w-10 h-10 text-shopici-coral animate-spin" />
                     </div>
@@ -123,7 +200,7 @@ export function PaymentPoller({ orderId, initialPaid, children }: Props) {
                     </p>
                 </div>
 
-                {/* USSD codes — compact */}
+                {/* USSD codes */}
                 <div className="grid grid-cols-2 gap-2">
                     <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-3 text-center">
                         <p className="text-xs font-bold text-yellow-800 mb-1">MTN MoMo</p>
@@ -156,7 +233,6 @@ export function PaymentPoller({ orderId, initialPaid, children }: Props) {
                     <p className="text-sm font-bold font-mono text-gray-800">#{orderId}</p>
                 </div>
 
-                {/* Timer */}
                 <p className="text-xs text-gray-400">
                     En attente de confirmation… {elapsed}s
                 </p>

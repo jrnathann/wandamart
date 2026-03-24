@@ -1,46 +1,84 @@
+// components/admin/orders/StatusStepper.tsx
 import { Check } from "lucide-react";
 import type { OrderStatus, TrackingCheckpoint } from "@/types/OrderTracking";
 
 interface StatusStepperProps {
-  currentStatus: OrderStatus;
-  checkpoints?: TrackingCheckpoint[];
+    currentStatus: OrderStatus;
+    checkpoints?: TrackingCheckpoint[];
 }
 
 export default function StatusStepper({ currentStatus, checkpoints = [] }: StatusStepperProps) {
-  const statuses: OrderStatus[] = ["En préparation", "En route", "Livré"];
+    const statuses: OrderStatus[] = ["En préparation", "En route", "Livré"];
 
-  // Determine the latest status (checkpoint takes priority)
-  const latestStatus = checkpoints.length > 0
-    ? checkpoints.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()).slice(-1)[0].status
-    : currentStatus;
+    // Derive latest status from checkpoints without mutating the array
+    const latestStatus: OrderStatus =
+        checkpoints.length > 0
+            ? [...checkpoints].sort(
+                  (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+              )[0].status
+            : currentStatus;
 
-  const currentIndex = statuses.indexOf(latestStatus);
+    const currentIndex = statuses.indexOf(latestStatus);
 
-  return (
-    <div className="bg-white rounded-xl p-4 border border-slate-200">
-      <h3 className="text-sm font-bold text-shopici-black mb-4">Statut de la commande</h3>
-      <div className="flex items-center justify-between">
-        {statuses.map((status, idx) => {
-          const isCompleted = idx < currentIndex; // steps before current
-          const isActive = idx === currentIndex;  // current step
-          const isDelivered = latestStatus === "Livré"; // special case
+    const stepColors: Record<OrderStatus, { bg: string; ring: string }> = {
+        "En préparation": { bg: "bg-orange-500", ring: "ring-orange-200" },
+        "En route":       { bg: "bg-blue-500",   ring: "ring-blue-200"   },
+        "Livré":          { bg: "bg-green-500",  ring: "ring-green-200"  },
+        "Annulé":         { bg: "bg-red-400",    ring: "ring-red-200"    },
+    };
 
-          return (
-            <div key={status} className="flex flex-col items-center flex-1">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                isDelivered || isCompleted
-                  ? 'bg-green-500 text-white'      // completed steps or delivered
-                  : isActive
-                  ? 'bg-gradient-to-br from-shopici-blue to-shopici-coral text-white shadow-lg' // active
-                  : 'bg-slate-200 text-slate-400' // pending
-              }`}>
-                <Check className="w-5 h-5" />
-              </div>
-              <p className="text-xs text-shopici-charcoal mt-2 text-center">{status}</p>
+    return (
+        <div className="bg-white rounded-xl p-4 border border-slate-200 mb-4">
+            <h3 className="text-sm font-bold text-shopici-black mb-4">Statut de la commande</h3>
+
+            <div className="relative flex items-center justify-between">
+                {/* Connecting line behind the dots */}
+                <div className="absolute left-5 right-5 top-5 h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
+
+                {statuses.map((status, idx) => {
+                    const isCompleted = idx < currentIndex;
+                    const isActive    = idx === currentIndex;
+                    const colors      = stepColors[status];
+
+                    return (
+                        <div key={status} className="relative z-10 flex flex-col items-center flex-1">
+                            <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 border-white transition-all duration-300 ${
+                                    isCompleted
+                                        ? "bg-green-500 ring-2 ring-green-200"
+                                        : isActive
+                                        ? `${colors.bg} ring-2 ${colors.ring} shadow-md`
+                                        : "bg-slate-200"
+                                }`}
+                            >
+                                <Check
+                                    className={`w-5 h-5 transition-colors ${
+                                        isCompleted || isActive ? "text-white" : "text-slate-400"
+                                    }`}
+                                />
+                            </div>
+                            <p
+                                className={`text-xs mt-2 text-center font-medium transition-colors ${
+                                    isActive
+                                        ? "text-shopici-black"
+                                        : isCompleted
+                                        ? "text-green-600"
+                                        : "text-slate-400"
+                                }`}
+                            >
+                                {status}
+                            </p>
+                        </div>
+                    );
+                })}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+
+            {/* Cancelled state warning */}
+            {latestStatus === "Annulé" && (
+                <div className="mt-3 px-3 py-2 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600 font-medium text-center">
+                    Cette commande a été annulée
+                </div>
+            )}
+        </div>
+    );
 }

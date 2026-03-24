@@ -1,12 +1,8 @@
 "use client"
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
 import Homepage from "@/components/Home";
 import FAQSection from "@/components/Faqs";
-import Footer from "@/components/Footer";
-import CartDrawer from "@/components/CartDrawer";
-import CartToast from "@/components/CartToast";
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);

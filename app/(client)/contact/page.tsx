@@ -1,9 +1,12 @@
 "use client"
 import { useState } from "react";
 import { Mail, Phone, MapPin, Facebook, Send, MessageSquare, Clock } from "lucide-react";
-import { storeConfig } from "@/data/configData";
+import { useConfig } from "@/context/ConfigContext";
 
 export default function ContactPage() {
+  const storeConfig = useConfig();
+  const loading = !storeConfig;
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,34 +19,20 @@ export default function ContactPage() {
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (!res.ok) throw new Error("Erreur lors de l'envoi du message");
-
       setSubmitStatus("success");
-
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: ""
-      });
-
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       setTimeout(() => setSubmitStatus("idle"), 5000);
     } catch (err) {
       console.error(err);
@@ -55,7 +44,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="bg-gradient-to-br from-shopici-black to-text-[#414141] text-white py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Contactez-nous</h1>
@@ -81,34 +70,46 @@ export default function ContactPage() {
 
             {/* Contact Cards */}
             <div className="space-y-4">
+              {/* Address */}
               <div className="bg-white border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-6 h-6 text-shopici-coral" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-semibold text-shopici-black mb-1">Adresse</h3>
-                    <p className="text-sm text-[#414141]">
-                      {storeConfig.contact.address}
-                    </p>
+                    {loading ? (
+                      <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
+                    ) : (
+                      <p className="text-sm text-[#414141]">{storeConfig.contact.address}</p>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Phone */}
               <div className="bg-white border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center flex-shrink-0">
                     <Phone className="w-6 h-6 text-shopici-coral" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-semibold text-shopici-black mb-1">Téléphone</h3>
-                    <a href="tel:+237" className="text-sm text-[#414141] hover:text-shopici-coral transition-colors">
-                      {storeConfig.contact.phone}
-                    </a>
+                    {loading ? (
+                      <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
+                    ) : (
+                      <a
+                        href={`tel:${storeConfig.contact.phone}`}
+                        className="text-sm text-[#414141] hover:text-shopici-coral transition-colors"
+                      >
+                        {storeConfig.contact.phone}
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Hours — static, no skeleton needed */}
               <div className="bg-white border border-shopici-gray/30 rounded-xl p-5 hover:border-shopici-blue/50 transition-all duration-300 hover:shadow-lg">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-shopici-coral/10 flex items-center justify-center flex-shrink-0">
@@ -116,12 +117,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-shopici-black mb-1">Horaires</h3>
-                    <p className="text-sm text-[#414141]">
-                      Lun - Sam: 8h00 - 18h00
-                    </p>
-                    <p className="text-sm text-[#414141]">
-                      Dimanche: Fermé
-                    </p>
+                    <p className="text-sm text-[#414141]">Lun - Sam: 8h00 - 18h00</p>
+                    <p className="text-sm text-[#414141]">Dimanche: Fermé</p>
                   </div>
                 </div>
               </div>
@@ -130,19 +127,23 @@ export default function ContactPage() {
             {/* Social Media */}
             <div className="bg-gradient-to-br from-shopici-blue/10 to-shopici-coral/10 rounded-xl p-6">
               <h3 className="font-semibold text-shopici-black mb-4">Suivez-nous</h3>
-              <a
-                href={`${storeConfig.social.facebook}?ref=header`} 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-shopici-black hover:bg-shopici-blue text-white rounded-lg transition-all duration-300 transform hover:scale-105"
-              >
-                <Facebook className="w-5 h-5" />
-                <span className="font-medium">Facebook</span>
-              </a>
+              {loading ? (
+                <div className="h-10 w-32 bg-gray-200 animate-pulse rounded-lg" />
+              ) : (
+                <a
+                  href={`${storeConfig.social.facebook}?ref=header`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-shopici-black hover:bg-shopici-blue text-white rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  <Facebook className="w-5 h-5" />
+                  <span className="font-medium">Facebook</span>
+                </a>
+              )}
             </div>
           </div>
 
-          {/* Contact Form */}
+          {/* Contact Form — no config dependency, render immediately */}
           <div className="lg:col-span-2">
             <div className="bg-white border border-shopici-gray/30 rounded-2xl p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
@@ -159,6 +160,14 @@ export default function ContactPage() {
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-green-800 text-sm font-medium">
                     ✓ Message envoyé avec succès ! Nous vous contacterons bientôt.
+                  </p>
+                </div>
+              )}
+
+              {submitStatus === "error" && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 text-sm font-medium">
+                    ✗ Une erreur est survenue. Veuillez réessayer.
                   </p>
                 </div>
               )}
@@ -180,7 +189,6 @@ export default function ContactPage() {
                       placeholder="Votre nom"
                     />
                   </div>
-
                   <div>
                     <label htmlFor="email" className="block text-sm font-semibold text-shopici-black mb-2">
                       Email *
@@ -213,7 +221,6 @@ export default function ContactPage() {
                       placeholder="+237 XXX XXX XXX"
                     />
                   </div>
-
                   <div>
                     <label htmlFor="subject" className="block text-sm font-semibold text-shopici-black mb-2">
                       Sujet *
@@ -272,6 +279,7 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

@@ -3,14 +3,14 @@
 /**
  * app/order/[id]/ReceiptButton.tsx
  *
- * Client component — uses jsPDF to generate a PDF receipt in the browser.
- * No server round-trip needed. Install: npm install jspdf
+ * Renders a hidden HTML receipt, screenshots it with html2canvas,
+ * then saves it as a PDF via jsPDF.
+ *
+ * Install: npm install jspdf html2canvas
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Download, Loader2 } from "lucide-react";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface OrderItem {
     name:     string;
@@ -34,8 +34,6 @@ interface OrderData {
     items: OrderItem[];
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function fmt(n: number) {
     return new Intl.NumberFormat("fr-FR").format(n);
 }
@@ -47,163 +45,214 @@ function fmtDate(d: string) {
     }).format(new Date(d));
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── The receipt HTML — styled inline so html2canvas captures it correctly ─────
+
+function ReceiptHTML({ order }: { order: OrderData }) {
+    const payDate = order.paidAt ? fmtDate(order.paidAt) : fmtDate(order.createdAt);
+
+    return (
+        <div style={{
+            width: "794px",           // A4 at 96dpi
+            background: "#ffffff",
+            fontFamily: "'Segoe UI', system-ui, sans-serif",
+            color: "#111",
+        }}>
+
+            {/* ── Header ── */}
+            <div style={{
+                background: "#121212",
+                padding: "32px 40px 28px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+            }}>
+                <div>
+                    <div style={{ fontSize: 28, fontWeight: 900, color: "#fff", letterSpacing: -1 }}>
+                        SHOPICI
+                    </div>
+                    <div style={{ fontSize: 11, color: "#FF6B35", fontWeight: 700, letterSpacing: 3, marginTop: 4 }}>
+                        REÇU DE PAIEMENT
+                    </div>
+                </div>
+                <div style={{
+                    background: "#FF6B35",
+                    borderRadius: 8,
+                    padding: "6px 14px",
+                    color: "#fff",
+                    fontSize: 12,
+                    fontWeight: 700,
+                }}>
+                    #{order.id}
+                </div>
+            </div>
+
+            {/* ── Amount hero ── */}
+            <div style={{
+                background: "#f7f7f7",
+                padding: "24px 40px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: "1px solid #ebebeb",
+            }}>
+                <div>
+                    <div style={{ fontSize: 11, color: "#999", fontWeight: 600, letterSpacing: 2, marginBottom: 4 }}>
+                        MONTANT PAYÉ
+                    </div>
+                    <div style={{ fontSize: 36, fontWeight: 900, color: "#FF6B35", letterSpacing: -1 }}>
+                        {fmt(order.total)} <span style={{ fontSize: 18, fontWeight: 700 }}>XAF</span>
+                    </div>
+                </div>
+                <div style={{
+                    background: "#22c55e",
+                    borderRadius: 100,
+                    padding: "8px 20px",
+                    color: "#fff",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    letterSpacing: 1,
+                }}>
+                    ✓ PAYÉ
+                </div>
+            </div>
+
+            {/* ── Payment meta ── */}
+            <div style={{
+                padding: "20px 40px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 16,
+                borderBottom: "1px solid #ebebeb",
+            }}>
+                <MetaField label="Méthode de paiement" value="Mobile Money" />
+                <MetaField label="Date de paiement"     value={payDate} />
+            </div>
+
+            {/* ── Customer info ── */}
+            <div style={{ padding: "20px 40px 0", borderBottom: "1px solid #ebebeb" }}>
+                <SectionTitle label="INFORMATIONS CLIENT" />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: "12px 0 20px" }}>
+                    <MetaField label="Nom complet"  value={order.customer.name} />
+                    <MetaField label="Téléphone"    value={order.customer.phone} />
+                    <MetaField label="Zone de livraison" value={order.customer.deliveryZone} />
+                </div>
+            </div>
+
+            {/* ── Items table ── */}
+            <div style={{ padding: "20px 40px 0" }}>
+                <SectionTitle label="DÉTAIL DE LA COMMANDE" />
+                <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12 }}>
+                    <thead>
+                        <tr style={{ background: "#121212", color: "#fff" }}>
+                            <th style={thStyle("left")}>Produit</th>
+                            <th style={thStyle("center")}>Qté</th>
+                            <th style={thStyle("right")}>Prix unit.</th>
+                            <th style={thStyle("right")}>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {order.items.map((item, i) => (
+                            <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f9f9f9" }}>
+                                <td style={tdStyle("left")}>{item.name}</td>
+                                <td style={tdStyle("center")}>{item.quantity}</td>
+                                <td style={tdStyle("right")}>{fmt(item.price)} XAF</td>
+                                <td style={{ ...tdStyle("right"), fontWeight: 700 }}>
+                                    {fmt(item.price * item.quantity)} XAF
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr style={{ background: "#FF6B35", color: "#fff" }}>
+                            <td colSpan={3} style={{ ...tdStyle("left"), fontWeight: 800, fontSize: 13 }}>TOTAL</td>
+                            <td style={{ ...tdStyle("right"), fontWeight: 900, fontSize: 14 }}>
+                                {fmt(order.total)} XAF
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            {/* ── Footer ── */}
+            <div style={{
+                background: "#121212",
+                marginTop: 32,
+                padding: "18px 40px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+            }}>
+                <div style={{ color: "#666", fontSize: 11 }}>
+                    Shopici — votre boutique en ligne de confiance
+                </div>
+                <div style={{ color: "#FF6B35", fontSize: 11, fontWeight: 600 }}>
+                    Généré le {fmtDate(new Date().toISOString())}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── Small helpers ──────────────────────────────────────────────────────────────
+
+function SectionTitle({ label }: { label: string }) {
+    return (
+        <div style={{ fontSize: 10, fontWeight: 800, color: "#FF6B35", letterSpacing: 2 }}>
+            {label}
+        </div>
+    );
+}
+
+function MetaField({ label, value }: { label: string; value: string }) {
+    return (
+        <div>
+            <div style={{ fontSize: 10, color: "#999", fontWeight: 600, letterSpacing: 1, marginBottom: 3 }}>
+                {label.toUpperCase()}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#111" }}>{value}</div>
+        </div>
+    );
+}
+
+function thStyle(align: "left" | "center" | "right"): React.CSSProperties {
+    return { padding: "10px 12px", fontSize: 10, fontWeight: 700, textAlign: align, letterSpacing: 1 };
+}
+
+function tdStyle(align: "left" | "center" | "right"): React.CSSProperties {
+    return { padding: "10px 12px", fontSize: 12, textAlign: align, color: "#222", borderBottom: "1px solid #ebebeb" };
+}
+
+// ── Button ────────────────────────────────────────────────────────────────────
 
 export function ReceiptButton({ order }: { order: OrderData }) {
     const [loading, setLoading] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const handleDownload = async () => {
         setLoading(true);
         try {
-            // Dynamic import — only loads jsPDF when the button is clicked
-            const { jsPDF } = await import("jspdf");
+            const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+                import("html2canvas"),
+                import("jspdf"),
+            ]);
 
-            const doc  = new jsPDF({ unit: "mm", format: "a4" });
-            const W    = 210;   // A4 width mm
-            const pad  = 18;    // left/right margin
-            let   y    = 0;     // current Y cursor
+            const el = containerRef.current!;
 
-            // ── Palette ───────────────────────────────────────────────────────
-            const CORAL  = [255, 107, 53]  as [number, number, number];
-            const BLACK  = [18,  18,  18]  as [number, number, number];
-            const GRAY   = [120, 120, 120] as [number, number, number];
-            const LGRAY  = [245, 245, 245] as [number, number, number];
-            const WHITE  = [255, 255, 255] as [number, number, number];
-            const GREEN  = [34,  197, 94]  as [number, number, number];
-
-            // ── Header band ───────────────────────────────────────────────────
-            doc.setFillColor(...BLACK);
-            doc.rect(0, 0, W, 40, "F");
-
-            doc.setTextColor(...WHITE);
-            doc.setFontSize(22);
-            doc.setFont("helvetica", "bold");
-            doc.text("SHOPICI", pad, 18);
-
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(...CORAL);
-            doc.text("REÇU DE PAIEMENT", pad, 26);
-
-            // Order ID badge top-right
-            doc.setFillColor(...CORAL);
-            doc.roundedRect(W - pad - 44, 8, 44, 12, 3, 3, "F");
-            doc.setTextColor(...WHITE);
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "bold");
-            doc.text(`#${order.id}`, W - pad - 22, 15.5, { align: "center" });
-
-            y = 48;
-
-            // ── Paid amount hero ───────────────────────────────────────────────
-            doc.setFillColor(...LGRAY);
-            doc.roundedRect(pad, y, W - pad * 2, 24, 4, 4, "F");
-
-            doc.setTextColor(...GRAY);
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "normal");
-            doc.text("MONTANT PAYÉ", pad + 6, y + 8);
-
-            doc.setTextColor(...CORAL);
-            doc.setFontSize(20);
-            doc.setFont("helvetica", "bold");
-            doc.text(`${fmt(order.total)} XAF`, pad + 6, y + 19);
-
-            // Green paid badge
-            doc.setFillColor(...GREEN);
-            doc.roundedRect(W - pad - 30, y + 6, 30, 12, 3, 3, "F");
-            doc.setTextColor(...WHITE);
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "bold");
-            doc.text("PAYÉ ✓", W - pad - 15, y + 13.5, { align: "center" });
-
-            y += 32;
-
-            // ── Payment details row ───────────────────────────────────────────
-            const payDate = order.paidAt ? fmtDate(order.paidAt) : fmtDate(order.createdAt);
-            drawLabelValue(doc, pad, y, "Méthode de paiement", "Mobile Money (Fapshi)", GRAY, BLACK);
-            drawLabelValue(doc, W / 2, y, "Date de paiement", payDate, GRAY, BLACK);
-            y += 14;
-
-            // ── Divider ───────────────────────────────────────────────────────
-            doc.setDrawColor(230, 230, 230);
-            doc.setLineWidth(0.3);
-            doc.line(pad, y, W - pad, y);
-            y += 8;
-
-            // ── Customer info ─────────────────────────────────────────────────
-            sectionTitle(doc, pad, y, "INFORMATIONS CLIENT", CORAL);
-            y += 8;
-
-            drawLabelValue(doc, pad,      y, "Nom complet",  order.customer.name,         GRAY, BLACK);
-            drawLabelValue(doc, W / 2,    y, "Téléphone",    order.customer.phone,         GRAY, BLACK);
-            y += 10;
-            drawLabelValue(doc, pad,      y, "Adresse",      order.customer.deliveryZone,  GRAY, BLACK);
-            y += 14;
-
-            // ── Divider ───────────────────────────────────────────────────────
-            doc.setDrawColor(230, 230, 230);
-            doc.line(pad, y, W - pad, y);
-            y += 8;
-
-            // ── Items table ───────────────────────────────────────────────────
-            sectionTitle(doc, pad, y, "DÉTAIL DE LA COMMANDE", CORAL);
-            y += 8;
-
-            // Table header
-            doc.setFillColor(...BLACK);
-            doc.rect(pad, y, W - pad * 2, 9, "F");
-            doc.setTextColor(...WHITE);
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "bold");
-            doc.text("PRODUIT",  pad + 3,        y + 6);
-            doc.text("QTÉ",      W - pad - 44,   y + 6, { align: "center" });
-            doc.text("P.U",      W - pad - 24,   y + 6, { align: "center" });
-            doc.text("TOTAL",    W - pad - 3,     y + 6, { align: "right" });
-            y += 9;
-
-            // Table rows
-            order.items.forEach((item, i) => {
-                const rowBg = i % 2 === 0 ? WHITE : LGRAY;
-                doc.setFillColor(...rowBg);
-                doc.rect(pad, y, W - pad * 2, 9, "F");
-
-                doc.setTextColor(...BLACK);
-                doc.setFontSize(8);
-                doc.setFont("helvetica", "normal");
-
-                // Truncate long names
-                const name = item.name.length > 38 ? item.name.slice(0, 35) + "..." : item.name;
-                doc.text(name,                      pad + 3,       y + 6);
-                doc.text(String(item.quantity),     W - pad - 44,  y + 6, { align: "center" });
-                doc.text(`${fmt(item.price)}`,      W - pad - 24,  y + 6, { align: "center" });
-                doc.setFont("helvetica", "bold");
-                doc.text(`${fmt(item.price * item.quantity)} XAF`, W - pad - 3, y + 6, { align: "right" });
-                y += 9;
+            const canvas = await html2canvas(el, {
+                scale: 2,           // 2× for crisp output
+                useCORS: true,
+                backgroundColor: "#ffffff",
             });
 
-            // Total row
-            doc.setFillColor(...CORAL);
-            doc.rect(pad, y, W - pad * 2, 10, "F");
-            doc.setTextColor(...WHITE);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            doc.text("TOTAL",                    pad + 3,   y + 7);
-            doc.text(`${fmt(order.total)} XAF`,  W - pad - 3, y + 7, { align: "right" });
-            y += 18;
+            const imgData = canvas.toDataURL("image/png");
 
-            // ── Footer ────────────────────────────────────────────────────────
-            doc.setFillColor(...BLACK);
-            doc.rect(0, 280, W, 17, "F");
-            doc.setTextColor(...GRAY);
-            doc.setFontSize(7.5);
-            doc.setFont("helvetica", "normal");
-            doc.text("Shopici — votre boutique en ligne de confiance", W / 2, 287, { align: "center" });
-            doc.setTextColor(...CORAL);
-            doc.text(`Reçu généré le ${fmtDate(new Date().toISOString())}`, W / 2, 292, { align: "center" });
+            // A4 in mm: 210 × 297
+            const pdf    = new jsPDF({ unit: "mm", format: "a4" });
+            const pdfW   = pdf.internal.pageSize.getWidth();
+            const pdfH   = (canvas.height * pdfW) / canvas.width;
 
-            // ── Save ──────────────────────────────────────────────────────────
-            doc.save(`recu-shopici-${order.id}.pdf`);
+            pdf.addImage(imgData, "PNG", 0, 0, pdfW, pdfH);
+            pdf.save(`recu-shopici-${order.id}.pdf`);
 
         } catch (err) {
             console.error("PDF generation failed:", err);
@@ -214,55 +263,32 @@ export function ReceiptButton({ order }: { order: OrderData }) {
     };
 
     return (
-        <button
-            onClick={handleDownload}
-            disabled={loading}
-            className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
-                loading
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-shopici-coral hover:brightness-105 active:scale-[0.98] text-white shadow-lg shadow-shopici-coral/30"
-            }`}
-        >
-            {loading ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Génération du reçu...</>
-            ) : (
-                <><Download className="w-5 h-5" /> Télécharger le reçu PDF</>
-            )}
-        </button>
+        <>
+            {/* Hidden receipt — off-screen but rendered so html2canvas can read it */}
+            <div
+                style={{ position: "absolute", top: -9999, left: -9999, pointerEvents: "none" }}
+                aria-hidden="true"
+            >
+                <div ref={containerRef}>
+                    <ReceiptHTML order={order} />
+                </div>
+            </div>
+
+            <button
+                onClick={handleDownload}
+                disabled={loading}
+                className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
+                    loading
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-shopici-coral hover:brightness-105 active:scale-[0.98] text-white shadow-lg shadow-shopici-coral/30"
+                }`}
+            >
+                {loading ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Génération du reçu...</>
+                ) : (
+                    <><Download className="w-5 h-5" /> Télécharger le reçu PDF</>
+                )}
+            </button>
+        </>
     );
-}
-
-// ── PDF drawing helpers ───────────────────────────────────────────────────────
-
-function sectionTitle(
-    doc:   InstanceType<typeof import("jspdf").jsPDF>,
-    x:     number,
-    y:     number,
-    label: string,
-    color: [number, number, number]
-) {
-    doc.setTextColor(...color);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "bold");
-    doc.text(label, x, y);
-}
-
-function drawLabelValue(
-    doc:        InstanceType<typeof import("jspdf").jsPDF>,
-    x:          number,
-    y:          number,
-    label:      string,
-    value:      string,
-    labelColor: [number, number, number],
-    valueColor: [number, number, number]
-) {
-    doc.setTextColor(...labelColor);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
-    doc.text(label, x, y);
-
-    doc.setTextColor(...valueColor);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text(value, x, y + 5);
 }

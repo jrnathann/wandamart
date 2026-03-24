@@ -123,7 +123,6 @@ export default function OrdersTable({ orders, onSelectOrder, onToggleSeriousness
                   {/* ✅ Status badge + seriousness badge stacked */}
                   <div className="flex flex-col gap-1 w-fit">
                     <StatusBadge status={order.status} />
-                    <SeriousnessBadge value={order.isSeriousCustomer ?? null} />
                   </div>
                 </td>
                 <td className="py-4 px-4 text-right">

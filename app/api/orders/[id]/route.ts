@@ -58,23 +58,25 @@ export async function PATCH(
                     await product.save();
                 }
             }
+            // ✅ Save original state
+            const wasPaid = order.paid;
 
             // Send FB CAPI Purchase — but only if NOT already paid online.
             // Online orders fire the Purchase event in the Fapshi webhook the
             // moment payment is confirmed, so we must not fire it a second time.
-            if (!order.paid) {
+            if (!wasPaid) {
                 sendPurchaseEvent({
-                    orderId:  order.id,
-                    value:    order.total,
+                    orderId: order.id,
+                    value: order.total,
                     currency: "XAF",
                     userData: {
                         firstName: order.customer.name.split(" ")[0],
-                        lastName:  order.customer.name.split(" ").slice(1).join(" ") || undefined,
-                        phone:     order.customer.phone,
-                        city:      order.customer.deliveryZone.split(",").pop()?.trim(),
-                        country:   "CM",
-                        fbp:       order._fbp,
-                        fbc:       order._fbc,
+                        lastName: order.customer.name.split(" ").slice(1).join(" ") || undefined,
+                        phone: order.customer.phone,
+                        city: order.customer.deliveryZone.split(",").pop()?.trim(),
+                        country: "CM",
+                        fbp: order._fbp,
+                        fbc: order._fbc,
                         ipAddress: order._ip,
                         userAgent: order._ua,
                     },
@@ -91,7 +93,13 @@ export async function PATCH(
                     `[Facebook CAPI] Skipped for order ${order.id} — already fired on payment`
                 );
             }
+            // ✅ THEN mark as paid
+            if (!wasPaid) {
+                order.paid = true;
+                order.paidAt = new Date();
+            }
         }
+
         await order.save();
 
         return NextResponse.json(order, { status: 200 });

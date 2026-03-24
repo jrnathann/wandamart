@@ -2,7 +2,7 @@
 
 const bannerSlides = [
   {
-    id: 1,
+    id: "1",
     title: "Nouveautés 2026",
     subtitle: "Découvrez nos derniers produits",
     cta: "Acheter Maintenant",
@@ -10,7 +10,7 @@ const bannerSlides = [
     bgColor: "from-blue-500 to-purple-600",
   },
   {
-    id: 2,
+    id: "2",
     title: "Offres Spéciales",
     subtitle: "Jusqu'à 30% de réduction",
     cta: "Voir les Offres",
