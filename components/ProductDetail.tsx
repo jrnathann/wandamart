@@ -14,6 +14,7 @@ import TestimonialsSection from "./TestimonialsSection";
 import OrderModal from "./OrderModal";
 import AlternatingContentSection from "./AlternatingContentSection";
 import ShippingTicker from "./ShipperTicker";
+import { StickyPurchase } from "./StickyPurchase";
 
 interface ProductDetailsPageProps {
     slug: string;
@@ -210,7 +211,15 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     return (
         <div className="min-h-screen bg-[var(--shopici-background)]">
             <UrgencyBanner timeLeft={timeLeft} />
-            <ShippingTicker/>
+            <ShippingTicker />
+            {paymentMode === null && (
+                <StickyPurchase
+                    product={product}
+                    onOrderClick={() => setPaymentMode("cod")}
+                    onMobileMoneyClick={() => setPaymentMode("online")}
+                    formatPrice={formatPrice}
+                />
+            )}
             <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
                 {/* Back Link */}
                 <Link

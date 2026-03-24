@@ -137,59 +137,59 @@ export default function ProductInfo({
                 </div>
             </div>
 
-<div className="relative group border-l-2 border-shopici-coral pl-6 py-2 space-y-6">
-    {/* ── Delivery "Power-Row" ── */}
-    {product.delivery.available && (
-        <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-shopici-coral italic animate-pulse">
-                    Logistique Live
-                </span>
-                <div className="h-px flex-1 bg-gradient-to-r from-shopici-coral/20 to-transparent" />
-            </div>
-            
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-shopici-black" />
-                    <span className="text-xl font-black text-shopici-black tracking-tighter uppercase italic">
-                        {product.delivery.estimatedDays}
-                    </span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-shopici-blue/5 rounded-md border border-shopici-blue/10">
-                    <Truck className="w-3 h-3 text-shopici-blue" />
-                    <span className="text-[10px] font-black text-shopici-blue uppercase tracking-tight">
-                        Cameroun Entier
-                    </span>
-                </div>
-            </div>
-            
-            {/* <p className="text-[10px] font-bold text-shopici-gray uppercase tracking-widest opacity-60 truncate">
+            <div className="relative group border-l-2 border-shopici-coral pl-6 py-2 space-y-6">
+                {/* ── Delivery "Power-Row" ── */}
+                {product.delivery.available && (
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-shopici-coral italic animate-pulse">
+                                Logistique Live
+                            </span>
+                            <div className="h-px flex-1 bg-gradient-to-r from-shopici-coral/20 to-transparent" />
+                        </div>
+
+                        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-shopici-black" />
+                                <span className="text-xl font-black text-shopici-black tracking-tighter uppercase italic">
+                                    {product.delivery.estimatedDays}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-shopici-blue/5 rounded-md border border-shopici-blue/10">
+                                <Truck className="w-3 h-3 text-shopici-blue" />
+                                <span className="text-[10px] font-black text-shopici-blue uppercase tracking-tight">
+                                    Cameroun Entier
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* <p className="text-[10px] font-bold text-shopici-gray uppercase tracking-widest opacity-60 truncate">
                 {product.delivery.areas.join(" • ")}
             </p> */}
-        </div>
-    )}
+                    </div>
+                )}
 
-    {/* ── Trust "Micro-Grid" ── */}
-    <div className="flex items-center gap-6 border-t border-shopici-gray/10 pt-4">
-        {[
-            { icon: Shield, label: "Sécurisé" },
-            { icon: Package, label: "Premium" },
-            { icon: Star, label: "Certifié" },
-        ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2 group/badge cursor-default">
-                <div className="p-1.5 rounded-lg bg-shopici-black text-white group-hover/badge:bg-shopici-coral transition-colors">
-                    <Icon className="w-3 h-3" />
+                {/* ── Trust "Micro-Grid" ── */}
+                <div className="flex items-center gap-6 border-t border-shopici-gray/10 pt-4">
+                    {[
+                        { icon: Shield, label: "Sécurisé" },
+                        { icon: Package, label: "Premium" },
+                        { icon: Star, label: "Certifié" },
+                    ].map(({ icon: Icon, label }) => (
+                        <div key={label} className="flex items-center gap-2 group/badge cursor-default">
+                            <div className="p-1.5 rounded-lg bg-shopici-black text-white group-hover/badge:bg-shopici-coral transition-colors">
+                                <Icon className="w-3 h-3" />
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-tighter text-shopici-black group-hover/badge:text-shopici-coral transition-colors">
+                                {label}
+                            </span>
+                        </div>
+                    ))}
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-tighter text-shopici-black group-hover/badge:text-shopici-coral transition-colors">
-                    {label}
-                </span>
-            </div>
-        ))}
-    </div>
 
-    {/* Decorative Bottom Corner (Optional) */}
-    <div className="absolute top-0 right-0 w-24 h-24 bg-shopici-blue/5 rounded-full blur-3xl -z-10" />
-</div>
+                {/* Decorative Bottom Corner (Optional) */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-shopici-blue/5 rounded-full blur-3xl -z-10" />
+            </div>
         </div>
     );
 }

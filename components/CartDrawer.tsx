@@ -258,7 +258,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                 <button onClick={() => setPaymentMode("cod")} className="relative w-full py-5 bg-shopici-coral text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-shopici-coral/20 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-hidden group">
                   <span className="relative z-10 flex items-center justify-center gap-3">
                     <ShoppingCart className="w-4 h-4" />
-                    Commander & Payer à la livraison
+                    Payer à la livraison
                   </span>
                   <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500" />
                 </button>

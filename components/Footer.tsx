@@ -17,7 +17,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-12">
-        
+
         {/* 2. Top Section: Large Editorial Typography */}
         <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-16 mb-20 md:mb-32">
           <div className="max-w-xl space-y-8 md:space-y-10">
@@ -38,7 +38,7 @@ export default function Footer() {
                 {loading ? "..." : storeConfig.name}
               </h3>
             </div>
-            
+
             <p className="text-lg md:text-2xl font-medium leading-snug tracking-tight text-white/70">
               L'excellence du shopping <span className="italic font-black text-white">digital</span> au Cameroun. <br />
               <span className="text-white/30 text-[10px] md:text-lg uppercase tracking-widest font-bold block mt-2">Sourcing premium • Livraison sécurisée</span>
@@ -47,8 +47,10 @@ export default function Footer() {
 
           <div className="w-full lg:w-auto lg:text-right border-l-2 lg:border-l-0 lg:border-r-2 border-shopici-coral/30 pl-6 lg:pl-0 lg:pr-8 py-2 md:py-4">
             <h4 className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-shopici-blue mb-2 md:mb-4">Conciergerie</h4>
-            <a 
-              href={`tel:${storeConfig?.contact.phone}`}
+            <a
+              href={`https://wa.me/${storeConfig?.contact.phone.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group flex items-center lg:justify-end gap-4 md:gap-6 text-2xl md:text-5xl font-black tracking-tighter hover:text-shopici-coral transition-colors duration-500"
             >
               {loading ? "..." : storeConfig.contact.phone}
@@ -59,31 +61,31 @@ export default function Footer() {
 
         {/* 3. The Responsive Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12 md:gap-24 border-t border-white/5 pt-16 pb-16 md:pb-20">
-          <FooterColumn 
-            title="Catalogue" 
+          <FooterColumn
+            title="Catalogue"
             links={[
               { label: "Nos Produits", href: "/products" },
               { label: "Nouveautés", href: "/products?filter=new" },
               { label: "Promotions", href: "/products?filter=sale" }
-            ]} 
+            ]}
           />
-          <FooterColumn 
-            title="La Maison" 
+          <FooterColumn
+            title="La Maison"
             links={[
               { label: "À Propos", href: "/about" },
               { label: "Contact", href: "/contact" },
               { label: "Nos Boutiques", href: "/about#locations" }
-            ]} 
+            ]}
           />
-          <FooterColumn 
-            title="Assistance" 
+          <FooterColumn
+            title="Assistance"
             links={[
               { label: "Suivi Commande", href: "/shipping" },
               { label: "Livraison", href: "/shipping#delivery" },
               { label: "Retours", href: "/shipping#returns" }
-            ]} 
+            ]}
           />
-          
+
           <div className="col-span-2 md:col-span-1 space-y-6 md:space-y-8">
             <h4 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-white/20">Siège Social</h4>
             <div className="flex items-start gap-3 md:gap-4 text-xs md:text-sm font-bold uppercase tracking-tight text-white/50 leading-relaxed">
@@ -107,7 +109,7 @@ export default function Footer() {
               <a href="/cookies" className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-shopici-coral transition-colors">Cookies</a>
             </div>
           </div>
-          
+
           <div className="flex gap-6">
             {!loading && (
               <a href={storeConfig.social.facebook} target="_blank" rel="noopener noreferrer" className="text-white/20 hover:text-white transition-colors">
