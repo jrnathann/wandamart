@@ -6,22 +6,49 @@ interface StatusBadgeProps {
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
-  const styles: Record<OrderStatus, string> = {
-    "En préparation":
-      "bg-yellow-100 text-yellow-800 border border-yellow-200",
-    "En route":
-      "bg-blue-100 text-blue-800 border border-blue-200",
-    "Livré":
-      "bg-green-100 text-green-800 border border-green-200",
-    "Annulé":
-      "bg-red-100 text-red-800 border border-red-200",
+  // Industrial Color Mapping
+  const config: Record<OrderStatus, { border: string; text: string; dot: string; bg: string }> = {
+    "En préparation": {
+      border: "border-orange-500/20",
+      text: "text-orange-600",
+      dot: "bg-orange-500",
+      bg: "bg-orange-50/50",
+    },
+    "En route": {
+      border: "border-shopici-blue/20",
+      text: "text-shopici-blue",
+      dot: "bg-shopici-blue",
+      bg: "bg-shopici-blue/5",
+    },
+    "Livré": {
+      border: "border-green-600/20",
+      text: "text-green-700",
+      dot: "bg-green-600",
+      bg: "bg-green-50/50",
+    },
+    "Annulé": {
+      border: "border-shopici-coral/20",
+      text: "text-shopici-coral",
+      dot: "bg-shopici-coral",
+      bg: "bg-shopici-coral/5",
+    },
   };
 
+  const { border, text, dot, bg } = config[status];
+
   return (
-    <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${styles[status]}`}
+    <div
+      className={`
+        inline-flex items-center gap-2 px-2.5 py-1 
+        rounded-none border-l-2 ${border} ${bg} ${text}
+        text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap
+        transition-all duration-300
+      `}
     >
-      {status}
-    </span>
+      {/* Status Light: Pulse effect for active states */}
+      <span className={`w-1.5 h-1.5 rounded-full ${dot} ${status === "En route" ? "animate-pulse" : ""}`} />
+      
+      <span>{status}</span>
+    </div>
   );
 }

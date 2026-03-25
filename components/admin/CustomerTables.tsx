@@ -1,4 +1,5 @@
-// components/admin/customers/CustomersTable.tsx
+"use client";
+
 import { useState, useMemo } from "react";
 import { 
   Users, 
@@ -22,168 +23,112 @@ interface Customer {
   lastOrderDate: string;
 }
 
-interface CustomersTableProps {
-  customers: Customer[];
-}
-
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
-export default function CustomersTable({ customers }: CustomersTableProps) {
+export default function CustomersTable({ customers }: { customers: Customer[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Calculate pagination
   const totalPages = Math.ceil(customers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
   const currentCustomers = useMemo(
-    () => customers.slice(startIndex, endIndex),
-    [customers, startIndex, endIndex]
+    () => customers.slice(startIndex, startIndex + itemsPerPage),
+    [customers, startIndex, itemsPerPage]
   );
 
-  // Reset to page 1 when filters change
-  useMemo(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [customers.length]);
+  const goToPage = (page: number) => setCurrentPage(Math.max(1, Math.min(page, totalPages)));
 
-  const goToPage = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
-
-  const handleItemsPerPageChange = (value: number) => {
-    setItemsPerPage(value);
-    setCurrentPage(1);
-  };
-
-  // Generate page numbers
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-      }
-    }
-
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (currentPage <= 3) pages.push(1, 2, 3, 4, '...', totalPages);
+    else if (currentPage >= totalPages - 2) pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    else pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
     return pages;
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
-      {/* Table */}
-      <div className="relative -mx-4 sm:mx-0 overflow-x-auto">
-        <table className="w-full min-w-[640px]">
-          <thead className="bg-gradient-to-r from-shopici-blue/10 via-shopici-coral/5 to-shopici-blue/10 border-b-2 border-shopici-charcoal/10">
-            <tr>
-              <th className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 text-left text-[10px] sm:text-xs font-bold uppercase tracking-wider text-shopici-charcoal ">
-                Client
-              </th>
-              <th className="px-3 py-2 sm:px-4 lg:px-6 text-left text-[10px] sm:text-xs font-bold uppercase tracking-wider text-shopici-charcoal ">
-                Contact
-              </th>
-              <th className="hidden md:table-cell px-3 py-2 sm:px-4 lg:px-6 text-left text-[10px] sm:text-xs font-bold uppercase tracking-wider text-shopici-charcoal ">
-                Zone
-              </th>
-              <th className="px-3 py-2 sm:px-4 lg:px-6 text-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-shopici-charcoal ">
-                Cmd
-              </th>
-              <th className="hidden sm:table-cell px-3 py-2 sm:px-4 lg:px-6 text-right text-[10px] sm:text-xs font-bold uppercase tracking-wider text-shopici-charcoal ">
-                Total
-              </th>
-              <th className="hidden lg:table-cell px-3 py-2 sm:px-4 lg:px-6 text-right text-[10px] sm:text-xs font-bold uppercase tracking-wider text-shopici-charcoal ">
-                Dernière
-              </th>
+    <div className="bg-white border border-shopici-black/[0.08] rounded-none overflow-hidden">
+      {/* Table Console */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[800px] border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-shopici-black/10">
+              {['Client', 'Contact', 'Zone', 'Cmd', 'Total', 'Dernière'].map((head, i) => (
+                <th key={head} className={`px-6 py-4 text-left text-[10px] font-black uppercase tracking-[0.2em] text-shopici-black/40 ${i > 3 ? 'text-right' : ''} ${head === 'Cmd' ? 'text-center' : ''}`}>
+                  {head}
+                </th>
+              ))}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-shopici-charcoal/5">
+          <tbody className="divide-y divide-shopici-black/[0.05]">
             {currentCustomers.map((customer) => (
-              <tr
-                key={customer.id}
-                className="hover:bg-gradient-to-r hover:from-shopici-blue/5 hover:to-shopici-coral/5 transition-all group"
-              >
+              <tr key={customer.id} className="hover:bg-shopici-blue/[0.02] transition-colors group">
                 {/* CLIENT */}
-                <td className="px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-shopici-blue to-shopici-coral flex items-center justify-center text-white font-bold text-xs sm:text-sm border border-white shadow-md">
-                      {customer.name.charAt(0).toUpperCase()}
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-shopici-black flex items-center justify-center text-white font-black text-xs shrink-0">
+                      {customer.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <div className="leading-tight">
-                      <p className="font-semibold text-sm sm:text-base text-shopici-black">
+                    <div>
+                      <p className="font-bold text-[13px] uppercase tracking-tight text-shopici-black leading-none mb-1">
                         {customer.name}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-shopici-charcoal">
-                        ID: {customer.id.slice(-8)}
+                      <p className="font-mono text-[9px] text-shopici-black/30 uppercase">
+                        REG_ID: {customer.id.slice(-8).toUpperCase()}
                       </p>
                     </div>
                   </div>
                 </td>
 
                 {/* CONTACT */}
-                <td className="px-3 py-2 sm:px-4 lg:px-6">
-                  <div className="space-y-0.5 sm:space-y-1 text-[11px] sm:text-sm text-shopici-charcoal">
-                    <div className="flex items-center gap-1.5">
+                <td className="px-6 py-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-[11px] font-bold text-shopici-black/60">
                       <Phone size={12} className="text-shopici-blue" />
                       {customer.phone}
                     </div>
                     {customer.email && (
-                      <div className="hidden sm:flex items-center gap-1.5">
-                        <Mail size={12} className="text-shopici-coral" />
-                        <span className="truncate max-w-[200px]">{customer.email}</span>
+                      <div className="flex items-center gap-2 text-[10px] text-shopici-black/30 italic">
+                        <Mail size={12} />
+                        <span className="truncate max-w-[150px]">{customer.email}</span>
                       </div>
                     )}
                   </div>
                 </td>
 
                 {/* ZONE */}
-                <td className="hidden md:table-cell px-3 py-2 sm:px-4 lg:px-6">
-                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-shopici-blue/10 border border-shopici-blue/30 rounded-full">
-                    <MapPin size={12} className="text-shopici-blue" />
-                    <span className="text-xs font-semibold text-shopici-blue">
+                <td className="px-6 py-4">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 border border-shopici-black/10 bg-slate-50">
+                    <MapPin size={10} className="text-shopici-black/40" />
+                    <span className="text-[10px] font-black uppercase tracking-tighter text-shopici-black/60">
                       {customer.deliveryZone}
                     </span>
                   </div>
                 </td>
 
-                {/* COMMANDES */}
-                <td className="px-3 py-2 sm:px-4 lg:px-6 text-center">
-                  <div className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-md bg-shopici-coral/10 border border-shopici-coral/30">
-                    <span className="text-xs sm:text-sm font-bold text-shopici-coral">
-                      {customer.totalOrders}
-                    </span>
-                  </div>
+                {/* CMD */}
+                <td className="px-6 py-4 text-center">
+                  <span className="text-sm font-black text-shopici-black tabular-nums">
+                    {customer.totalOrders}
+                  </span>
                 </td>
 
                 {/* TOTAL */}
-                <td className="hidden sm:table-cell px-3 py-2 sm:px-4 lg:px-6 text-right">
-                  <p className="font-bold text-sm sm:text-base text-shopici-black dark:text-shopici-foreground">
-                    {customer.totalSpent.toLocaleString()} XAF
+                <td className="px-6 py-4 text-right">
+                  <p className="font-black text-[13px] text-shopici-black tabular-nums">
+                    {customer.totalSpent.toLocaleString()} <span className="text-[9px] text-shopici-black/30">XAF</span>
                   </p>
-                  <p className="text-[10px] sm:text-xs text-shopici-charcoal">
-                    ~{Math.round(customer.totalSpent / customer.totalOrders).toLocaleString()} XAF/cmd
+                  <p className="text-[9px] font-bold text-shopici-coral uppercase tracking-tighter">
+                    AVG: {Math.round(customer.totalSpent / customer.totalOrders).toLocaleString()}
                   </p>
                 </td>
 
                 {/* LAST ORDER */}
-                <td className="hidden lg:table-cell px-3 py-2 sm:px-4 lg:px-6 text-right">
-                  <p className="text-xs text-shopici-charcoal ">
-                    {new Date(customer.lastOrderDate).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      timeZone: 'UTC'
-                    })}
+                <td className="px-6 py-4 text-right">
+                  <p className="font-mono text-[10px] text-shopici-black/40">
+                    {new Date(customer.lastOrderDate).toLocaleDateString('en-GB').replace(/\//g, '.')}
                   </p>
                 </td>
               </tr>
@@ -192,117 +137,50 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
         </table>
       </div>
 
-      {/* Empty State */}
-      {customers.length === 0 && (
-        <div className="text-center py-16">
-          <Users size={64} className="mx-auto text-shopici-charcoal/30 mb-4" />
-          <p className="text-shopici-charcoal text-lg font-semibold mb-2">
-            Aucun client trouvé
-          </p>
-          <p className="text-sm text-shopici-charcoal/60">
-            Essayez de modifier vos filtres de recherche
-          </p>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {customers.length > 0 && (
-        <div className="border-t-2 border-shopici-charcoal/10 bg-gradient-to-r from-shopici-coral/5 via-transparent to-shopici-blue/5 px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Items per page */}
-            <div className="flex items-center gap-3 text-sm">
-              <span className="font-semibold text-shopici-charcoal  whitespace-nowrap">
-                Lignes par page:
-              </span>
+      {/* Pagination Console */}
+      <div className="border-t border-shopici-black/10 bg-slate-50 p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black uppercase tracking-widest text-shopici-black/40">Lignes:</span>
               <select
                 value={itemsPerPage}
-                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="px-3 py-2 border border-shopici-charcoal/10 rounded-lg bg-white text-shopici-black font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-shopici-coral/30 transition-all"
+                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                className="bg-white border border-shopici-black/10 px-2 py-1 text-[11px] font-black focus:outline-none focus:border-shopici-blue"
               >
-                {ITEMS_PER_PAGE_OPTIONS.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
+                {ITEMS_PER_PAGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <span className="text-shopici-charcoal whitespace-nowrap">
-                {startIndex + 1}-{Math.min(endIndex, customers.length)} sur {customers.length}
-              </span>
+            </div>
+            <span className="font-mono text-[10px] text-shopici-black/30 uppercase tracking-tighter">
+              Séquence: {startIndex + 1}—{Math.min(startIndex + itemsPerPage, customers.length)} / TOTAL {customers.length}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button onClick={() => goToPage(1)} disabled={currentPage === 1} className="p-2 border border-shopici-black/5 hover:bg-white disabled:opacity-20 transition-colors"><ChevronsLeft size={16}/></button>
+            <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="p-2 border border-shopici-black/5 hover:bg-white disabled:opacity-20 transition-colors mr-2"><ChevronLeft size={16}/></button>
+            
+            <div className="flex items-center gap-1">
+              {getPageNumbers().map((p, i) => (
+                p === '...' ? <span key={i} className="px-2 text-shopici-black/20">...</span> :
+                <button
+                  key={i}
+                  onClick={() => goToPage(p as number)}
+                  className={`min-w-[32px] h-8 text-[11px] font-black transition-all ${
+                    currentPage === p ? 'bg-shopici-black text-white' : 'border border-shopici-black/5 text-shopici-black/40 hover:bg-white'
+                  }`}
+                >
+                  {String(p).padStart(2, '0')}
+                </button>
+              ))}
             </div>
 
-            {/* Page navigation */}
-            <div className="flex items-center gap-2">
-              {/* First page */}
-              <button
-                onClick={() => goToPage(1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title="Première page"
-              >
-                <ChevronsLeft size={18} className="text-shopici-charcoal" />
-              </button>
-
-              {/* Previous page */}
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title="Page précédente"
-              >
-                <ChevronLeft size={18} className="text-shopici-charcoal" />
-              </button>
-
-              {/* Page numbers */}
-              <div className="hidden sm:flex items-center gap-1">
-                {getPageNumbers().map((page, index) => (
-                  page === '...' ? (
-                    <span key={`ellipsis-${index}`} className="px-3 py-2 text-shopici-charcoal">
-                      ...
-                    </span>
-                  ) : (
-                    <button
-                      key={page}
-                      onClick={() => goToPage(page as number)}
-                      className={`min-w-[40px] px-3 py-2 rounded-lg font-bold text-sm transition-all ${
-                        currentPage === page
-                          ? 'bg-gradient-to-r from-shopici-coral to-shopici-blue text-white shadow-md scale-105'
-                          : 'border border-shopici-charcoal/10 text-shopici-charcoal hover:bg-shopici-coral/10 hover:border-shopici-coral/30'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )
-                ))}
-              </div>
-
-              {/* Mobile page indicator */}
-              <div className="sm:hidden px-3 py-2 bg-shopici-gray/10 rounded-lg">
-                <span className="text-sm font-semibold text-shopici-black ">
-                  {currentPage} / {totalPages}
-                </span>
-              </div>
-
-              {/* Next page */}
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title="Page suivante"
-              >
-                <ChevronRight size={18} className="text-shopici-charcoal" />
-              </button>
-
-              {/* Last page */}
-              <button
-                onClick={() => goToPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-shopici-charcoal/10 hover:bg-shopici-coral/10 hover:border-shopici-coral/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                title="Dernière page"
-              >
-                <ChevronsRight size={18} className="text-shopici-charcoal" />
-              </button>
-            </div>
+            <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 border border-shopici-black/5 hover:bg-white disabled:opacity-20 transition-colors ml-2"><ChevronRight size={16}/></button>
+            <button onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages} className="p-2 border border-shopici-black/5 hover:bg-white disabled:opacity-20 transition-colors"><ChevronsRight size={16}/></button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

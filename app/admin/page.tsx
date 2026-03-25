@@ -11,6 +11,7 @@ import { OrderTracking } from "@/types/OrderTracking";
 import { Product } from "@/types/Product";
 import { fetchOrders } from "@/helper/order";
 import DashboardSkeleton from "@/components/admin/DashboardSkeleton";
+import StatusBadge from "@/components/admin/orders/shared/StatusBadge";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -156,7 +157,6 @@ export default function DashboardPage() {
           onChange={(range) => setDateRange(range)}
         />
       </div>
-      <div className="mt-6 h-0.5 w-full bg-gradient-to-r from-transparent via-shopici-charcoal/20 to-transparent" />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -187,45 +187,62 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts + Top Products */}
+      {/* Charts + Top Products Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Sales chart */}
-        <Card className="lg:col-span-2 rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
-          <div className="bg-gradient-to-br from-shopici-blue/5 via-transparent to-shopici-coral/5 p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
-                  Sales Overview
+        <div className="lg:col-span-2 bg-white border border-shopici-black/[0.12] rounded-none overflow-hidden transition-all duration-500 hover:border-shopici-black/20">
+          {/* Padding adaptatif : p-5 sur mobile, p-8 sur desktop */}
+          <div className="p-5 sm:p-8">
+
+            {/* EN-TÊTE : Responsive (Stack vertical sur mobile) */}
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-6 mb-10 sm:mb-12">
+              <div className="space-y-1">
+                <h3 className="font-bold text-xl sm:text-2xl tracking-tight text-shopici-black leading-none">
+                  Analyse des revenus
                 </h3>
-                <p className="text-xs text-shopici-charcoal mt-1">
-                  Confirmed revenue over time
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] text-shopici-black/30">
+                  Flux financier consolidé
                 </p>
               </div>
-              <div className="px-3 py-1.5 bg-shopici-blue/10 rounded-full">
-                <span className="text-xs font-semibold text-shopici-blue">
-                  {revenueData.length} days
+
+              <div className="flex flex-col items-start sm:items-end gap-2 w-full sm:w-auto">
+                <div className="px-4 py-2 bg-shopici-black text-white text-[10px] font-bold uppercase tracking-widest border border-shopici-black w-fit">
+                  {revenueData.length} jours de données
+                </div>
+                <span className="text-[9px] font-bold text-shopici-black/20 uppercase tracking-widest">
+                  Mise à jour : Temps réel
                 </span>
               </div>
             </div>
-            <div className="h-56 -mx-2">
+
+            {/* ZONE GRAPHIQUE : Hauteur fixe mais responsive via le container */}
+            <div className="h-64 sm:h-72 -mx-2">
               <Chart
                 options={{
-                  chart: { toolbar: { show: false }, background: "transparent" },
+                  chart: {
+                    toolbar: { show: false },
+                    background: "transparent",
+                    // Optimisation du rendu sur mobile
+                    sparkline: { enabled: false }
+                  },
                   dataLabels: { enabled: false },
                   markers: { size: 0 },
                   xaxis: {
                     categories: revenueData.map((d) => d.date),
                     labels: {
-                      style: { colors: "var(--shopici-charcoal)", fontSize: "11px" },
+                      // On cache certains labels sur mobile pour éviter la surcharge
+                      hideOverlappingLabels: true,
+                      style: { colors: "var(--shopici-charcoal)", fontSize: "10px" },
                     },
                   },
                   yaxis: {
                     labels: {
                       formatter: (val: number) => `${val.toLocaleString()}`,
-                      style: { colors: "var(--shopici-charcoal)", fontSize: "11px" },
+                      style: { colors: "var(--shopici-charcoal)", fontSize: "10px" },
                     },
                   },
-                  stroke: { curve: "smooth", width: 3 },
+                  stroke: { curve: "smooth", width: 1 },
                   fill: {
                     type: "gradient",
                     gradient: {
@@ -242,7 +259,7 @@ export default function DashboardPage() {
                     y: { formatter: (val: number) => `${val.toLocaleString()} XAF` },
                   },
                   colors: ["var(--shopici-blue)"],
-                  grid: { borderColor: "#e5e5e5", strokeDashArray: 4 },
+                  grid: { borderColor: "#e5e5e5", strokeDashArray: 1 },
                   theme: { mode: "light" },
                 }}
                 series={[{ name: "Revenue", data: revenueData.map((d) => d.total) }]}
@@ -252,131 +269,170 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Top Products */}
-        <Card className="rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
-          <div className="bg-gradient-to-br from-shopici-coral/5 via-transparent to-shopici-blue/5 p-6">
-            <div className="mb-5">
-              <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
-                Top Sellers
-              </h3>
-              <p className="text-xs text-shopici-charcoal mt-1">
-                Best performing products
-              </p>
+        <div className="bg-white border border-shopici-black/[0.12] rounded-none overflow-hidden transition-all duration-500">
+          <div className="p-4 sm:p-8">
+
+            {/* EN-TÊTE : RESPONSIVE & SANS UNDERSCORES */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+              <div>
+                <h3 className="font-bold text-xl sm:text-2xl tracking-tight text-shopici-black leading-none">
+                  Performances Produits
+                </h3>
+                <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-shopici-black/40 mt-1">
+                  Analyse des meilleures ventes
+                </p>
+              </div>
+              <div className="flex items-center self-start sm:self-auto gap-2 px-3 py-1.5 bg-shopici-black text-white border border-shopici-black">
+                <span className="w-2 h-2 bg-shopici-coral" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Classement</span>
+              </div>
             </div>
-            <div className="space-y-3">
+
+            {/* LISTE DES PRODUITS */}
+            <div className="space-y-4">
               {topProducts.length > 0 ? (
                 topProducts.map((p, idx) => {
                   const imageUrl = p.product?.images?.[0]?.url || "/placeholder.png";
                   return (
                     <div
                       key={p.name}
-                      className="group flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 dark:hover:bg-shopici-charcoal/5 transition-all duration-200"
+                      className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-4 border border-shopici-black/[0.05] hover:border-shopici-black/20 transition-all cursor-default"
                     >
-                      <div className="relative">
-                        <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden border-2 border-shopici-charcoal/10 group-hover:border-shopici-blue/30 transition-colors">
-                          <img src={imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                      {/* INDEX & IMAGE : Toujours groupés */}
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-none overflow-hidden border border-shopici-black/10 bg-shopici-black/[0.02]">
+                            <img
+                              src={imageUrl}
+                              alt={p.name}
+                              className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500"
+                            />
+                          </div>
+                          <div className="absolute -top-2 -left-2 w-6 h-6 bg-shopici-black text-white text-[10px] font-bold flex items-center justify-center">
+                            0{idx + 1}
+                          </div>
                         </div>
-                        <div className="absolute -top-1 -left-1 w-5 h-5 bg-shopici-coral text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          {idx + 1}
+
+                        {/* Mobile-only name display (optionnel si on veut forcer le nom à côté de l'image sur petit écran) */}
+                        <div className="sm:hidden flex-1 min-w-0">
+                          <p className="font-bold text-sm text-shopici-black truncate">
+                            {p.name}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-shopici-black dark:text-shopici-foreground truncate">
+
+                      {/* INFOS PRODUIT : Masqué sur très petit mobile si déjà affiché au-dessus */}
+                      <div className="hidden sm:block flex-1 min-w-0">
+                        <p className="font-bold text-sm text-shopici-black tracking-tight truncate">
                           {p.name}
                         </p>
-                        <p className="text-xs text-shopici-charcoal">{p.qty} sold</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-[11px] font-medium text-shopici-black/40 uppercase tracking-tighter">
+                            Volume Mensuel
+                          </span>
+                          <div className="h-[1px] w-4 bg-shopici-black/10" />
+                          <span className="text-[11px] font-bold text-shopici-black/60">
+                            {p.qty} UNITÉS
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-shrink-0 px-2.5 py-1 bg-shopici-coral/10 rounded-full">
-                        <span className="font-bold text-sm text-shopici-coral">{p.qty}</span>
+
+                      {/* SCORE DE PERFORMANCE : Adaptatif */}
+                      <div className="flex items-center justify-between sm:justify-end sm:flex-col sm:items-end sm:min-w-[100px] py-2 px-4 bg-shopici-coral/[0.04] border-l-2 border-shopici-coral sm:border-l-2">
+                        <div className="sm:hidden text-[10px] font-bold uppercase text-shopici-coral/60 tracking-tighter">
+                          Total Ventes
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-xl font-bold text-shopici-coral tabular-nums leading-none">
+                            {p.qty}
+                          </span>
+                          <span className="hidden sm:block text-[9px] font-bold uppercase text-shopici-coral/60 mt-1 tracking-tighter">
+                            Ventes Net
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <div className="text-center py-8">
-                  <Package size={32} className="mx-auto text-shopici-charcoal/30 mb-2" />
-                  <p className="text-shopici-charcoal text-sm">No sales data yet</p>
+                <div className="text-center py-12 border border-dashed border-shopici-black/10">
+                  <Package size={32} className="mx-auto text-shopici-black/20 mb-3" strokeWidth={1} />
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-shopici-black/40">
+                    Aucune donnée disponible
+                  </p>
                 </div>
               )}
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Recent Orders */}
-      <Card className="rounded-2xl border border-shopici-charcoal/10 overflow-hidden">
-        <div className="bg-gradient-to-br from-shopici-blue/5 via-transparent to-shopici-coral/5 p-6">
-          <div className="flex items-center justify-between mb-5">
+      <div className="bg-white border border-shopici-black/[0.12] rounded-none overflow-hidden transition-all duration-500">
+        <div className="p-4 sm:p-8">
+          {/* EN-TÊTE : Responsive stack */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
-              <h3 className="font-bold text-lg text-shopici-black dark:text-shopici-foreground">
-                Recent Orders
+              <h3 className="font-bold text-xl sm:text-2xl tracking-tight text-shopici-black leading-none">
+                Commandes Récentes
               </h3>
-              <p className="text-xs text-shopici-charcoal mt-1">
-                Latest transactions from your store
+              <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-shopici-black/40 mt-1">
+                Flux des dernières transactions
               </p>
             </div>
             <Link
               href="/admin/orders"
-              className="text-sm flex items-center gap-1.5 text-shopici-blue hover:text-shopici-coral transition-colors font-medium group"
+              className="text-[11px] font-bold uppercase tracking-[0.2em] text-shopici-black/50 hover:text-shopici-coral transition-colors group flex items-center gap-2 self-start sm:self-auto"
             >
-              View all
-              <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              Voir tout
+              <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </Link>
           </div>
-          <div className="overflow-x-auto -mx-6 px-6">
-            <table className="w-full text-sm">
-              <thead className="text-left text-shopici-charcoal">
-                <tr className="border-b-2 border-shopici-charcoal/10">
-                  <th className="py-3 font-semibold">Customer</th>
-                  <th className="font-semibold">Status</th>
-                  <th className="font-semibold">Payment</th>
-                  <th className="font-semibold">Date</th>
-                  <th className="hidden sm:table-cell text-right font-semibold">Amount</th>
+
+          {/* TABLEAU : Scroll optimisé */}
+          <div className="overflow-x-auto -mx-4 px-4 sm:-mx-8 sm:px-8">
+            <table className="w-full text-left border-collapse tabular-nums min-w-[600px] sm:min-w-full">
+              <thead>
+                <tr className="border-b border-shopici-black/[0.1]">
+                  <th className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-shopici-black/40 whitespace-nowrap">Client</th>
+                  <th className="py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-shopici-black/40 whitespace-nowrap">Statut Système</th>
+                  <th className="hidden md:table-cell py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-shopici-black/40 whitespace-nowrap">Paiement</th>
+                  <th className="hidden sm:table-cell py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-shopici-black/40 whitespace-nowrap">Date</th>
+                  <th className="text-right py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-shopici-black/40 whitespace-nowrap">Montant Net</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-shopici-black/[0.06]">
                 {recentOrders.map((o) => (
                   <tr
                     key={o.id}
-                    className="border-b border-shopici-charcoal/5 last:border-none hover:bg-white/50 dark:hover:bg-shopici-charcoal/5 transition-colors"
+                    className="group hover:bg-shopici-black/[0.01] transition-colors cursor-default"
                   >
-                    <td className="py-4 font-semibold text-shopici-black dark:text-shopici-foreground">
+                    <td className="text-sm font-semibold text-shopici-black whitespace-nowrap">
                       {o.customer.name}
                     </td>
-                    <td>
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[o.status]}`}>
-                        {o.status}
+                    <td className="">
+                      <span>
+                        <StatusBadge status={o.status} />
                       </span>
                     </td>
-                    <td>
-                      {o.paymentMethod === "online" ? (
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${o.paid
-                          ? "bg-green-100 text-green-700 border border-green-200"
-                          : "bg-yellow-100 text-yellow-700 border border-yellow-200"
-                          }`}>
-                          {o.paid ? "Payé ✓" : "En attente"}
+                    <td className="hidden md:table-cell">
+                      <div className="flex items-center gap-3 whitespace-nowrap">
+                        <div className={`w-2 h-2 ${o.paid ? 'bg-green-600' : 'bg-shopici-coral'}`} />
+                        <span className="text-[11px] font-bold uppercase text-shopici-black/60">
+                          {o.paid ? "Réglé" : o.paymentMethod === "online" ? "Attente" : "Livraison"}
                         </span>
-                      ) : (
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${o.paid
-                          ? "bg-green-100 text-green-700 border border-green-200"
-                          : "bg-gray-100 text-gray-600 border border-gray-200"
-                          }`}>
-                          {o.paid ? "Payé ✓" : "À la livraison"}
-                        </span>
-                      )}
+                      </div>
                     </td>
-                    <td className="text-shopici-charcoal">
+                    <td className="hidden sm:table-cell text-[11px] font-bold text-shopici-black/40 uppercase whitespace-nowrap">
                       {new Date(o.createdAt).toLocaleDateString("fr-FR", {
-                        day: "numeric",
+                        day: "2-digit",
                         month: "short",
-                        year: "numeric",
-                        timeZone: "UTC",
                       })}
                     </td>
-                    <td className="hidden sm:table-cell text-right font-bold text-shopici-black dark:text-shopici-foreground">
-                      {o.total.toLocaleString()} XAF
+                    <td className="py-6 text-right text-sm sm:text-base font-bold tracking-tight text-shopici-black whitespace-nowrap">
+                      {o.total.toLocaleString()} <span className="text-[9px] sm:text-[10px] font-medium text-shopici-black/30 ml-1">XAF</span>
                     </td>
                   </tr>
                 ))}
@@ -384,36 +440,80 @@ export default function DashboardPage() {
             </table>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
 
-function KpiCard({ title, value, icon, gradient }: any) {
+function KpiCard({ title, value, icon, color = "coral" }: any) {
+  // Define a very subtle accent color for the icon background
+  const accentColor = color === "coral" ? "bg-shopici-coral/5 text-shopici-coral" : "bg-shopici-blue/5 text-shopici-blue";
+
   return (
-    <Card className="rounded-2xl shadow-sm border border-shopici-charcoal/10 overflow-hidden hover:shadow-sm transition-all duration-300 hover:-translate-y-1">
-      <div className={`bg-gradient-to-br ${gradient} p-5`}>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-semibold uppercase tracking-wider text-shopici-charcoal">
+    <div className="group relative bg-white border border-shopici-black/[0.08] hover:border-shopici-black/20 transition-all duration-500 rounded-none p-6 flex flex-col justify-between h-full min-h-[160px]">
+
+      {/* 1. TOP SECTION: THE LABEL */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-shopici-black/50 leading-none">
             {title}
-          </span>
-          <div className="p-2 bg-white/50 dark:bg-shopici-charcoal/10 rounded-lg">
+          </p>
+          {/* Subtle Activity Dot */}
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1 h-1 rounded-full ${color === 'coral' ? 'bg-shopici-coral' : 'bg-shopici-blue'} animate-pulse`} />
+            <span className="text-[9px] font-bold text-shopici-black/20 uppercase tracking-tighter italic">Live_Sync</span>
+          </div>
+        </div>
+
+        {/* 2. THE ICON: Refined & Contained */}
+        <div className={`p-2.5 rounded-none border border-shopici-black/[0.03] ${accentColor} transition-colors group-hover:bg-shopici-black group-hover:text-white group-hover:border-shopici-black`}>
+          {/* Rendering icon at a smaller, more 'refined' scale */}
+          <div className="scale-90">
             {icon}
           </div>
         </div>
-        <div className="mt-2">
-          <span className="text-3xl font-bold text-shopici-black dark:text-shopici-foreground">
-            {value}
-          </span>
-        </div>
       </div>
-    </Card>
+
+      {/* 3. THE VALUE: Editorial Weight */}
+      <div className="mt-8 flex items-baseline gap-1">
+        <span className="text-4xl font-black tracking-tighter text-shopici-black tabular-nums">
+          {value}
+        </span>
+        {/* Apple-style subtle unit or secondary info */}
+        <span className="text-[10px] font-black uppercase text-shopici-black/20 mb-1 italic">
+          Units
+        </span>
+      </div>
+
+      {/* 4. THE PROGRESS LINE: Industrial Precision */}
+      <div className="mt-4 w-full h-[1px] bg-shopici-black/[0.05] relative overflow-hidden">
+        <div className={`absolute inset-y-0 left-0 w-1/3 ${color === 'coral' ? 'bg-shopici-coral/40' : 'bg-shopici-blue/40'}`} />
+      </div>
+
+      {/* Subtle corner detail for that 'Blueprint' feel */}
+      <div className="absolute top-0 right-0 w-8 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 w-1 h-1 bg-shopici-black/10" />
+      </div>
+    </div>
   );
 }
 
 const statusStyle: Record<string, string> = {
-  "Livré": "bg-green-100 text-green-700 border border-green-200",
-  "En route": "bg-shopici-blue/20 text-shopici-blue border border-shopici-blue/30",
-  "En préparation": "bg-shopici-coral/20 text-shopici-coral border border-shopici-coral/30",
-  "Annulé": "bg-red-100 text-red-600 border border-red-200",
+  // LIVRÉ: THE "FINALIZED" STATE
+  // Bold, green, and marked with a definitive tick. 
+  // It stands out as a "Success" entry.
+  "Livré": "text-green-600 font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-1.5 before:content-['[✓]'] before:font-mono before:text-[11px]",
+
+  // EN ROUTE: THE "ACTIVE" STATE
+  // Professional blue with an italic lean to show it is currently "Promising" and moving.
+  "En route": "text-yellow-500 font-black uppercase tracking-[0.1em] text-[10px] flex items-center gap-2 before:content-['•'] before:animate-pulse",
+
+  // EN PRÉPARATION: THE "INTERNAL" STATE
+  // Standard black but with high letter spacing. 
+  // It feels "Uncertain" or light because it hasn't left the warehouse yet.
+  "En préparation": "text-shopici-black font-medium uppercase tracking-[0.25em] text-[9px] flex items-center gap-2 before:content-['○'] before:opacity-20",
+
+  // ANNULÉ: THE "VOID" STATE
+  // Faded out and struck through. It looks like a cancelled entry in a ledger.
+  "Annulé": "text-shopici-black/20 font-bold uppercase tracking-[0.15em] text-[8px] line-through decoration-1",
 };

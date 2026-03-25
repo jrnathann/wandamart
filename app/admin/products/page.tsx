@@ -14,6 +14,7 @@ import {
     Grid3x3,
     List,
     ImageIcon,
+    ChevronDown,
 } from "lucide-react";
 
 // import { products } from "@/data/products";
@@ -22,6 +23,8 @@ import StatCard from "@/components/admin/orders/shared/StatCard";
 import ProductCard from "@/components/admin/products/ProductCard";
 import ProductListItem from "@/components/admin/products/ProductListItem";
 import Link from "next/link";
+import VintageHeader from "@/components/VintageHeader";
+import ActionButton from "@/components/admin/orders/shared/ActionButton";
 
 type ViewMode = "grid" | "list";
 type SortOption = "name" | "price" | "stock" | "recent";
@@ -136,28 +139,21 @@ export default function ProductsPage() {
                 {/* Header */}
                 <div className="relative">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-shopici-black mb-2">
-                                Catalogue Produits
-                            </h1>
-                            <div className="h-1 w-24 bg-gradient-to-r from-shopici-blue via-shopici-coral to-transparent rounded-full" />
-                            <p className="text-sm text-shopici-charcoal mt-2">
-                                {filteredProducts.length} produit
-                                {filteredProducts.length > 1 ? "s" : ""} • Gestion complète
-                            </p>
-                        </div>
-
-                        <Link href={'/admin/products/new'} className="px-6 py-3 bg-gradient-to-r from-shopici-blue to-shopici-coral text-white text-sm font-bold rounded-xl shadow-sm hover:scale-105 transition-all flex items-center gap-2 border-2 border-white/20">
-                            <Plus size={18} />
-                            Nouveau Produit
-                        </Link>
+                        <VintageHeader
+                            title="Catalogue Produits"
+                            count={filteredProducts.length}
+                            
+                        />
+                        <ActionButton
+                            href="/admin/products/new"
+                            label="Nouveau Produit"
+                            icon={<Plus />}
+                        />
                     </div>
-
-                    <div className="mt-6 h-0.5 w-full bg-gradient-to-r from-transparent via-shopici-charcoal/20 to-transparent" />
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     {loading ? (
                         [1, 2, 3, 4].map((i) => <StatSkeleton key={i} />)
                     ) : (
@@ -165,13 +161,11 @@ export default function ProductsPage() {
                             <StatCard
                                 title="Total Produits"
                                 value={stats.total}
-                                gradient="from-shopici-charcoal via-shopici-charcoal/90 to-shopici-black"
                                 icon={<Package size={18} className="text-white" />}
                             />
                             <StatCard
                                 title="Disponibles"
                                 value={stats.available}
-                                gradient="from-green-500 via-green-600 to-emerald-700"
                                 icon={<Eye size={18} className="text-white" />}
                                 percentage={availabilityRate}
                                 trend={availabilityRate >= 50 ? "up" : "down"}
@@ -179,13 +173,11 @@ export default function ProductsPage() {
                             <StatCard
                                 title="Stock Bas"
                                 value={stats.lowStock}
-                                gradient="from-shopici-coral via-shopici-coral/90 to-orange-600"
                                 icon={<AlertCircle size={18} className="text-white" />}
                             />
                             <StatCard
                                 title="En Vedette"
                                 value={stats.featured}
-                                gradient="from-shopici-blue via-shopici-blue/90 to-blue-700"
                                 icon={<TrendingUp size={18} className="text-white" />}
                             />
                         </>
@@ -193,97 +185,133 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white  rounded-2xl border border-shopici-charcoal/10 p-6 space-y-4">
-                    <div className="bg-white  rounded-2xl border border-shopici-charcoal/10 p-6 space-y-4">
+                <div className="">
+                    <div className="bg-white border border-shopici-black/10 p-5 md:p-8 rounded-none space-y-6">
                         {loading ? (
-                            <div className="space-y-3">
-                                <div className="h-10 w-full rounded-xl bg-gray-200 animate-pulse" />
-                                <div className="h-10 w-full rounded-xl bg-gray-200 animate-pulse" />
+                            <div className="space-y-4">
+                                {/* Industrial Skeleton */}
+                                <div className="h-12 w-full bg-slate-100 border-2 border-slate-200 animate-pulse rounded-none" />
+                                <div className="h-12 w-full bg-slate-50 border-2 border-slate-100 animate-pulse rounded-none" />
                             </div>
                         ) : (
                             <>
-                                {/* Filters Inputs */}
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-shopici-charcoal w-5 h-5" />
+                                {/* Search Input Group */}
+                                <div className="relative group">
+                                    {/* Icon stays sharp and high-contrast */}
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-shopici-black w-5 h-5 transition-transform group-focus-within:scale-110" />
+
                                     <input
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Rechercher par nom, description ou tags..."
-                                        className="w-full pl-11 pr-4 py-3 border border-shopici-charcoal/10 rounded-xl focus:ring-2 focus:ring-shopici-blue/20 outline-none"
+                                        placeholder="RECHERCHER PAR NOM, DESCRIPTION OU TAGS..."
+                                        className="w-full pl-12 pr-4 py-4 border border-shopici-black/20 rounded-none 
+                               text-[11px] font-black uppercase tracking-[0.1em] placeholder:text-shopici-black/20
+                               focus:outline-none focus:bg-shopici-black focus:text-white focus:placeholder:text-white/30
+                               transition-all duration-200 shadow-[4px_4px_0px_rgba(0,0,0,0.05)] focus:shadow-none"
                                     />
+
+                                    {/* Optional: Keyboard shortcut hint for that "Pro" feel */}
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
+                                        <span className="px-2 py-1 border border-shopici-black/10 text-[9px] font-mono text-shopici-black/30">
+                                            ESC
+                                        </span>
+                                    </div>
                                 </div>
                             </>
                         )}
                     </div>
 
-                    <div className="flex flex-wrap gap-3 justify-between">
-                        <div className="flex flex-wrap gap-3">
-                            {/* Category */}
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white  text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
-                            >
-                                <option value="">Toutes catégories</option>
-                                {categories.map((cat) => (
-                                    <option key={cat}>{cat}</option>
-                                ))}
-                            </select>
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-wrap items-center justify-between gap-4 py-4">
 
-                            {/* Availability */}
-                            <select
-                                value={availabilityFilter}
-                                onChange={(e) => setAvailabilityFilter(e.target.value as any)}
-                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
-                            >
-                                <option value="all">Tous statuts</option>
-                                <option value="available">Disponibles</option>
-                                <option value="unavailable">Indisponibles</option>
-                            </select>
+                            {/* LEFT SIDE: Filter Group */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Category Select */}
+                                <div className="relative group">
+                                    <select
+                                        value={categoryFilter}
+                                        onChange={(e) => setCategoryFilter(e.target.value)}
+                                        className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-shopici-black/10 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:bg-shopici-black focus:text-white transition-all cursor-pointer rounded-none"
+                                    >
+                                        <option value="">Catégories (Toutes)</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 group-hover:opacity-100">
+                                        <ChevronDown size={14} strokeWidth={3} />
+                                    </div>
+                                </div>
 
-                            {/* Sort */}
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="px-4 py-2.5 border border-shopici-charcoal/20 rounded-xl bg-white text-shopici-black dark:text-shopici-foreground hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-shopici-blue/30 transition-all"
-                            >
-                                <option value="recent">Plus récents</option>
-                                <option value="name">Nom A-Z</option>
-                                <option value="price">Prix décroissant</option>
-                                <option value="stock">Stock décroissant</option>
-                            </select>
+                                {/* Availability Select */}
+                                <div className="relative group">
+                                    <select
+                                        value={availabilityFilter}
+                                        onChange={(e) => setAvailabilityFilter(e.target.value as any)}
+                                        className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-shopici-black/10 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:bg-shopici-black focus:text-white transition-all cursor-pointer rounded-none"
+                                    >
+                                        <option value="all">Statuts (Tous)</option>
+                                        <option value="available">Disponibles</option>
+                                        <option value="unavailable">Indisponibles</option>
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 group-hover:opacity-100">
+                                        <ChevronDown size={14} strokeWidth={3} />
+                                    </div>
+                                </div>
 
-                            {/* Clear filters */}
-                            {(searchQuery || categoryFilter || availabilityFilter !== "all") && (
+                                {/* Sort Select */}
+                                <div className="relative group">
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                        className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-shopici-black/10 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:bg-shopici-black focus:text-white transition-all cursor-pointer rounded-none"
+                                    >
+                                        <option value="recent">Plus récents</option>
+                                        <option value="name">Nom A-Z</option>
+                                        <option value="price">Prix ↓</option>
+                                        <option value="stock">Stock ↓</option>
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 group-hover:opacity-100">
+                                        <ChevronDown size={14} strokeWidth={3} />
+                                    </div>
+                                </div>
+
+                                {/* Clear Filters - Industrial style */}
+                                {(searchQuery || categoryFilter || availabilityFilter !== "all") && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="px-4 py-2.5 bg-shopici-coral text-white text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-shopici-black transition-all rounded-none"
+                                    >
+                                        <X size={14} strokeWidth={3} />
+                                        Réinitialiser
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* RIGHT SIDE: View Mode Toggle */}
+                            <div className="flex border border-shopici-black/10 bg-white rounded-none">
                                 <button
-                                    onClick={clearFilters}
-                                    className="px-4 py-2.5 bg-shopici-coral/10 text-shopici-coral rounded-xl font-semibold flex items-center gap-2 hover:shadow-sm transition-all"
+                                    onClick={() => setViewMode("grid")}
+                                    className={`p-2 transition-all rounded-none ${viewMode === "grid"
+                                        ? "bg-shopici-black text-white"
+                                        : "text-shopici-black/30 hover:text-shopici-black"
+                                        }`}
+                                    title="Vue Grille"
                                 >
-                                    <X size={16} />
-                                    Effacer
+                                    <Grid3x3 size={18} strokeWidth={2.5} />
                                 </button>
-                            )}
-                        </div>
+                                <button
+                                    onClick={() => setViewMode("list")}
+                                    className={`p-2 transition-all rounded-none ${viewMode === "list"
+                                        ? "bg-shopici-black text-white"
+                                        : "text-shopici-black/30 hover:text-shopici-black"
+                                        }`}
+                                    title="Vue Liste"
+                                >
+                                    <List size={18} strokeWidth={2.5} />
+                                </button>
+                            </div>
 
-                        <div className="flex gap-2 bg-shopici-gray/10 p-1 rounded-lg">
-                            <button
-                                onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded-lg ${viewMode === "grid"
-                                    ? "bg-white shadow text-shopici-blue"
-                                    : ""
-                                    }`}
-                            >
-                                <Grid3x3 size={18} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode("list")}
-                                className={`p-2 rounded-lg ${viewMode === "list"
-                                    ? "bg-white shadow text-shopici-blue"
-                                    : ""
-                                    }`}
-                            >
-                                <List size={18} />
-                            </button>
                         </div>
                     </div>
                 </div>

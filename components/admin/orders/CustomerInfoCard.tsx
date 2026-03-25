@@ -1,6 +1,6 @@
 "use client"
 
-import { Package, MapPin, MessageCircle, Copy } from "lucide-react";
+import { MapPin, MessageCircle, Copy, Clock, Phone } from "lucide-react";
 import type { CustomerInfo } from "@/types/OrderTracking";
 
 interface CustomerInfoCardProps {
@@ -10,81 +10,88 @@ interface CustomerInfoCardProps {
 export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
   const getCallTimeLabel = (time: CustomerInfo["callTime"]) => {
     const labels: Record<CustomerInfo["callTime"], string> = {
-      now:       "📲 Maintenant",
-      morning:   "🌅 Matin (8h–12h)",
-      afternoon: "☀️ Après-midi (12h–17h)",
-      evening:   "🌙 Soir (17h–20h)",
+      now: "Maintenant",
+      morning: "Matin (08h–12h)",
+      afternoon: "Après-midi (12h–17h)",
+      evening: "Soir (17h–20h)",
     };
-
     return labels[time];
   };
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
-
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-4 border border-slate-200">
-      <h3 className="text-sm font-bold text-shopici-black mb-3 flex items-center gap-2">
-        <Package className="w-4 h-4 text-shopici-blue" />
-        Informations client
-      </h3>
-
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        {/* Name */}
-        <div>
-          <p className="text-shopici-charcoal mb-1">Nom</p>
-          <p className="font-semibold text-shopici-black">{customer.name}</p>
+    <div className="bg-white border border-shopici-black/10 p-5 md:p-8 rounded-none">
+      
+      {/* 1. HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 pb-6 border-b border-shopici-black/5">
+        <div className="space-y-1">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-shopici-black/30">
+            Fiche Client
+          </h3>
+          <p className="text-2xl font-black text-shopici-black tracking-tight uppercase">
+            {customer.name}
+          </p>
         </div>
-
-        {/* Phone */}
-        <div>
-          <p className="text-shopici-charcoal mb-1">Téléphone</p>
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-shopici-black">{customer.phone}</p>
-
-            <button
-              type="button"
-              onClick={() => copyToClipboard(customer.phone)}
-              className="p-1 hover:bg-slate-100 rounded"
-              aria-label="Copier le numéro"
+        
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {customer.hasWhatsApp && (
+            <a
+              href={`https://wa.me/${customer.phone.replace(/\s/g, "")}`}
+              target="_blank"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
             >
-              <Copy className="w-3 h-3 text-shopici-charcoal" />
-            </button>
+              <MessageCircle size={14} fill="currentColor" />
+              WhatsApp
+            </a>
+          )}
+          <a href={`tel:${customer.phone}`} className="p-3 border-2 border-shopici-black text-shopici-black hover:bg-black hover:text-white">
+            <Phone size={16} />
+          </a>
+        </div>
+      </div>
 
-            {customer.hasWhatsApp && (
-              <a
-                href={`https://wa.me/${customer.phone.replace(/\s/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1 bg-green-100 rounded hover:bg-green-200 transition"
-                aria-label="Contacter via WhatsApp"
-              >
-                <MessageCircle className="w-3 h-3 text-green-600" />
-              </a>
-            )}
+      {/* 2. DATA GRID */}
+      <div className="space-y-8">
+        {/* ROW 1: Contact & Delivery (Top Priority) */}
+        <div className="grid grid-cols-2 gap-x-8">
+          {/* Telephone */}
+          <div className="space-y-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40">Téléphone</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black tabular-nums text-shopici-black">{customer.phone}</span>
+              <button onClick={() => navigator.clipboard.writeText(customer.phone)} className="text-shopici-black/20 hover:text-shopici-black">
+                <Copy size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Livraison - Now has 50% of the card width to prevent truncation */}
+          <div className="space-y-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40">Livraison</p>
+            <div className="flex items-center gap-2 text-sm font-black text-shopici-black uppercase leading-tight">
+              <MapPin size={14} className="text-shopici-blue shrink-0" />
+              <span>{customer.deliveryZone}</span>
+            </div>
           </div>
         </div>
 
-        {/* Delivery zone */}
-        <div>
-          <p className="text-shopici-charcoal mb-1">Zone de livraison</p>
-          <p className="font-semibold text-shopici-black flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {customer.deliveryZone}
+        {/* ROW 2: Availability (Shifted Down) */}
+        <div className="pt-6 border-t border-shopici-black/5">
+          <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40 mb-3">
+            Disponibilité d'appel
           </p>
-        </div>
-
-        {/* Call time */}
-        <div>
-          <p className="text-shopici-charcoal mb-1">Créneau d'appel</p>
-          <p className="font-semibold text-shopici-black text-xs">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-shopici-coral/5 border border-shopici-coral/20 text-xs font-black text-shopici-black uppercase">
+            <Clock size={14} className="text-shopici-coral shrink-0" />
             {getCallTimeLabel(customer.callTime)}
-          </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. FOOTER */}
+      <div className="mt-10 flex items-center justify-between opacity-20">
+        <div className="text-[8px] font-mono font-bold uppercase tracking-[0.2em]">Logistics v3.0</div>
+        <div className="flex gap-1">
+          <div className="w-1.5 h-1.5 bg-shopici-black" />
+          <div className="w-1.5 h-1.5 bg-shopici-blue" />
         </div>
       </div>
     </div>

@@ -45,7 +45,8 @@ export default function DeliveryTimeline({
             const res = await fetch(`/api/orders/${orderId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus, checkpoint: autoCheckpoint }),
+                // FIX: key must be "newCheckpoint" — that's what the API reads
+                body: JSON.stringify({ status: newStatus, newCheckpoint: autoCheckpoint }),
             });
 
             if (!res.ok) {
@@ -53,8 +54,6 @@ export default function DeliveryTimeline({
                 throw new Error(data.error ?? "Erreur lors de la mise à jour");
             }
 
-            // Tell the parent — it will update localOrder and pass new props back down.
-            // We do NOT touch any local state here so there is no desync.
             onStatusUpdate?.(newStatus);
             onCheckpointAdd?.(autoCheckpoint);
         } catch (err: any) {
@@ -88,7 +87,8 @@ export default function DeliveryTimeline({
             const res = await fetch(`/api/orders/${orderId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: checkpoint.status, checkpoint }),
+                // FIX: key must be "newCheckpoint" — that's what the API reads
+                body: JSON.stringify({ status: checkpoint.status, newCheckpoint: checkpoint }),
             });
 
             if (!res.ok) {
@@ -96,8 +96,9 @@ export default function DeliveryTimeline({
                 throw new Error(data.error ?? "Erreur lors de l'ajout");
             }
 
+            // FIX: do NOT call onStatusUpdate here — onCheckpointAdd in the parent
+            // already updates both checkpoints AND status atomically.
             onCheckpointAdd?.(checkpoint);
-            onStatusUpdate?.(checkpoint.status);
 
             setShowAddForm(false);
             setNewCheckpoint({});
@@ -125,12 +126,15 @@ export default function DeliveryTimeline({
         }
     };
 
+    // FIX: ascending sort (oldest first, newest at bottom) so the timeline reads
+    // chronologically top-to-bottom. Descending sort was causing "Livré" to appear
+    // in the middle when its timestamp was earlier than a prior "En route" checkpoint.
     const sortedCheckpoints = [...checkpoints].sort(
-        (a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()
+        (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
     );
 
     return (
-        <div className="bg-white rounded-xl p-4 border border-slate-200">
+        <div className="bg-white p-4 border border-slate-200">
             {/* StatusStepper reads straight from props — always in sync with localOrder */}
             <StatusStepper currentStatus={currentStatus} checkpoints={checkpoints} />
 
@@ -250,7 +254,7 @@ export default function DeliveryTimeline({
                 </div>
             )}
 
-            {/* Timeline — rendered from props, not local state */}
+            {/* Timeline — ascending order: oldest at top, newest at bottom */}
             <div className="relative space-y-4">
                 {checkpoints.length > 0 && (
                     <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200" />
@@ -263,26 +267,39 @@ export default function DeliveryTimeline({
                         <p className="text-xs opacity-75">Utilisez la mise à jour rapide ci-dessus</p>
                     </div>
                 ) : (
-                    sortedCheckpoints.map((checkpoint, idx) => (
-                        <div key={idx} className="relative pl-10">
-                            <div className={`absolute left-2 w-4 h-4 rounded-full border-2 border-white shadow ${
-                                checkpoint.status === "Livré"       ? "bg-green-500"
-                                : checkpoint.status === "En route" ? "bg-blue-500"
-                                : checkpoint.status === "Annulé"   ? "bg-red-400"
-                                : "bg-yellow-500"
-                            }`} />
-                            <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                                <div className="flex items-start justify-between mb-1">
-                                    <p className="text-sm font-semibold text-shopici-black">{checkpoint.location}</p>
-                                    <StatusBadge status={checkpoint.status} />
+                    sortedCheckpoints.map((checkpoint, idx) => {
+                        // The last entry in ascending order is the most recent — highlight it
+                        const isLatest = idx === sortedCheckpoints.length - 1;
+                        return (
+                            <div key={idx} className="relative pl-10">
+                                <div className={`absolute left-2 w-4 h-4 rounded-full border-2 border-white shadow transition-all ${
+                                    checkpoint.status === "Livré"      ? "bg-green-500"
+                                    : checkpoint.status === "En route" ? "bg-blue-500"
+                                    : checkpoint.status === "Annulé"   ? "bg-red-400"
+                                    : "bg-yellow-500"
+                                } ${isLatest ? "ring-2 ring-offset-1 ring-slate-400 scale-110" : ""}`} />
+                                <div className={`rounded-lg p-3 border transition-all ${
+                                    isLatest
+                                        ? "bg-white border-slate-300 shadow-sm"
+                                        : "bg-slate-50 border-slate-100"
+                                }`}>
+                                    <div className="flex items-start justify-between mb-1">
+                                        <p className="text-sm font-semibold text-shopici-black">{checkpoint.location}</p>
+                                        <StatusBadge status={checkpoint.status} />
+                                    </div>
+                                    <p className="text-xs text-shopici-charcoal flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        {new Date(checkpoint.time).toLocaleString("fr-FR")}
+                                    </p>
+                                    {isLatest && (
+                                        <p className="text-xs text-shopici-blue font-medium mt-1">
+                                            ● Statut actuel
+                                        </p>
+                                    )}
                                 </div>
-                                <p className="text-xs text-shopici-charcoal flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    {new Date(checkpoint.time).toLocaleString("fr-FR")}
-                                </p>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </div>

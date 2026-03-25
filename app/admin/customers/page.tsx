@@ -20,7 +20,8 @@ import { OrderTracking } from "@/types/OrderTracking";
 import { fetchOrders } from "@/helper/order";
 import { CustomersPageSkeleton } from "@/components/admin/CustomerPageSkeleton";
 import CustomersTable from "@/components/admin/CustomerTables";
-
+import ActionButton from "@/components/admin/orders/shared/ActionButton";
+import { useNotify } from "@/context/NotifyContext";
 interface Customer {
   id: string;
   name: string;
@@ -38,8 +39,11 @@ export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [zoneFilter, setZoneFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<"orders" | "spent" | "recent">("orders");
+  const [isExporting, setExporting] = useState(false)
 
   const [loading, setLoading] = useState(true);
+
+  const { notify } = useNotify();
 
   useEffect(() => {
     async function loadOrders() {
@@ -55,58 +59,65 @@ export default function CustomersPage() {
     loadOrders();
   }, []);
 
-  const exportCustomers = () => {
-    if (filteredCustomers.length === 0) return;
+  const exportCustomers = async () => {
+    if (filteredCustomers.length === 0 || isExporting) return;
 
-    const headers = [
-      "Nom",
-      "Téléphone",
-      "Email",
-      "Zone",
-      "Commandes",
-      "Total dépensé (XAF)",
-      "Dernière commande"
-    ];
+    try {
+      setExporting(true);
 
-    const rows = filteredCustomers.map(c => [
-      c.name,
-      c.phone,
-      c.email ?? "",
-      c.deliveryZone,
-      c.totalOrders.toString(),
-      c.totalSpent.toString(),
-      new Date(c.lastOrderDate).toLocaleDateString("fr-FR")
-    ]);
+      const headers = [
+        "Nom",
+        "Téléphone",
+        "Email",
+        "Zone",
+        "Commandes",
+        "Total dépensé (XAF)",
+        "Dernière commande"
+      ];
 
-    const csvContent =
-      "\uFEFF" + // UTF-8 BOM for Excel (VERY important for accents)
-      [headers, ...rows]
-        .map(row =>
-          row
-            .map(value =>
-              `"${String(value).replace(/"/g, '""')}"`
-            )
-            .join(";")
-        )
-        .join("\n");
+      const rows = filteredCustomers.map(c => [
+        c.name,
+        c.phone,
+        c.email ?? "",
+        c.deliveryZone,
+        c.totalOrders.toString(),
+        c.totalSpent.toString(),
+        new Date(c.lastOrderDate).toLocaleDateString("fr-FR")
+      ]);
 
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;"
-    });
+      const csvContent =
+        "\uFEFF" + // important for Excel accents
+        [headers, ...rows]
+          .map(row =>
+            row
+              .map(value => `"${String(value).replace(/"/g, '""')}"`)
+              .join(";")
+          )
+          .join("\n");
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;"
+      });
 
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `clients_${new Date().toISOString().slice(0, 10)}.csv`
-    );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `clients_${new Date().toISOString().slice(0, 10)}.csv`
+      );
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      notify("Exported", "succefully", "success")
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setExporting(false); // 🔥 always reset
+    }
   };
 
   // Transform orders data into customers
@@ -191,13 +202,12 @@ export default function CustomersPage() {
               count={filteredCustomers.length}
               pluralLabel="client"
             />
-            <button
+            <ActionButton
+              label="Exporter CSV"
+              subLabel="Format Tableur"
               onClick={exportCustomers}
-              className="px-6 py-3 bg-gradient-to-r from-shopici-coral to-shopici-blue text-white text-sm font-bold rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-105 flex items-center gap-2 justify-center border border-white/20"
-            >
-              <Download className="w-4 h-4" />
-              Exporter les clients
-            </button>
+              isLoading={isExporting}
+            />
           </div>
 
           {/* Decorative line */}
@@ -209,7 +219,6 @@ export default function CustomersPage() {
           <StatCard
             title="Total Clients"
             value={stats.totalCustomers.toString()}
-            gradient="from-shopici-blue via-shopici-blue/90 to-blue-700"
             icon={<Users size={18} className="text-white" />}
             percentage={8}
             trend="up"
@@ -217,7 +226,6 @@ export default function CustomersPage() {
           <StatCard
             title="Clients Actifs"
             value={stats.activeCustomers.toString()}
-            gradient="from-green-500 via-green-600 to-emerald-700"
             icon={<TrendingUp size={18} className="text-white" />}
             percentage={15}
             trend="up"
@@ -225,7 +233,6 @@ export default function CustomersPage() {
           <StatCard
             title="Panier Moyen"
             value={`${Math.round(stats.averageOrderValue).toLocaleString()} XAF`}
-            gradient="from-shopici-coral via-shopici-coral/90 to-orange-600"
             icon={<ShoppingBag size={18} className="text-white" />}
             percentage={5}
             trend="up"
@@ -233,86 +240,80 @@ export default function CustomersPage() {
           <StatCard
             title="Zone Populaire"
             value={stats.topZone}
-            gradient="from-shopici-charcoal via-shopici-charcoal/90 to-shopici-black"
             icon={<MapPin size={18} className="text-white" />}
           />
         </div>
 
-        {/* Filters & Search */}
-        <div className="bg-white  rounded-2xl border border-shopici-charcoal/10 p-2 sm:p-3 lg:p-4">
-          <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
+        {/* Filters & Search - Industrial Console Style */}
+        <div className="bg-white border border-shopici-black/[0.08] p-3 sm:p-4 transition-all duration-300">
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch">
 
-            {/* SEARCH */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-shopici-charcoal w-4 h-4 sm:w-5 sm:h-5" />
-                <input
-                  type="text"
-                  placeholder="Rechercher par nom ou téléphone..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 lg:py-3
-                     text-sm sm:text-base
-                     border border-shopici-charcoal/10 rounded-xl
-                     focus:outline-none focus:border-shopici-blue/50
-                     focus:ring-2 focus:ring-shopici-blue/20
-                     transition-all bg-shopici-gray/5"
-                />
+            {/* SEARCH: Terminal Style */}
+            <div className="flex-1 relative group">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 border-r border-shopici-black/10 pr-2 pointer-events-none">
+                <Search className="text-shopici-black/40 w-4 h-4" />
               </div>
+              <input
+                type="text"
+                placeholder="RECHERCHER PAR NOM OU TÉLÉPHONE..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-shopici-black/10 rounded-none
+                   text-[11px] font-bold uppercase tracking-widest placeholder:text-shopici-black/20
+                   focus:outline-none focus:bg-white focus:border-shopici-blue transition-all
+                   placeholder:font-medium"
+              />
             </div>
 
-            {/* FILTERS */}
-            <div className="flex gap-2 sm:gap-3 flex-wrap lg:flex-nowrap">
+            {/* FILTERS: Modular Blocks */}
+            <div className="flex flex-col sm:flex-row gap-2 flex-wrap lg:flex-nowrap">
 
-              {/* ZONE */}
-              <select
-                value={zoneFilter}
-                onChange={(e) => setZoneFilter(e.target.value)}
-                className="min-w-[140px] sm:min-w-[160px]
-                   px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3
-                   text-sm sm:text-base font-medium
-                   border border-shopici-charcoal/10 rounded-xl
-                   focus:outline-none focus:border-shopici-blue/50
-                   bg-white 
-                   text-shopici-black dark:text-shopici-foreground"
-              >
-                <option value="">Toutes les zones</option>
-                {zones.map(zone => (
-                  <option key={zone} value={zone}>{zone}</option>
-                ))}
-              </select>
+              {/* ZONE SELECT */}
+              <div className="relative flex-1 sm:flex-none">
+                <label className="absolute -top-2 left-2 bg-white px-1 text-[8px] font-black uppercase text-shopici-black/30 tracking-tighter z-10">
+                  Localisation
+                </label>
+                <select
+                  value={zoneFilter}
+                  onChange={(e) => setZoneFilter(e.target.value)}
+                  className="w-full sm:min-w-[160px] px-3 py-3 text-[10px] font-black uppercase tracking-widest
+                     bg-white border border-shopici-black/10 rounded-none appearance-none
+                     focus:outline-none focus:border-shopici-blue cursor-pointer transition-colors"
+                >
+                  <option value="">Toutes les zones</option>
+                  {zones.map(zone => (
+                    <option key={zone} value={zone}>{zone}</option>
+                  ))}
+                </select>
+              </div>
 
-              {/* SORT */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="min-w-[150px] sm:min-w-[180px]
-                   px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3
-                   text-sm sm:text-base font-medium
-                   border border-shopici-charcoal/10 rounded-xl
-                   focus:outline-none focus:border-shopici-blue/50
-                   bg-white 
-                   text-shopici-black dark:text-shopici-foreground"
-              >
-                <option value="orders">+ Commandes</option>
-                <option value="spent">+ Dépenses</option>
-                <option value="recent">+ Récents</option>
-              </select>
+              {/* SORT SELECT */}
+              <div className="relative flex-1 sm:flex-none">
+                <label className="absolute -top-2 left-2 bg-white px-1 text-[8px] font-black uppercase text-shopici-black/30 tracking-tighter z-10">
+                  Trier Par
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="w-full sm:min-w-[160px] px-3 py-3 text-[10px] font-black uppercase tracking-widest
+                     bg-white border border-shopici-black/10 rounded-none appearance-none
+                     focus:outline-none focus:border-shopici-blue cursor-pointer transition-colors"
+                >
+                  <option value="orders">+ Commandes</option>
+                  <option value="spent">+ Dépenses</option>
+                  <option value="recent">+ Récents</option>
+                </select>
+              </div>
 
-              {/* CLEAR */}
+              {/* CLEAR FILTERS: Action Block */}
               {(searchQuery || zoneFilter) && (
                 <button
                   onClick={clearFilters}
-                  className="px-3 sm:px-4 py-2 sm:py-2.5 lg:py-3
-                     text-sm sm:text-base
-                     bg-shopici-coral/10 text-shopici-coral
-                     hover:bg-shopici-coral/20
-                     rounded-xl font-semibold
-                     transition-all flex items-center gap-1.5
-                     border border-shopici-coral/20"
+                  className="px-5 py-3 bg-shopici-coral text-white text-[10px] font-black uppercase tracking-[0.15em]
+                     hover:bg-shopici-black transition-colors flex items-center justify-center gap-2 group"
                 >
-                  <X size={14} className="sm:size-4" />
-                  <span className="hidden sm:inline">Effacer</span>
+                  <X size={12} strokeWidth={4} className="group-hover:rotate-90 transition-transform" />
+                  <span>Reset</span>
                 </button>
               )}
             </div>
@@ -342,68 +343,97 @@ export default function CustomersPage() {
     </div>
   );
 }
-
-// Reuse StatCard component
-function StatCard({
-  title,
-  value,
-  gradient,
-  icon,
-  percentage,
-  trend
-}: {
+interface StatCardProps {
   title: string;
-  value: string;
-  gradient: string;
+  value: string | number;
   icon?: React.ReactNode;
   percentage?: number;
   trend?: 'up' | 'down';
-}) {
+  accentColor?: "coral" | "blue"; // Strictly Shopici palette
+}
+function StatCard({
+  title,
+  value,
+  icon,
+  percentage,
+  trend,
+  accentColor = "coral"
+}: StatCardProps) {
+
+  const isCoral = accentColor === "coral";
+  const bgClass = isCoral ? "bg-shopici-coral" : "bg-shopici-blue";
+
   return (
-    <div className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 shadow-sm border border-white/20 overflow-hidden group hover:shadow-md transition-all duration-300`}>
-      {/* Vintage pattern overlay */}
-      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] bg-[length:24px_24px]" />
+    <div className="group relative bg-white border border-shopici-black/[0.08] hover:border-shopici-black/20 transition-all duration-500 rounded-none p-6 flex flex-col justify-between h-full min-h-[190px] overflow-hidden">
 
-      {/* Decorative corner elements */}
-      <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-white/30 rounded-tr-lg" />
-      <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-white/30 rounded-bl-lg" />
-
-      <div className="relative z-10">
-        {/* Header with icon */}
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/80 drop-shadow-sm">
+      {/* 1. HEADER: Technical Meta-data */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-shopici-black/50 leading-none">
             {title}
           </p>
-          {icon && (
-            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 group-hover:scale-110 transition-transform">
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${bgClass} animate-pulse`} />
+            <span className="text-[9px] font-bold text-shopici-black/20 uppercase tracking-widest italic">
+              Live Sync
+            </span>
+          </div>
+        </div>
+
+        {/* 2. ICON: Industrial Block Style */}
+        {icon && (
+          <div className="bg-shopici-black p-2.5 transition-transform duration-300 group-hover:-translate-y-1">
+            <div className="scale-90 text-white">
               {icon}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Value */}
-        <div className="flex items-end justify-between">
-          <p className="text-2xl font-bold text-white drop-shadow-md">
+      {/* 3. VALUE: High Contrast Data */}
+      <div className="mt-8 flex flex-col gap-2.5">
+        <div className="flex items-baseline gap-2">
+          <p className="text-4xl font-black tracking-tighter text-shopici-black tabular-nums leading-none">
             {value}
           </p>
-
-          {/* Percentage badge */}
-          {percentage !== undefined && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold backdrop-blur-sm border ${trend === 'up'
-              ? 'bg-white/90 text-green-600 border-white/50'
-              : trend === 'down'
-                ? 'bg-white/90 text-red-600 border-white/50'
-                : 'bg-white/90 text-gray-600 border-white/50'
-              }`}>
-              {trend === 'up' && <TrendingUp size={12} />}
-              {trend === 'down' && <TrendingDown size={12} />}
-              {percentage > 0 ? '+' : ''}{percentage}%
-            </div>
-          )}
+          <span className="text-[9px] font-black uppercase text-shopici-black/20 italic tracking-tighter">
+            Data Units
+          </span>
         </div>
 
-        {/* Decorative line */}
-        <div className="mt-3 h-0.5 w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        {/* TREND BADGE */}
+        {percentage !== undefined && (
+          <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.15em] ${trend === 'up' ? 'text-emerald-600' : 'text-shopici-coral'
+            }`}>
+            {trend === 'up' ? <TrendingUp size={12} strokeWidth={3} /> : <TrendingDown size={12} strokeWidth={3} />}
+            <span>{percentage > 0 ? '+' : ''}{percentage}%</span>
+            <span className="text-shopici-black/10 font-bold lowercase tracking-tighter ml-1">vs prev</span>
+          </div>
+        )}
+      </div>
+
+      {/* 4. FOOTER: The "Registry" Line */}
+      <div className="mt-6 space-y-3">
+        <div className="w-full h-[1px] bg-shopici-black/[0.05] relative overflow-hidden">
+          <div className={`absolute inset-y-0 left-0 w-1/3 ${bgClass} opacity-40`} />
+        </div>
+
+        <div className="flex justify-between items-center">
+          <span className="text-[8px] font-bold uppercase tracking-widest text-shopici-black/20">
+            Archive Consolidée
+          </span>
+          {/* Blueprint Detail */}
+          <div className="flex gap-1.5">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="w-0.5 h-0.5 bg-shopici-black/10" />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Hover Aesthetic: Corner Marker */}
+      <div className="absolute top-0 right-0 w-6 h-6 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-shopici-black/20" />
       </div>
     </div>
   );

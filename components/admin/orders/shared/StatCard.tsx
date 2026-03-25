@@ -1,70 +1,101 @@
-
 // components/admin/orders/shared/StatCard.tsx
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface StatCardProps {
   title: string;
-  value: number;
-  gradient: string;
+  value: string | number;
   icon?: React.ReactNode;
   percentage?: number;
   trend?: 'up' | 'down';
+  accentColor?: string; // e.g., "coral" or "blue"
 }
 
 export default function StatCard({ 
   title, 
   value, 
-  gradient, 
   icon,
   percentage,
-  trend 
+  trend,
+  accentColor = "coral" 
 }: StatCardProps) {
+  
+  // Logic to handle colors based on the accentColor prop
+  const isCoral = accentColor === "coral";
+  const themeClass = isCoral ? "text-shopici-coral" : "text-shopici-blue";
+  const bgClass = isCoral ? "bg-shopici-coral" : "bg-shopici-blue";
+
   return (
-    <div className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 border border-white/20 overflow-hidden group hover:shadow-md transition-all duration-300`}>
-      {/* Vintage pattern overlay */}
-      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] bg-[length:24px_24px]" />
+    <div className="group relative bg-white border border-shopici-black/[0.08] hover:border-shopici-black/20 transition-all duration-500 rounded-none p-6 flex flex-col justify-between h-full min-h-[180px] overflow-hidden">
       
-      {/* Decorative corner elements */}
-      <div className="absolute top-2 right-2 w-8 h-8 border-t-1 border-r-1 border-white/30 rounded-tr-lg" />
-      <div className="absolute bottom-2 left-2 w-8 h-8 border-b-1 border-l-1 border-white/30 rounded-bl-lg" />
-      
-      <div className="relative z-10">
-        {/* Header with icon */}
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/80 drop-shadow-sm">
+      {/* 1. HEADER SECTION: Title & Live Sync Status */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-shopici-black/50 leading-none">
             {title}
           </p>
-          {icon && (
-            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 group-hover:scale-110 transition-transform">
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1 h-1 rounded-full ${bgClass} animate-pulse`} />
+            <span className="text-[9px] font-bold text-shopici-black/20 uppercase tracking-tighter italic">
+              Live Sync
+            </span>
+          </div>
+        </div>
+
+        {/* 2. ICON CONTAINER: Refined Blueprint Style */}
+        {icon && (
+          <div className="bg-shopici-black p-2">
+            <div className="scale-90">
               {icon}
             </div>
-          )}
-        </div>
-        
-        {/* Value */}
-        <div className="flex items-end justify-between">
-          <p className="text-3xl font-bold text-white drop-shadow-sm">
+          </div>
+        )}
+      </div>
+
+      {/* 3. VALUE SECTION: Big Data & Trends */}
+      <div className="mt-8 flex flex-col gap-2">
+        <div className="flex items-baseline gap-2">
+          <p className="text-4xl font-black tracking-tighter text-shopici-black tabular-nums leading-none">
             {value}
           </p>
-          
-          {/* Percentage badge */}
-          {percentage !== undefined && (
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold backdrop-blur-sm border ${
-              trend === 'up' 
-                ? 'bg-white/90 text-green-600 border-white/50' 
-                : trend === 'down'
-                ? 'bg-white/90 text-red-600 border-white/50'
-                : 'bg-white/90 text-gray-600 border-white/50'
-            }`}>
-              {trend === 'up' && <TrendingUp size={12} />}
-              {trend === 'down' && <TrendingDown size={12} />}
-              {percentage > 0 ? '+' : ''}{percentage}%
-            </div>
-          )}
+          <span className="text-[10px] font-black uppercase text-shopici-black/20 italic">
+            Units
+          </span>
+        </div>
+
+        {/* TREND BADGE: Logic for Up/Down/Neutral */}
+        {percentage !== undefined && (
+          <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${
+            trend === 'up' ? 'text-green-600' : 'text-shopici-coral'
+          }`}>
+            {trend === 'up' ? <TrendingUp size={12} strokeWidth={3} /> : <TrendingDown size={12} strokeWidth={3} />}
+            <span>{percentage > 0 ? '+' : ''}{percentage}%</span>
+            <span className="text-shopici-black/10 font-bold lowercase tracking-tighter">vs prev</span>
+          </div>
+        )}
+      </div>
+
+      {/* 4. FOOTER: Industrial Precision Line */}
+      <div className="mt-6 space-y-3">
+        <div className="w-full h-[1px] bg-shopici-black/[0.05] relative overflow-hidden">
+          <div className={`absolute inset-y-0 left-0 w-1/3 ${bgClass} opacity-40`} />
         </div>
         
-        {/* Decorative line */}
-        <div className="mt-3 h-0.5 w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        <div className="flex justify-between items-center">
+          <span className="text-[8px] font-bold uppercase tracking-widest text-shopici-black/20">
+            Registre consolidé
+          </span>
+          {/* Blueprint Dots */}
+          <div className="flex gap-1">
+            <div className="w-0.5 h-0.5 bg-shopici-black/10" />
+            <div className="w-0.5 h-0.5 bg-shopici-black/10" />
+            <div className="w-0.5 h-0.5 bg-shopici-black/10" />
+          </div>
+        </div>
+      </div>
+
+      {/* Subtle Corner Detail */}
+      <div className="absolute top-0 right-0 w-8 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 w-1 h-1 bg-shopici-black/10" />
       </div>
     </div>
   );

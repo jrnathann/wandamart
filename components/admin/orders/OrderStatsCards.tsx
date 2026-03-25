@@ -22,7 +22,6 @@ export default function OrderStatsCards({ stats }: OrderStatsCardsProps) {
       <StatCard 
         title="Total Commandes" 
         value={stats.total} 
-        gradient="from-shopici-charcoal via-shopici-charcoal/90 to-shopici-black" 
         icon={<Package size={18} className="text-white" />}
         percentage={12}
         trend="up"
@@ -30,21 +29,18 @@ export default function OrderStatsCards({ stats }: OrderStatsCardsProps) {
       <StatCard 
         title="En préparation" 
         value={stats.enPreparation} 
-        gradient="from-shopici-coral via-shopici-coral/90 to-orange-600" 
         icon={<Clock size={18} className="text-white" />}
         percentage={preparationPercent}
       />
       <StatCard 
         title="En route" 
         value={stats.enRoute} 
-        gradient="from-shopici-blue via-shopici-blue/90 to-blue-700" 
         icon={<Truck size={18} className="text-white" />}
         percentage={enRoutePercent}
       />
       <StatCard 
         title="Livré" 
         value={stats.livre} 
-        gradient="from-green-500 via-green-600 to-emerald-700" 
         icon={<CheckCircle size={18} className="text-white" />}
         percentage={livrePercent}
       />

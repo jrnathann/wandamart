@@ -13,17 +13,19 @@ import OrderDetailsDrawer from "./OrderDetailsDrawer";
 import VintageHeader from "@/components/VintageHeader";
 import { fetchOrders } from "@/helper/order";
 import { CustomersPageSkeleton } from "../CustomerPageSkeleton";
+import ActionButton from "./shared/ActionButton";
+import { useNotify } from "@/context/NotifyContext";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<OrderTracking[]>([]);
     const [loading, setLoading] = useState(true);
-
+    const [isExporting, setExporting] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState<OrderTracking | null>(null);
     const [statusFilter, setStatusFilter] = useState<OrderStatus[]>([]);
     const [zoneFilter, setZoneFilter] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
     const [showUnserious, setShowUnserious] = useState(false);
-
+    const { notify } = useNotify();
     // Date filter state
     const [dateRange, setDateRange] = useState<{
         start: Date;
@@ -81,24 +83,24 @@ export default function OrdersPage() {
         enRoute: orders.filter(o => o.status === "En route").length,
         livre: orders.filter(o => o.status === "Livré").length,
     };
-    const exportOrdersToCSV = () => {
-        if (filteredOrders.length === 0) {
-            alert("Aucune commande à exporter");
-            return;
-        }
+const exportOrdersToCSV = () => {
+    // 1. START SYSTEM PROCESSING
+    setExporting(true);
 
+    // 2. GUARD CLAUSE (Validation)
+    if (filteredOrders.length === 0) {
+        notify("ALERTE", "Aucune commande détectée pour l'exportation", "warning");
+        
+        // CRITICAL: Reset the loading state before exiting
+        setExporting(false); 
+        return;
+    }
+
+    try {
         const headers = [
-            "ID",
-            "Statut",
-            "Total (XAF)",
-            "Date",
-            "Client",
-            "Téléphone",
-            "Zone de livraison",
-            "Créneau d'appel",
-            "Nombre d'articles",
-            "Articles",
-            "Checkpoints"
+            "ID", "Statut", "Total (XAF)", "Date", "Client", 
+            "Téléphone", "Zone de livraison", "Créneau d'appel", 
+            "Nombre d'articles", "Articles", "Checkpoints"
         ];
 
         const rows = filteredOrders.map(order => [
@@ -111,35 +113,39 @@ export default function OrdersPage() {
             order.customer.deliveryZone,
             order.customer.callTime,
             order.items.length,
-            order.items
-                .map(i => `${i.productId} x${i.quantity}`)
-                .join(" | "),
-            order.checkpoints
-                .map(c => `${c.status} @ ${c.location}`)
-                .join(" → ")
+            order.items.map(i => `${i.productId} x${i.quantity}`).join(" | "),
+            order.checkpoints.map(c => `${c.status} @ ${c.location}`).join(" → ")
         ]);
 
-        const csvContent =
-            [headers, ...rows]
-                .map(row =>
-                    row
-                        .map(value => `"${String(value).replace(/"/g, '""')}"`)
-                        .join(",")
-                )
-                .join("\n");
+        const csvContent = [headers, ...rows]
+            .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(","))
+            .join("\n");
 
+        // 3. FILE GENERATION
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
-
         const link = document.createElement("a");
+        
         link.href = url;
-        link.download = `commandes_${new Date().toISOString().slice(0, 10)}.csv`;
+        // Clean filename (zero underscores in display, just tech format)
+        link.download = `EXTRACT_ORDERS_${new Date().toISOString().slice(0, 10)}.csv`;
+        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
         URL.revokeObjectURL(url);
-    };
+
+        // 4. SUCCESS FEEDBACK (Optional: if you added a success state to your notify)
+        notify("SYSTÈME", "Extraction du registre terminée","success");
+
+    } catch (error) {
+        // Handle unexpected engine failures
+        notify("ERREUR", "Une erreur est survenue lors de la génération", "error");
+    } finally {
+        // 5. END SYSTEM PROCESSING (Always runs)
+        setExporting(false);
+    }
+};
 
     const toggleStatusFilter = (status: OrderStatus) => {
         setStatusFilter(prev =>
@@ -220,18 +226,16 @@ export default function OrdersPage() {
                         />
 
                         {/* Export Button */}
-                        <button
+
+                        <ActionButton
+                            label="Exporter CSV"
+                            subLabel="Format Tableur"
                             onClick={exportOrdersToCSV}
-                            className="w-full sm:w-auto px-4 py-2 bg-shopici-black hover:bg-shopici-charcoal text-white text-sm font-semibold rounded-lg transition-all shadow-sm flex items-center gap-2 justify-center"
-                        >
-                            <Download className="w-4 h-4" />
-                            Exporter
-                        </button>
+                            isLoading={isExporting}
+                        />
                     </div>
 
                 </div>
-                <div className="mt-6 h-0.5 w-full bg-gradient-to-r from-transparent via-shopici-charcoal/20 to-transparent" />
-
                 {/* Stats */}
                 <OrderStatsCards stats={stats} />
 

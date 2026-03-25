@@ -7,8 +7,10 @@ import {
   Save, Loader2, Check, AlertCircle, Sliders,
   LayoutTemplate, CreditCard, Globe, Image as ImageIcon,
   ChevronDown, ChevronUp,
+  ChevronsUpDown,
 } from "lucide-react";
-
+import ActionButton from "@/components/admin/orders/shared/ActionButton";
+import { useNotify } from "@/context/NotifyContext";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface BannerSlide {
@@ -77,12 +79,12 @@ function normalizeSlides(slides: BannerSlide[]): BannerSlide[] {
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: "general",  label: "Général",   icon: Store },
-  { id: "contact",  label: "Contact",   icon: Phone },
-  { id: "social",   label: "Réseaux",   icon: Globe },
+  { id: "general", label: "Général", icon: Store },
+  { id: "contact", label: "Contact", icon: Phone },
+  { id: "social", label: "Réseaux", icon: Globe },
   { id: "tracking", label: "Analytics", icon: BarChart2 },
-  { id: "theme",    label: "Thème",     icon: Palette },
-  { id: "banners",  label: "Bannières", icon: LayoutTemplate },
+  { id: "theme", label: "Thème", icon: Palette },
+  { id: "banners", label: "Bannières", icon: LayoutTemplate },
   { id: "features", label: "Fonctions", icon: Zap },
 ] as const;
 
@@ -91,74 +93,126 @@ type TabId = (typeof TABS)[number]["id"];
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Field({ label, hint, children }: {
-  label: string; hint?: string; children: React.ReactNode;
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold text-shopici-charcoal uppercase tracking-wider">{label}</label>
-      {children}
-      {hint && <p className="text-xs text-shopici-charcoal/50 mt-0.5">{hint}</p>}
+    <div className="group flex flex-col gap-2 relative">
+      {/* Label: Shifted to high-contrast black with extra tracking for a 'technical' feel */}
+      <div className="flex items-center gap-2">
+        <label className="text-[10px] font-black text-shopici-black uppercase tracking-[0.15em] leading-none">
+          {label}
+        </label>
+        <div className="h-[1px] flex-1 bg-shopici-black/5 group-focus-within:bg-shopici-blue/20 transition-colors" />
+      </div>
+
+      {/* Input Slot */}
+      <div className="relative">
+        {children}
+      </div>
+
+      {/* Hint: Formatted like a code comment // */}
+      {hint && (
+        <p className="text-[10px] font-mono text-shopici-charcoal/40 mt-0.5 flex items-start gap-1">
+          <span className="text-shopici-blue/40 font-bold">//</span>
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
 
 function Input({ value, onChange, placeholder, type = "text" }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
 }) {
   return (
-    <input type={type} value={value} onChange={e => onChange(e.target.value)}
+    <input
+      type={type}
+      value={value}
+      onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full px-4 py-2.5 text-sm border border-shopici-charcoal/10 rounded-xl
-        focus:outline-none focus:border-shopici-blue/50 focus:ring-2 focus:ring-shopici-blue/15
-        bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/35 transition-all" />
+      className="w-full px-4 py-3 text-[13px] font-bold border border-shopici-charcoal/15 rounded-none
+        focus:outline-none focus:border-shopici-blue focus:bg-white
+        bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/20 
+        transition-all duration-200 border-l-2 focus:border-l-shopici-blue"
+    />
   );
 }
 
 function Textarea({ value, onChange, placeholder, rows = 3 }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; rows?: number;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  rows?: number;
 }) {
   return (
-    <textarea value={value} onChange={e => onChange(e.target.value)}
-      placeholder={placeholder} rows={rows}
-      className="w-full px-4 py-2.5 text-sm border border-shopici-charcoal/10 rounded-xl
-        focus:outline-none focus:border-shopici-blue/50 focus:ring-2 focus:ring-shopici-blue/15
-        bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/35 transition-all resize-none" />
+    <textarea
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={rows}
+      className="w-full px-4 py-3 text-[13px] font-bold border border-shopici-charcoal/15 rounded-none
+        focus:outline-none focus:border-shopici-blue focus:bg-white
+        bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/20 
+        transition-all duration-200 border-l-2 focus:border-l-shopici-blue resize-none
+        scrollbar-thin scrollbar-thumb-shopici-charcoal/20"
+    />
   );
 }
 
 function IconInput({ value, onChange, placeholder, type = "text", icon }: {
-  value: string; onChange: (v: string) => void;
-  placeholder?: string; type?: string; icon: React.ReactNode;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+  icon: React.ReactNode;
 }) {
   return (
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-shopici-charcoal/40 pointer-events-none">
+    <div className="group relative">
+      {/* Icon Wrapper: High contrast background on focus for a 'modular' look */}
+      <span className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center 
+        text-shopici-charcoal/40 group-focus-within:text-shopici-blue 
+        border-r border-shopici-charcoal/10 transition-colors pointer-events-none">
         {icon}
       </span>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)}
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-9 pr-4 py-2.5 text-sm border border-shopici-charcoal/10 rounded-xl
-          focus:outline-none focus:border-shopici-blue/50 focus:ring-2 focus:ring-shopici-blue/15
-          bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/35 transition-all" />
+        className="w-full pl-14 pr-4 py-3 text-[13px] font-bold border border-shopici-charcoal/15 rounded-none
+          focus:outline-none focus:border-shopici-blue focus:bg-white
+          bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/20 
+          transition-all duration-200 border-l-2 focus:border-l-shopici-blue"
+      />
     </div>
   );
 }
-
 // ─── Image upload ─────────────────────────────────────────────────────────────
 
-function ImageUpload({ value, onChange, label = "Télécharger", previewSize = "md" }: {
-  value: string; onChange: (url: string) => void;
-  label?: string; previewSize?: "sm" | "md" | "lg";
+function ImageUpload({ value, onChange, label = "Charger l'Asset", previewSize = "md" }: {
+  value: string;
+  onChange: (url: string) => void;
+  label?: string;
+  previewSize?: "sm" | "md" | "lg";
 }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const ref = useRef<HTMLInputElement>(null);
-  const sizeClass = previewSize === "sm" ? "h-14 w-14" : previewSize === "lg" ? "h-28 w-28" : "h-20 w-20";
+
+  // Industrial scale: slightly larger, strictly square
+  const sizeClass = previewSize === "sm" ? "h-16 w-16" : previewSize === "lg" ? "h-32 w-32" : "h-24 w-24";
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(""); setUploading(true);
+    setError("");
+    setUploading(true);
+
     try {
       const form = new FormData();
       form.append("file", file);
@@ -167,7 +221,7 @@ function ImageUpload({ value, onChange, label = "Télécharger", previewSize = "
       const data = await res.json();
       onChange(data.url);
     } catch {
-      setError("Échec de l'upload.");
+      setError("ERREUR_SYS: Échec de l'upload.");
     } finally {
       setUploading(false);
       if (ref.current) ref.current.value = "";
@@ -175,56 +229,110 @@ function ImageUpload({ value, onChange, label = "Télécharger", previewSize = "
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <div className={`${sizeClass} rounded-xl border-2 border-dashed border-shopici-charcoal/15
-        bg-shopici-gray/5 flex items-center justify-center overflow-hidden shrink-0`}>
-        {value
-          ? <img src={value} alt="preview" className="w-full h-full object-cover" />
-          : <ImageIcon size={20} className="text-shopici-charcoal/25" />}
+    <div className="flex items-start gap-6 group">
+      {/* Asset Preview Frame */}
+      <div className={`${sizeClass} relative border border-shopici-charcoal/20 bg-shopici-gray/5 
+        flex items-center justify-center overflow-hidden shrink-0 transition-all
+        group-hover:border-shopici-blue/40`}>
+
+        {value ? (
+          <img src={value} alt="asset-preview" className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all" />
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <ImageIcon size={20} className="text-shopici-charcoal/20" />
+            <span className="text-[8px] font-black uppercase text-shopici-charcoal/20 tracking-tighter">No_Data</span>
+          </div>
+        )}
+
+        {/* Loading Overlay */}
+        {uploading && (
+          <div className="absolute inset-0 bg-shopici-black/60 flex items-center justify-center backdrop-blur-[1px]">
+            <Loader2 size={20} className="animate-spin text-white" />
+          </div>
+        )}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <button type="button" onClick={() => ref.current?.click()} disabled={uploading}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold
-            bg-shopici-blue/10 text-shopici-blue hover:bg-shopici-blue/20
-            rounded-xl transition-all border border-shopici-blue/20 disabled:opacity-60">
-          {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-          {uploading ? "Upload…" : label}
-        </button>
-        {value && (
-          <button type="button" onClick={() => onChange("")}
-            className="text-xs text-shopici-coral/70 hover:text-shopici-coral transition-colors text-left">
-            Supprimer
+
+      <div className="flex flex-col gap-3 pt-1">
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => ref.current?.click()}
+            disabled={uploading}
+            className="flex items-center justify-center gap-3 px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em]
+              bg-shopici-black text-white hover:bg-shopici-blue disabled:bg-shopici-charcoal/40 
+              transition-all duration-200 shadow-sm"
+          >
+            {uploading ? "SÉQUENCE_CHARGEMENT..." : label}
           </button>
-        )}
+
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="text-[9px] font-bold text-shopici-coral/60 hover:text-shopici-coral 
+                uppercase tracking-widest text-left pt-1 transition-colors"
+            >
+              [ Effacer L'entrée ]
+            </button>
+          )}
+        </div>
+
         {error && (
-          <p className="text-xs text-shopici-coral flex items-center gap-1">
-            <AlertCircle size={11} /> {error}
-          </p>
+          <div className="flex items-center gap-2 p-2 bg-shopici-coral/5 border-l-2 border-shopici-coral">
+            <AlertCircle size={12} className="text-shopici-coral" />
+            <span className="text-[10px] font-mono font-bold text-shopici-coral">{error}</span>
+          </div>
         )}
       </div>
+
       <input ref={ref} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   );
 }
-
 // ─── Color field ──────────────────────────────────────────────────────────────
 
 function ColorField({ label, value, onChange }: {
-  label: string; value: string; onChange: (v: string) => void;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold text-shopici-charcoal uppercase tracking-wider">{label}</label>
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg border border-shopici-charcoal/15 shrink-0"
-          style={{ backgroundColor: value }} />
-        <input type="color" value={value} onChange={e => onChange(e.target.value)}
-          className="w-8 h-8 rounded-lg cursor-pointer border border-shopici-charcoal/10 bg-transparent" />
-        <input type="text" value={value} onChange={e => onChange(e.target.value)}
-          placeholder="#000000"
-          className="flex-1 px-3 py-2 text-sm font-mono border border-shopici-charcoal/10 rounded-xl
-            focus:outline-none focus:border-shopici-blue/50 focus:ring-2 focus:ring-shopici-blue/15
-            bg-shopici-gray/5 text-shopici-black transition-all" />
+    <div className="flex flex-col gap-2 group">
+      {/* Small Technical Label */}
+      <label className="text-[10px] font-black text-shopici-charcoal/40 uppercase tracking-[0.2em]">
+        {label}
+      </label>
+
+      <div className="flex items-stretch gap-0">
+        {/* Integrated Color Swatch & Native Picker */}
+        <div className="relative w-12 h-12 border border-shopici-charcoal/20 shrink-0 bg-white p-1">
+          <div
+            className="w-full h-full transition-colors duration-300"
+            style={{ backgroundColor: value }}
+          />
+          <input
+            type="color"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+        </div>
+
+        {/* HEX Data Input */}
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-shopici-charcoal/30 font-bold pointer-events-none">
+            HEX_
+          </span>
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="#000000"
+            className="w-full h-full pl-12 pr-4 text-[13px] font-mono font-bold border border-l-0 border-shopici-charcoal/20 rounded-none
+              focus:outline-none focus:border-shopici-blue focus:bg-white
+              bg-shopici-gray/5 text-shopici-black transition-all uppercase"
+          />
+        </div>
       </div>
     </div>
   );
@@ -233,26 +341,58 @@ function ColorField({ label, value, onChange }: {
 // ─── Feature toggle ───────────────────────────────────────────────────────────
 
 function FeatureToggle({ label, description, icon, value, onChange }: {
-  label: string; description: string; icon: React.ReactNode;
-  value: boolean; onChange: (v: boolean) => void;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  value: boolean;
+  onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-4 border border-shopici-charcoal/10
-      rounded-xl hover:bg-shopici-gray/5 transition-colors">
-      <div className="flex items-center gap-3">
-        <span className={`p-2 rounded-xl transition-colors ${value
-          ? "bg-green-100 text-green-600" : "bg-shopici-gray/20 text-shopici-charcoal/40"}`}>
+    <div className={`flex items-center justify-between p-5 border transition-all duration-300
+      ${value
+        ? "border-shopici-blue/30 bg-shopici-blue/[0.02]"
+        : "border-shopici-charcoal/10 bg-transparent"}`}>
+
+      <div className="flex items-center gap-4">
+        {/* Modular Icon Housing */}
+        <div className={`w-12 h-12 flex items-center justify-center border transition-colors
+          ${value
+            ? "border-shopici-blue bg-shopici-blue/10 text-shopici-blue"
+            : "border-shopici-charcoal/10 bg-shopici-gray/5 text-shopici-charcoal/30"}`}>
           {icon}
-        </span>
+        </div>
+
         <div>
-          <p className="text-sm font-semibold text-shopici-black">{label}</p>
-          <p className="text-xs text-shopici-charcoal/55 mt-0.5">{description}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-[13px] font-black uppercase tracking-tight text-shopici-black">
+              {label}
+            </p>
+            {value && (
+              <span className="text-[8px] font-black px-1.5 py-0.5 bg-green-500 text-white uppercase tracking-tighter">
+                Active
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] font-medium text-shopici-charcoal/50 mt-1 leading-tight max-w-[280px]">
+            {description}
+          </p>
         </div>
       </div>
-      <button type="button" onClick={() => onChange(!value)}
-        className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${value ? "bg-green-500" : "bg-shopici-charcoal/20"}`}
-        aria-pressed={value} aria-label={label}>
-        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${value ? "translate-x-5" : "translate-x-0"}`} />
+
+      {/* Industrial Rectangular Switch */}
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        className={`relative w-14 h-7 border-2 transition-all duration-200 shrink-0
+          ${value ? "border-green-500 bg-shopici-blue/5" : "border-shopici-charcoal/20 bg-shopici-gray/10"}`}
+        aria-pressed={value}
+        aria-label={label}
+      >
+        <div className={`absolute top-0.5 bottom-0.5 w-5 transition-all duration-300
+          ${value
+            ? "right-0.5 bg-green-500 shadow-[0_0_10px_rgba(134,159,173,0.5)]"
+            : "left-0.5 bg-shopici-charcoal/30"}`}
+        />
       </button>
     </div>
   );
@@ -261,46 +401,46 @@ function FeatureToggle({ label, description, icon, value, onChange }: {
 // ─── Tailwind gradient builder ────────────────────────────────────────────────
 
 const TW_COLORS = [
-  { label: "Slate",   stops: ["slate-300","slate-400","slate-500","slate-600","slate-700","slate-800","slate-900"] },
-  { label: "Gray",    stops: ["gray-300","gray-400","gray-500","gray-600","gray-700","gray-800","gray-900"] },
-  { label: "Red",     stops: ["red-300","red-400","red-500","red-600","red-700","red-800"] },
-  { label: "Orange",  stops: ["orange-300","orange-400","orange-500","orange-600","orange-700"] },
-  { label: "Amber",   stops: ["amber-300","amber-400","amber-500","amber-600","amber-700"] },
-  { label: "Yellow",  stops: ["yellow-300","yellow-400","yellow-500","yellow-600"] },
-  { label: "Lime",    stops: ["lime-300","lime-400","lime-500","lime-600","lime-700"] },
-  { label: "Green",   stops: ["green-300","green-400","green-500","green-600","green-700","green-800"] },
-  { label: "Teal",    stops: ["teal-300","teal-400","teal-500","teal-600","teal-700","teal-800"] },
-  { label: "Cyan",    stops: ["cyan-300","cyan-400","cyan-500","cyan-600","cyan-700"] },
-  { label: "Sky",     stops: ["sky-300","sky-400","sky-500","sky-600","sky-700","sky-800"] },
-  { label: "Blue",    stops: ["blue-300","blue-400","blue-500","blue-600","blue-700","blue-800"] },
-  { label: "Indigo",  stops: ["indigo-300","indigo-400","indigo-500","indigo-600","indigo-700","indigo-800"] },
-  { label: "Violet",  stops: ["violet-300","violet-400","violet-500","violet-600","violet-700","violet-800"] },
-  { label: "Purple",  stops: ["purple-300","purple-400","purple-500","purple-600","purple-700","purple-800"] },
-  { label: "Fuchsia", stops: ["fuchsia-300","fuchsia-400","fuchsia-500","fuchsia-600","fuchsia-700"] },
-  { label: "Pink",    stops: ["pink-300","pink-400","pink-500","pink-600","pink-700","pink-800"] },
-  { label: "Rose",    stops: ["rose-300","rose-400","rose-500","rose-600","rose-700","rose-800"] },
+  { label: "Slate", stops: ["slate-300", "slate-400", "slate-500", "slate-600", "slate-700", "slate-800", "slate-900"] },
+  { label: "Gray", stops: ["gray-300", "gray-400", "gray-500", "gray-600", "gray-700", "gray-800", "gray-900"] },
+  { label: "Red", stops: ["red-300", "red-400", "red-500", "red-600", "red-700", "red-800"] },
+  { label: "Orange", stops: ["orange-300", "orange-400", "orange-500", "orange-600", "orange-700"] },
+  { label: "Amber", stops: ["amber-300", "amber-400", "amber-500", "amber-600", "amber-700"] },
+  { label: "Yellow", stops: ["yellow-300", "yellow-400", "yellow-500", "yellow-600"] },
+  { label: "Lime", stops: ["lime-300", "lime-400", "lime-500", "lime-600", "lime-700"] },
+  { label: "Green", stops: ["green-300", "green-400", "green-500", "green-600", "green-700", "green-800"] },
+  { label: "Teal", stops: ["teal-300", "teal-400", "teal-500", "teal-600", "teal-700", "teal-800"] },
+  { label: "Cyan", stops: ["cyan-300", "cyan-400", "cyan-500", "cyan-600", "cyan-700"] },
+  { label: "Sky", stops: ["sky-300", "sky-400", "sky-500", "sky-600", "sky-700", "sky-800"] },
+  { label: "Blue", stops: ["blue-300", "blue-400", "blue-500", "blue-600", "blue-700", "blue-800"] },
+  { label: "Indigo", stops: ["indigo-300", "indigo-400", "indigo-500", "indigo-600", "indigo-700", "indigo-800"] },
+  { label: "Violet", stops: ["violet-300", "violet-400", "violet-500", "violet-600", "violet-700", "violet-800"] },
+  { label: "Purple", stops: ["purple-300", "purple-400", "purple-500", "purple-600", "purple-700", "purple-800"] },
+  { label: "Fuchsia", stops: ["fuchsia-300", "fuchsia-400", "fuchsia-500", "fuchsia-600", "fuchsia-700"] },
+  { label: "Pink", stops: ["pink-300", "pink-400", "pink-500", "pink-600", "pink-700", "pink-800"] },
+  { label: "Rose", stops: ["rose-300", "rose-400", "rose-500", "rose-600", "rose-700", "rose-800"] },
 ];
 
 const GRADIENT_PRESETS = [
-  { label: "Océan",       value: "from-blue-500 to-cyan-400" },
-  { label: "Coucher",     value: "from-orange-400 to-pink-600" },
-  { label: "Forêt",       value: "from-green-500 to-teal-700" },
-  { label: "Crépuscule",  value: "from-purple-600 to-pink-500" },
-  { label: "Nuit",        value: "from-slate-800 to-blue-900" },
-  { label: "Feu",         value: "from-red-500 to-orange-400" },
-  { label: "Lavande",     value: "from-indigo-400 to-violet-500" },
-  { label: "Menthe",      value: "from-teal-400 to-green-300" },
-  { label: "Rose Gold",   value: "from-rose-400 to-amber-300" },
-  { label: "Profond",     value: "from-gray-900 to-slate-700" },
-  { label: "Aqua",        value: "from-cyan-500 to-blue-600" },
-  { label: "Tropique",    value: "from-lime-400 to-cyan-500" },
+  { label: "Océan", value: "from-blue-500 to-cyan-400" },
+  { label: "Coucher", value: "from-orange-400 to-pink-600" },
+  { label: "Forêt", value: "from-green-500 to-teal-700" },
+  { label: "Crépuscule", value: "from-purple-600 to-pink-500" },
+  { label: "Nuit", value: "from-slate-800 to-blue-900" },
+  { label: "Feu", value: "from-red-500 to-orange-400" },
+  { label: "Lavande", value: "from-indigo-400 to-violet-500" },
+  { label: "Menthe", value: "from-teal-400 to-green-300" },
+  { label: "Rose Gold", value: "from-rose-400 to-amber-300" },
+  { label: "Profond", value: "from-gray-900 to-slate-700" },
+  { label: "Aqua", value: "from-cyan-500 to-blue-600" },
+  { label: "Tropique", value: "from-lime-400 to-cyan-500" },
 ];
 
 const DIR_OPTIONS = [
-  { value: "r",  label: "→" },
-  { value: "l",  label: "←" },
-  { value: "b",  label: "↓" },
-  { value: "t",  label: "↑" },
+  { value: "r", label: "→" },
+  { value: "l", label: "←" },
+  { value: "b", label: "↓" },
+  { value: "t", label: "↑" },
   { value: "br", label: "↘" },
   { value: "bl", label: "↙" },
   { value: "tr", label: "↗" },
@@ -309,12 +449,12 @@ const DIR_OPTIONS = [
 
 function parseBgColor(val: string) {
   const fromMatch = val.match(/from-([\w-]+)/);
-  const toMatch   = val.match(/to-([\w-]+)/);
-  const dirMatch  = val.match(/bg-gradient-to-(\w+)/);
+  const toMatch = val.match(/to-([\w-]+)/);
+  const dirMatch = val.match(/bg-gradient-to-(\w+)/);
   return {
     from: fromMatch?.[1] ?? "blue-500",
-    to:   toMatch?.[1]   ?? "purple-600",
-    dir:  dirMatch?.[1]  ?? "r",
+    to: toMatch?.[1] ?? "purple-600",
+    dir: dirMatch?.[1] ?? "r",
   };
 }
 
@@ -323,24 +463,24 @@ function buildBgColor(from: string, to: string, dir: string) {
 }
 
 const TW_HEX: Record<string, string> = {
-  "slate-300":"#cbd5e1","slate-400":"#94a3b8","slate-500":"#64748b","slate-600":"#475569","slate-700":"#334155","slate-800":"#1e293b","slate-900":"#0f172a",
-  "gray-300":"#d1d5db","gray-400":"#9ca3af","gray-500":"#6b7280","gray-600":"#4b5563","gray-700":"#374151","gray-800":"#1f2937","gray-900":"#111827",
-  "red-300":"#fca5a5","red-400":"#f87171","red-500":"#ef4444","red-600":"#dc2626","red-700":"#b91c1c","red-800":"#991b1b",
-  "orange-300":"#fdba74","orange-400":"#fb923c","orange-500":"#f97316","orange-600":"#ea580c","orange-700":"#c2410c",
-  "amber-300":"#fcd34d","amber-400":"#fbbf24","amber-500":"#f59e0b","amber-600":"#d97706","amber-700":"#b45309",
-  "yellow-300":"#fde047","yellow-400":"#facc15","yellow-500":"#eab308","yellow-600":"#ca8a04",
-  "lime-300":"#bef264","lime-400":"#a3e635","lime-500":"#84cc16","lime-600":"#65a30d","lime-700":"#4d7c0f",
-  "green-300":"#86efac","green-400":"#4ade80","green-500":"#22c55e","green-600":"#16a34a","green-700":"#15803d","green-800":"#166534",
-  "teal-300":"#5eead4","teal-400":"#2dd4bf","teal-500":"#14b8a6","teal-600":"#0d9488","teal-700":"#0f766e","teal-800":"#115e59",
-  "cyan-300":"#67e8f9","cyan-400":"#22d3ee","cyan-500":"#06b6d4","cyan-600":"#0891b2","cyan-700":"#0e7490",
-  "sky-300":"#7dd3fc","sky-400":"#38bdf8","sky-500":"#0ea5e9","sky-600":"#0284c7","sky-700":"#0369a1","sky-800":"#075985",
-  "blue-300":"#93c5fd","blue-400":"#60a5fa","blue-500":"#3b82f6","blue-600":"#2563eb","blue-700":"#1d4ed8","blue-800":"#1e40af",
-  "indigo-300":"#a5b4fc","indigo-400":"#818cf8","indigo-500":"#6366f1","indigo-600":"#4f46e5","indigo-700":"#4338ca","indigo-800":"#3730a3",
-  "violet-300":"#c4b5fd","violet-400":"#a78bfa","violet-500":"#8b5cf6","violet-600":"#7c3aed","violet-700":"#6d28d9","violet-800":"#5b21b6",
-  "purple-300":"#d8b4fe","purple-400":"#c084fc","purple-500":"#a855f7","purple-600":"#9333ea","purple-700":"#7e22ce","purple-800":"#6b21a8",
-  "fuchsia-300":"#f0abfc","fuchsia-400":"#e879f9","fuchsia-500":"#d946ef","fuchsia-600":"#c026d3","fuchsia-700":"#a21caf",
-  "pink-300":"#f9a8d4","pink-400":"#f472b6","pink-500":"#ec4899","pink-600":"#db2777","pink-700":"#be185d","pink-800":"#9d174d",
-  "rose-300":"#fda4af","rose-400":"#fb7185","rose-500":"#f43f5e","rose-600":"#e11d48","rose-700":"#be123c","rose-800":"#9f1239",
+  "slate-300": "#cbd5e1", "slate-400": "#94a3b8", "slate-500": "#64748b", "slate-600": "#475569", "slate-700": "#334155", "slate-800": "#1e293b", "slate-900": "#0f172a",
+  "gray-300": "#d1d5db", "gray-400": "#9ca3af", "gray-500": "#6b7280", "gray-600": "#4b5563", "gray-700": "#374151", "gray-800": "#1f2937", "gray-900": "#111827",
+  "red-300": "#fca5a5", "red-400": "#f87171", "red-500": "#ef4444", "red-600": "#dc2626", "red-700": "#b91c1c", "red-800": "#991b1b",
+  "orange-300": "#fdba74", "orange-400": "#fb923c", "orange-500": "#f97316", "orange-600": "#ea580c", "orange-700": "#c2410c",
+  "amber-300": "#fcd34d", "amber-400": "#fbbf24", "amber-500": "#f59e0b", "amber-600": "#d97706", "amber-700": "#b45309",
+  "yellow-300": "#fde047", "yellow-400": "#facc15", "yellow-500": "#eab308", "yellow-600": "#ca8a04",
+  "lime-300": "#bef264", "lime-400": "#a3e635", "lime-500": "#84cc16", "lime-600": "#65a30d", "lime-700": "#4d7c0f",
+  "green-300": "#86efac", "green-400": "#4ade80", "green-500": "#22c55e", "green-600": "#16a34a", "green-700": "#15803d", "green-800": "#166534",
+  "teal-300": "#5eead4", "teal-400": "#2dd4bf", "teal-500": "#14b8a6", "teal-600": "#0d9488", "teal-700": "#0f766e", "teal-800": "#115e59",
+  "cyan-300": "#67e8f9", "cyan-400": "#22d3ee", "cyan-500": "#06b6d4", "cyan-600": "#0891b2", "cyan-700": "#0e7490",
+  "sky-300": "#7dd3fc", "sky-400": "#38bdf8", "sky-500": "#0ea5e9", "sky-600": "#0284c7", "sky-700": "#0369a1", "sky-800": "#075985",
+  "blue-300": "#93c5fd", "blue-400": "#60a5fa", "blue-500": "#3b82f6", "blue-600": "#2563eb", "blue-700": "#1d4ed8", "blue-800": "#1e40af",
+  "indigo-300": "#a5b4fc", "indigo-400": "#818cf8", "indigo-500": "#6366f1", "indigo-600": "#4f46e5", "indigo-700": "#4338ca", "indigo-800": "#3730a3",
+  "violet-300": "#c4b5fd", "violet-400": "#a78bfa", "violet-500": "#8b5cf6", "violet-600": "#7c3aed", "violet-700": "#6d28d9", "violet-800": "#5b21b6",
+  "purple-300": "#d8b4fe", "purple-400": "#c084fc", "purple-500": "#a855f7", "purple-600": "#9333ea", "purple-700": "#7e22ce", "purple-800": "#6b21a8",
+  "fuchsia-300": "#f0abfc", "fuchsia-400": "#e879f9", "fuchsia-500": "#d946ef", "fuchsia-600": "#c026d3", "fuchsia-700": "#a21caf",
+  "pink-300": "#f9a8d4", "pink-400": "#f472b6", "pink-500": "#ec4899", "pink-600": "#db2777", "pink-700": "#be185d", "pink-800": "#9d174d",
+  "rose-300": "#fda4af", "rose-400": "#fb7185", "rose-500": "#f43f5e", "rose-600": "#e11d48", "rose-700": "#be123c", "rose-800": "#9f1239",
 };
 
 function twHex(name: string) { return TW_HEX[name] ?? "#888888"; }
@@ -373,9 +513,8 @@ function ColorStop({ label, value, onChange }: {
                   <button key={stop} type="button"
                     onClick={() => { onChange(stop); setOpen(false); }}
                     title={stop}
-                    className={`w-6 h-6 rounded-md border-2 transition-all hover:scale-110 ${
-                      value === stop ? "border-shopici-blue scale-110" : "border-transparent"
-                    }`}
+                    className={`w-6 h-6 rounded-md border-2 transition-all hover:scale-110 ${value === stop ? "border-shopici-blue scale-110" : "border-transparent"
+                      }`}
                     style={{ backgroundColor: twHex(stop) }} />
                 ))}
               </div>
@@ -393,8 +532,8 @@ function GradientBuilder({ value, onChange }: { value: string; onChange: (v: str
   const parsed = parseBgColor(normalized);
 
   const [from, setFrom] = useState(parsed.from);
-  const [to, setTo]     = useState(parsed.to);
-  const [dir, setDir]   = useState(parsed.dir);
+  const [to, setTo] = useState(parsed.to);
+  const [dir, setDir] = useState(parsed.dir);
 
   // If the incoming value changes (e.g. slide switcher), resync local state
   useEffect(() => {
@@ -409,8 +548,8 @@ function GradientBuilder({ value, onChange }: { value: string; onChange: (v: str
   }
 
   function handleFrom(v: string) { setFrom(v); update(v, to, dir); }
-  function handleTo(v: string)   { setTo(v);   update(from, v, dir); }
-  function handleDir(v: string)  { setDir(v);  update(from, to, v); }
+  function handleTo(v: string) { setTo(v); update(from, v, dir); }
+  function handleDir(v: string) { setDir(v); update(from, to, v); }
 
   function applyPreset(preset: string) {
     const p = parseBgColor(preset);
@@ -419,10 +558,11 @@ function GradientBuilder({ value, onChange }: { value: string; onChange: (v: str
   }
 
   const previewStyle = {
-    background: `linear-gradient(${
-      { r:"to right", l:"to left", b:"to bottom", t:"to top",
-        br:"to bottom right", bl:"to bottom left", tr:"to top right", tl:"to top left" }[dir] ?? "to right"
-    }, ${twHex(from)}, ${twHex(to)})`,
+    background: `linear-gradient(${{
+      r: "to right", l: "to left", b: "to bottom", t: "to top",
+      br: "to bottom right", bl: "to bottom left", tr: "to top right", tl: "to top left"
+    }[dir] ?? "to right"
+      }, ${twHex(from)}, ${twHex(to)})`,
   };
 
   return (
@@ -455,7 +595,7 @@ function GradientBuilder({ value, onChange }: { value: string; onChange: (v: str
       {/* Custom builder */}
       <div className="grid grid-cols-2 gap-3">
         <ColorStop label="Couleur de départ" value={from} onChange={handleFrom} />
-        <ColorStop label="Couleur d'arrivée"  value={to}   onChange={handleTo} />
+        <ColorStop label="Couleur d'arrivée" value={to} onChange={handleTo} />
       </div>
 
       {/* Direction */}
@@ -464,11 +604,10 @@ function GradientBuilder({ value, onChange }: { value: string; onChange: (v: str
         <div className="flex gap-1.5 flex-wrap">
           {DIR_OPTIONS.map(d => (
             <button key={d.value} type="button" onClick={() => handleDir(d.value)}
-              className={`w-9 h-9 text-sm rounded-lg border transition-all ${
-                dir === d.value
-                  ? "border-shopici-blue/50 bg-shopici-blue/10 text-shopici-blue font-bold"
-                  : "border-shopici-charcoal/10 text-shopici-charcoal/60 hover:border-shopici-charcoal/25"
-              }`}>
+              className={`w-9 h-9 text-sm rounded-lg border transition-all ${dir === d.value
+                ? "border-shopici-blue/50 bg-shopici-blue/10 text-shopici-blue font-bold"
+                : "border-shopici-charcoal/10 text-shopici-charcoal/60 hover:border-shopici-charcoal/25"
+                }`}>
               {d.label}
             </button>
           ))}
@@ -522,7 +661,7 @@ function BannerSlideCard({ slide, index, onChange, onRemove }: {
             <Trash2 size={14} />
           </button>
           {open ? <ChevronUp size={15} className="text-shopici-charcoal/40" />
-                : <ChevronDown size={15} className="text-shopici-charcoal/40" />}
+            : <ChevronDown size={15} className="text-shopici-charcoal/40" />}
         </div>
       </div>
 
@@ -593,9 +732,9 @@ function SettingsSkeleton() {
 function Toast({ status }: { status: "idle" | "saving" | "saved" | "error" }) {
   if (status === "idle") return null;
   const map = {
-    saving: { icon: <Loader2 size={15} className="animate-spin" />, text: "Enregistrement…",        cls: "bg-shopici-blue text-white" },
-    saved:  { icon: <Check size={15} />,                            text: "Paramètres sauvegardés", cls: "bg-green-500 text-white" },
-    error:  { icon: <AlertCircle size={15} />,                      text: "Échec, réessayez",       cls: "bg-shopici-coral text-white" },
+    saving: { icon: <Loader2 size={15} className="animate-spin" />, text: "Enregistrement…", cls: "bg-shopici-blue text-white" },
+    saved: { icon: <Check size={15} />, text: "Paramètres sauvegardés", cls: "bg-green-500 text-white" },
+    error: { icon: <AlertCircle size={15} />, text: "Échec, réessayez", cls: "bg-shopici-coral text-white" },
   };
   const { icon, text, cls } = map[status];
   return (
@@ -613,7 +752,7 @@ function GeneralTab({ config, set }: { config: StoreConfig; set: (k: keyof Store
     <div className="space-y-5">
       <Field label="Logo de la boutique">
         <ImageUpload value={config.logo} onChange={v => set("logo", v)}
-          label="Télécharger le logo" previewSize="lg" />
+          label="Upload logo" previewSize="lg" />
       </Field>
       <Field label="Nom de la boutique" hint="Affiché dans le header et les emails.">
         <Input value={config.name} onChange={v => set("name", v)} placeholder="Ma Boutique" />
@@ -627,12 +766,27 @@ function GeneralTab({ config, set }: { config: StoreConfig; set: (k: keyof Store
           placeholder="Notre mission est de…" rows={2} />
       </Field>
       <Field label="Devise">
-        <select value={config.currency} onChange={e => set("currency", e.target.value)}
-          className="w-full px-4 py-2.5 text-sm border border-shopici-charcoal/10 rounded-xl
-            focus:outline-none focus:border-shopici-blue/50 bg-shopici-gray/5 text-shopici-black transition-all">
-          {["XAF","XOF","USD","EUR","GBP","NGN","GHS","KES"].map(c =>
-            <option key={c} value={c}>{c}</option>)}
-        </select>
+        <div className="relative group">
+          {/* Custom Indicator Chevron */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-shopici-charcoal/30 group-focus-within:text-shopici-blue transition-colors">
+            <ChevronsUpDown size={14} strokeWidth={3} />
+          </div>
+
+          <select
+            value={config.currency}
+            onChange={e => set("currency", e.target.value)}
+            className="w-full px-4 py-3 text-[13px] font-bold border border-shopici-charcoal/15 rounded-none
+      appearance-none focus:outline-none focus:border-shopici-blue focus:bg-white
+      bg-shopici-gray/5 text-shopici-black transition-all duration-200 
+      border-l-2 focus:border-l-shopici-blue cursor-pointer"
+          >
+            {["XAF", "XOF", "USD", "EUR", "GBP", "NGN", "GHS", "KES"].map(c => (
+              <option key={c} value={c} className="font-mono font-bold">
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
       </Field>
     </div>
   );
@@ -652,14 +806,26 @@ function ContactTab({ config, setContact }: {
         <IconInput value={config.contact.phone} onChange={v => setContact("phone", v)}
           placeholder="+237 6XX XXX XXX" type="tel" icon={<Phone size={14} />} />
       </Field>
-      <Field label="Adresse">
-        <div className="relative">
-          <MapPin size={14} className="absolute left-3 top-3 text-shopici-charcoal/40 pointer-events-none" />
-          <textarea value={config.contact.address} onChange={e => setContact("address", e.target.value)}
-            placeholder="Rue, Quartier, Ville" rows={2}
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-shopici-charcoal/10 rounded-xl
-              focus:outline-none focus:border-shopici-blue/50 focus:ring-2 focus:ring-shopici-blue/15
-              bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/35 transition-all resize-none" />
+      <Field label="Adresse" hint="Format : Rue, Quartier, Ville">
+        <div className="group relative">
+          {/* Map Icon Slot: Locked in a vertical sidebar for a technical feel */}
+          <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center 
+      text-shopici-charcoal/40 group-focus-within:text-shopici-blue 
+      border-r border-shopici-charcoal/10 transition-colors pointer-events-none">
+            <MapPin size={16} strokeWidth={2.5} />
+          </div>
+
+          <textarea
+            value={config.contact.address}
+            onChange={e => setContact("address", e.target.value)}
+            placeholder="Entrez la localisation précise..."
+            rows={2}
+            className="w-full pl-14 pr-4 py-3 text-[13px] font-bold border border-shopici-charcoal/15 rounded-none
+        focus:outline-none focus:border-shopici-blue focus:bg-white
+        bg-shopici-gray/5 text-shopici-black placeholder:text-shopici-charcoal/20 
+        transition-all duration-200 border-l-2 focus:border-l-shopici-blue resize-none
+        scrollbar-thin scrollbar-thumb-shopici-charcoal/20"
+          />
         </div>
       </Field>
     </div>
@@ -713,8 +879,8 @@ function ThemeTab({ config, setColor }: {
 }) {
   return (
     <div className="space-y-5">
-      <ColorField label="Noir (fond principal)"      value={config.theme.colors.black} onChange={v => setColor("black", v)} />
-      <ColorField label="Bleu (accent principal)"    value={config.theme.colors.blue}  onChange={v => setColor("blue", v)} />
+      <ColorField label="Noir (fond principal)" value={config.theme.colors.black} onChange={v => setColor("black", v)} />
+      <ColorField label="Bleu (accent principal)" value={config.theme.colors.blue} onChange={v => setColor("blue", v)} />
       <ColorField label="Corail (accent secondaire)" value={config.theme.colors.coral} onChange={v => setColor("coral", v)} />
       <div className="rounded-xl overflow-hidden border border-shopici-charcoal/10">
         <div className="px-4 py-2 text-xs font-semibold text-shopici-charcoal/50 uppercase tracking-wider bg-shopici-gray/5">
@@ -725,7 +891,7 @@ function ThemeTab({ config, setColor }: {
             {config.name || "Boutique"}
           </span>
           <div className="flex gap-3 ml-4">
-            {["Accueil","Produits","À propos"].map(l => (
+            {["Accueil", "Produits", "À propos"].map(l => (
               <span key={l} className="text-xs opacity-60" style={{ color: config.theme.colors.blue }}>{l}</span>
             ))}
           </div>
@@ -793,6 +959,7 @@ export default function SettingsPage() {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const {notify} = useNotify();
 
   function set<K extends keyof StoreConfig>(key: K, val: StoreConfig[K]) {
     setConfig(c => ({ ...c, [key]: val }));
@@ -857,9 +1024,11 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error();
       setStatus("saved");
+      notify("Saved","succesfully","success")
       setTimeout(() => setStatus("idle"), 3000);
     } catch {
       setStatus("error");
+      notify("Error","There was an error saving","error")
       setTimeout(() => setStatus("idle"), 4000);
     }
   }
@@ -869,7 +1038,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen">
       <Toast status={status} />
-      <div className="mx-auto space-y-6 max-w-3xl">
+      <div className="mx-auto space-y-6 max-w-6xl">
 
         {/* Header */}
         <div className="relative">
@@ -885,13 +1054,20 @@ export default function SettingsPage() {
                 Configurez l'identité et les fonctionnalités de votre boutique.
               </p>
             </div>
-            <button type="button" onClick={handleSave} disabled={status === "saving" || loading}
+            {/* <button type="button" onClick={handleSave} disabled={status === "saving" || loading}
               className="px-6 py-3 bg-gradient-to-r from-shopici-coral to-shopici-blue text-white text-sm font-bold
                 rounded-xl transition-all shadow-sm hover:shadow-md hover:scale-105 flex items-center gap-2
                 justify-center border-2 border-white/20 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed">
               {status === "saving" ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               Enregistrer
-            </button>
+            </button> */}
+            <ActionButton
+              label="Enregistrer"
+              subLabel="Paramètres"
+              icon={<Save />}
+              onClick={handleSave}
+              isLoading={status === "saving"}
+            />
           </div>
           <div className="mt-6 h-0.5 w-full bg-gradient-to-r from-transparent via-shopici-charcoal/20 to-transparent" />
         </div>
@@ -946,12 +1122,12 @@ export default function SettingsPage() {
 
             {loading ? <SettingsSkeleton /> : (
               <>
-                {activeTab === "general"  && <GeneralTab  config={config} set={set} />}
-                {activeTab === "contact"  && <ContactTab  config={config} setContact={setContact} />}
-                {activeTab === "social"   && <SocialTab   config={config} setSocial={setSocial} />}
+                {activeTab === "general" && <GeneralTab config={config} set={set} />}
+                {activeTab === "contact" && <ContactTab config={config} setContact={setContact} />}
+                {activeTab === "social" && <SocialTab config={config} setSocial={setSocial} />}
                 {activeTab === "tracking" && <TrackingTab config={config} setTracking={setTracking} />}
-                {activeTab === "theme"    && <ThemeTab    config={config} setColor={setColor} />}
-                {activeTab === "banners"  && <BannersTab  config={config} addSlide={addSlide} updateSlide={updateSlide} removeSlide={removeSlide} />}
+                {activeTab === "theme" && <ThemeTab config={config} setColor={setColor} />}
+                {activeTab === "banners" && <BannersTab config={config} addSlide={addSlide} updateSlide={updateSlide} removeSlide={removeSlide} />}
                 {activeTab === "features" && <FeaturesTab config={config} setFeature={setFeature} />}
               </>
             )}
@@ -960,12 +1136,13 @@ export default function SettingsPage() {
 
         {/* Mobile sticky save */}
         <div className="sm:hidden sticky bottom-4 z-40">
-          <button type="button" onClick={handleSave} disabled={status === "saving"}
-            className="w-full py-4 bg-gradient-to-r from-shopici-coral to-shopici-blue text-white text-sm font-bold
-              rounded-2xl shadow-lg flex items-center gap-2 justify-center border-2 border-white/20 disabled:opacity-70">
-            {status === "saving" ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-            Enregistrer les paramètres
-          </button>
+            <ActionButton
+              label="Enregistrer"
+              subLabel="Format Tableur"
+              icon={<Save />}
+              onClick={handleSave}
+              isLoading={status === "saving"}
+            />
         </div>
 
       </div>
