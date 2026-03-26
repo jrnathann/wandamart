@@ -201,12 +201,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {/* Operator Avatar: Shifted to a sharp square frame */}
             <div className="relative shrink-0">
               <div className="w-14 h-14 border border-shopici-charcoal/20 p-1 bg-white">
-                <CldImage
+                <img
                   src={user.avatar}
                   alt={user.name}
-                  fill
-                  sizes="(max-width: 768px) 10vw, 5vw"
-                  className="object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-300 shadow-inner"
+                  className="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-300 shadow-inner"
                 />
               </div>
               {/* Status indicator: Moved to a top-right 'LED' position */}

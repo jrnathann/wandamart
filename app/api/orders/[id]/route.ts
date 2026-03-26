@@ -80,7 +80,7 @@ export async function PATCH(
                         ipAddress: order._ip,
                         userAgent: order._ua,
                     },
-                    // testEventCode: "TEST60335",
+                    // testEventCode: "TEST57609",
                 }).then((result) => {
                     if (result.success) {
                         console.log(`[Facebook CAPI] ✅ Purchase event sent for order ${order.id}`);
