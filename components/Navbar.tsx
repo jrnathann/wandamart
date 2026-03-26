@@ -6,6 +6,7 @@ import { ShoppingCart, Menu, X, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useConfig } from "@/context/ConfigContext";
+import { CldImage } from 'next-cloudinary';
 
 export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
     const [open, setOpen] = useState(false);
@@ -24,14 +25,13 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
                     {/* Logo Area */}
                     <Link href="/" className="flex items-center gap-2 z-50">
                         {storeConfig?.logo ? (
-                            <Image
+                            <CldImage
                                 src={storeConfig.logo}
                                 alt={`${storeConfig.name} Logo`}
                                 width={130}
                                 height={45}
-                                priority
+                                loading="eager"
                                 className="object-contain"
-                                unoptimized
                             />
                         ) : (
                             <div className="w-[120px] h-[35px] bg-shopici-gray/20 animate-pulse" />
@@ -45,9 +45,9 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
                             { href: "/products", label: "Boutique" },
                             { href: "/contact", label: "Contact" },
                         ].map((link) => (
-                            <Link 
+                            <Link
                                 key={link.href}
-                                href={link.href} 
+                                href={link.href}
                                 className="text-[11px] font-black uppercase tracking-[0.2em] text-shopici-charcoal hover:text-shopici-blue transition-colors relative group"
                             >
                                 {link.label}
@@ -94,7 +94,7 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
             {/* Mobile Menu Drawer */}
             <div className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-[var(--shopici-background)] z-50 md:hidden transform transition-transform duration-500 cubic-bezier(0.23,1,0.32,1) ${open ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Close Button Inside Drawer */}
-                <button 
+                <button
                     onClick={() => setOpen(false)}
                     className="absolute top-8 right-6 p-2 text-shopici-black hover:text-shopici-coral transition-colors"
                 >
@@ -123,8 +123,8 @@ export default function Navbar({ onCartClick }: { onCartClick: () => void }) {
 
                     <div className="mt-auto pt-10 border-t border-shopici-gray/20">
                         <p className="text-[10px] font-bold text-shopici-gray uppercase tracking-widest mb-6">Besoin d'aide ?</p>
-                        <Link 
-                            href="https://wa.me/yournumber" 
+                        <Link
+                            href="https://wa.me/yournumber"
                             className="block w-full text-center py-5 bg-shopici-black text-white text-[11px] font-black uppercase tracking-[0.2em] hover:bg-shopici-blue transition-colors"
                         >
                             WhatsApp Support

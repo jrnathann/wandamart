@@ -3,12 +3,16 @@ const nextConfig = {
   serverExternalPackages: ["jspdf"],
   reactStrictMode: true,
   images: {
-    domains: [
-      "www.cdiscount.com",
-      "m.media-amazon.com",
-      "ci.jumia.is",
-      "images.squarespace-cdn.com",
-      "res.cloudinary.com"
+    remotePatterns: [
+      { protocol: "https", hostname: "www.cdiscount.com" },
+      { protocol: "https", hostname: "m.media-amazon.com" },
+      { protocol: "https", hostname: "ci.jumia.is" },
+      { protocol: "https", hostname: "images.squarespace-cdn.com" },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/domw8nvul/**", // scope it to your account
+      },
     ],
   },
 };

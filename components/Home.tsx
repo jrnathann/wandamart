@@ -8,6 +8,7 @@ import ProductCard from "./ProductCart";
 import { Product } from "@/types/Product";
 import HomepageSkeleton from "./HomeSkeleton";
 import { useConfig } from "@/context/ConfigContext";
+import { CldImage } from "next-cloudinary";
 
 interface HomepageProps {
     onProductAdded?: (productName: string) => void;
@@ -61,23 +62,22 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
                 {bannerSlides.map((slide, index) => (
                     <div
                         key={slide.id ?? index}
-                        className={`absolute inset-0 transition-all duration-[1000ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                            index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'
-                        }`}
+                        className={`absolute inset-0 transition-all duration-[1000ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'
+                            }`}
                     >
                         {/* Image Layer */}
-                        <Image
+                        <CldImage
                             src={slide.image}
                             alt={slide.title}
                             fill
+                            sizes="100vw"
                             className="object-cover opacity-60"
-                            priority={index === 0}
-                            unoptimized
+                            loading={index === 0 ? "eager" : "lazy"}
                         />
-                        
+
                         {/* Gradient Overlay using Brand Colors */}
                         <div className="absolute inset-0 bg-gradient-to-t from-shopici-black via-transparent to-transparent opacity-90" />
-                        
+
                         {/* Content Layer */}
                         <div className="relative h-full max-w-7xl mx-auto px-6 flex items-center">
                             <div className="max-w-3xl">
@@ -97,7 +97,7 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
                                     >
                                         {slide.cta}
                                     </Link>
-                                    <Link  href="/shipping" className="px-10 py-5 border border-white/20 text-white font-black text-[11px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
+                                    <Link href="/shipping" className="px-10 py-5 border border-white/20 text-white font-black text-[11px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
                                         Suivi Commande
                                     </Link>
                                 </div>
@@ -121,7 +121,7 @@ export default function Homepage({ onProductAdded }: HomepageProps) {
 
                 {/* Progress Bar Indicator */}
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-20">
-                    <div 
+                    <div
                         className="h-full bg-shopici-coral transition-all duration-[6000ms] ease-linear"
                         style={{ width: '100%' }}
                         key={currentSlide}

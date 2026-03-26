@@ -20,6 +20,7 @@ import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { useConfig } from "@/context/ConfigContext";
 import { NotifyProvider } from "@/context/NotifyContext";
+import { CldImage } from "next-cloudinary";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -200,10 +201,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {/* Operator Avatar: Shifted to a sharp square frame */}
             <div className="relative shrink-0">
               <div className="w-14 h-14 border border-shopici-charcoal/20 p-1 bg-white">
-                <img
+                <CldImage
                   src={user.avatar}
                   alt={user.name}
-                  className="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-300 shadow-inner"
+                  fill
+                  sizes="(max-width: 768px) 10vw, 5vw"
+                  className="object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-300 shadow-inner"
                 />
               </div>
               {/* Status indicator: Moved to a top-right 'LED' position */}
@@ -318,10 +321,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {/* Mobile User Profile */}
             <div className="p-4 border-b-2 border-shopici-charcoal/10 bg-gradient-to-br from-shopici-blue/5 to-shopici-coral/5">
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/50">
-                <img
+                <CldImage
                   src={user.avatar}
                   alt={user.name}
-                  className="w-12 h-12 rounded-full border-2 border-shopici-blue/30"
+                  width={48}
+                  height={48}
+                  className="rounded-full border-2 border-shopici-blue/30"
                 />
                 <div>
                   <p className="font-semibold text-sm text-shopici-black">{user.name}</p>

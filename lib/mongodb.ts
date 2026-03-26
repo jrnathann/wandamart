@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
-console.log("DEBUG ENV:", MONGODB_URI); // 👈 ADD THIS
+// console.log("DEBUG ENV:", MONGODB_URI); // 👈 ADD THIS
 
 
 if (!MONGODB_URI) {

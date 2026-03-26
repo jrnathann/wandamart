@@ -5,6 +5,7 @@ import type { Product } from "@/types/Product";
 import { useRouter } from "next/navigation";
 import { useNotify } from "@/context/NotifyContext";
 import { useState } from "react";
+import { CldImage } from "next-cloudinary";
 
 export default function ProductListItem({ product, onDelete }: { product: Product, onDelete: (id: string) => void; }) {
     const router = useRouter();
@@ -21,7 +22,7 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
         try {
             const res = await fetch(`/api/products/${product._id}`, { method: "DELETE" });
             if (!res.ok) throw new Error();
-            
+
             notify("MISE À JOUR", "Inventaire actualisé : Produit supprimé", "success");
             onDelete(product._id);
         } catch (error) {
@@ -39,10 +40,12 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
             {/* IMAGE: Responsive height for mobile, fixed for desktop */}
             <div className="w-full sm:w-28 h-40 sm:h-auto bg-slate-50 border-b sm:border-b-0 sm:border-r border-shopici-black/5 shrink-0 overflow-hidden">
                 {product.images?.[0] ? (
-                    <img
+                    <CldImage
                         src={product.images[0].url}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -65,7 +68,7 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
                 <p className="text-[10px] text-shopici-black/40 uppercase tracking-tight line-clamp-2 sm:line-clamp-1 mb-4 sm:mb-3">
                     {product.shortDescription || product.description}
                 </p>
-                
+
                 <div className="flex gap-2 items-center">
                     <span className="text-[8px] font-black text-white bg-shopici-black px-1.5 py-0.5 uppercase tracking-tighter">
                         {product.category || "General"}
@@ -80,14 +83,14 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
             <div className="flex sm:flex-col border-t sm:border-t-0 sm:border-l border-shopici-black/5 min-h-[56px] sm:min-h-0">
                 {!showConfirm ? (
                     <>
-                        <button 
-                            onClick={handleEdit} 
+                        <button
+                            onClick={handleEdit}
                             aria-label="Edit"
                             className="flex-1 p-4 sm:p-3 text-shopici-black/30 hover:text-shopici-blue hover:bg-shopici-blue/5 transition-all flex items-center justify-center border-r sm:border-r-0 sm:border-b border-shopici-black/5 active:bg-slate-100"
                         >
                             <Edit size={18} className="sm:size-4" />
                         </button>
-                        <button 
+                        <button
                             onClick={() => setShowConfirm(true)}
                             aria-label="Delete"
                             className="flex-1 p-4 sm:p-3 text-shopici-black/30 hover:text-shopici-coral hover:bg-shopici-coral/5 transition-all flex items-center justify-center active:bg-slate-100"
@@ -97,7 +100,7 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
                     </>
                 ) : (
                     <div className="flex flex-1 sm:flex-col h-full bg-shopici-coral/5 animate-in slide-in-from-bottom-2 sm:slide-in-from-right-2 duration-200">
-                        <button 
+                        <button
                             onClick={handleDelete}
                             disabled={isDeleting}
                             className="flex-[3] sm:flex-1 px-4 py-4 sm:py-3 bg-shopici-coral text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center gap-2"
@@ -105,7 +108,7 @@ export default function ProductListItem({ product, onDelete }: { product: Produc
                             <AlertCircle size={14} />
                             {isDeleting ? "..." : "CONFIRMER"}
                         </button>
-                        <button 
+                        <button
                             onClick={() => setShowConfirm(false)}
                             className="flex-1 p-4 sm:p-2 text-shopici-black/40 hover:text-shopici-black border-l sm:border-l-0 sm:border-t border-shopici-black/10 flex items-center justify-center"
                         >

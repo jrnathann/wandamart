@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ContentBlock } from "@/types/Product";
 import { CheckCircle2 } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
+import { CldImage } from "next-cloudinary";
 
 interface Props {
     blocks: ContentBlock[];
@@ -43,10 +44,12 @@ function Block({ block, index }: { block: ContentBlock; index: number }) {
         >
             {/* ── Image Panel (Editorial Style) ── */}
             <div className={`relative aspect-square lg:aspect-auto overflow-hidden ${isEven ? "lg:order-1" : "lg:order-2"}`}>
-                <img
+                <CldImage
                     src={block.image.url}
                     alt={block.image.alt ?? block.heading}
-                    className={`absolute inset-0 w-full h-full object-cover transition-transform duration-[1.5s] ease-out ${visible ? "scale-100" : "scale-110"}`}
+                    fill
+                    sizes="100vw"
+                    className={`object-cover transition-transform duration-[1.5s] ease-out ${visible ? "scale-100" : "scale-110"}`}
                 />
                 {/* Brand Overlay */}
                 <div className="absolute inset-0 bg-shopici-black/10 mix-blend-multiply" />

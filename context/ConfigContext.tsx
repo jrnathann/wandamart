@@ -79,9 +79,25 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         {children}
         {/* Loading overlay — only shown on cold start (no cache, waiting for first fetch) */}
         {mounted && !activeConfig && (
-          <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-            <span className="animate-pulse text-xl font-semibold">Loading...</span>
-          </div>
+<div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-[9999]">
+  <div className="w-48 h-px bg-shopici-black/10 relative overflow-hidden">
+    {/* The Scanner Beam */}
+    <div className="absolute inset-0 bg-shopici-black w-24 animate-[scan_1.5s_infinite_ease-in-out]" />
+  </div>
+  
+  {/* Minimalist Text */}
+  <span className="mt-4 text-[10px] font-black uppercase tracking-[0.5em] text-shopici-black">
+    Chargement
+  </span>
+
+  {/* CSS for the scan animation - Add to your global CSS or Tailwind config */}
+  <style jsx>{`
+    @keyframes scan {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+  `}</style>
+</div>
         )}
       </ConfigContext.Provider>
     </ConfigReadyContext.Provider>

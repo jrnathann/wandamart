@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { ShoppingCart, MapPin, Clock, Star } from "lucide-react";
 import { Product } from "@/types/Product";
 import { useCart } from "@/context/CartContext";
+import { CldImage } from "next-cloudinary";
 
 export default function ProductCard({ product, onProductAdded }: { product: Product, onProductAdded?: (n: string) => void }) {
   const { addToCart } = useCart();
@@ -20,12 +21,12 @@ export default function ProductCard({ product, onProductAdded }: { product: Prod
     onProductAdded?.(product.name);
   };
 
-  const discountPercent = product.compareAtPrice 
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100) 
+  const discountPercent = product.compareAtPrice
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
   return (
-    <div 
+    <div
       onClick={() => window.location.href = `/product-details/${product.slug}`}
       /* UPDATED: Uses var(--shopici-background) and theme gray */
       className="group flex flex-col bg-[var(--shopici-background)] border border-shopici-gray/20 hover:border-shopici-blue transition-all duration-500 cursor-pointer overflow-hidden rounded-none"
@@ -34,10 +35,12 @@ export default function ProductCard({ product, onProductAdded }: { product: Prod
       {/* UPDATED: bg-shopici-gray/10 ensures visibility against any background */}
       <div className="relative aspect-square bg-shopici-gray/10 overflow-hidden p-6">
         {product.images?.[0] ? (
-          <img 
-            src={product.images[0].url} 
+          <CldImage
+            src={product.images[0].url}
             alt={product.name}
-            className="w-full h-full object-contain mix-blend-multiply transition-transform duration-1000 ease-in-out group-hover:scale-110"
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className="object-contain mix-blend-multiply transition-transform duration-1000 ease-in-out group-hover:scale-110"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -59,9 +62,9 @@ export default function ProductCard({ product, onProductAdded }: { product: Prod
         <div className="flex items-center gap-1.5 mb-3">
           <div className="flex">
             {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                className={`w-2.5 h-2.5 ${i < Math.floor(ratingData.rating) ? 'fill-shopici-black text-shopici-black' : 'text-shopici-gray/50'}`} 
+              <Star
+                key={i}
+                className={`w-2.5 h-2.5 ${i < Math.floor(ratingData.rating) ? 'fill-shopici-black text-shopici-black' : 'text-shopici-gray/50'}`}
               />
             ))}
           </div>
@@ -110,7 +113,7 @@ export default function ProductCard({ product, onProductAdded }: { product: Prod
 
         {/* 4. Action Bar - Uses shopici-black & shopici-blue hover */}
         <div className="mt-6">
-          <button 
+          <button
             onClick={handleAddToCart}
             className="w-full flex items-center justify-center gap-3 bg-shopici-black text-white py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 hover:bg-shopici-blue active:scale-[0.98]"
           >

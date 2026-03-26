@@ -1,5 +1,6 @@
 import { MapPin, CheckCircle } from "lucide-react";
 import { Product } from "@/types/Product";
+import { CldImage } from "next-cloudinary";
 
 interface TestimonialsSectionProps {
     testimonials: Product["testimonials"];
@@ -17,10 +18,12 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
                 {testimonials.map((testimonial) => (
                     <div key={testimonial.id} className="relative group">
                         <div className="aspect-square bg-gradient-to-br from-shopici-gray to-shopici-blue/20 rounded-xl overflow-hidden">
-                            <img
+                            <CldImage
                                 src={testimonial.imageUrl}
                                 alt={`Client de ${testimonial.city}`}
-                                className="w-full h-full object-cover"
+                                fill
+                                sizes="(max-width: 768px) 15vw, 8vw"
+                                className="object-cover"
                             />
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 rounded-b-xl">

@@ -2,6 +2,7 @@
 
 import { Package, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { Product } from "@/types/Product";
+import { CldImage } from 'next-cloudinary';
 
 interface ImageGalleryProps {
     product: Product;
@@ -28,10 +29,13 @@ export default function ImageGallery({
             <div className="relative aspect-square bg-[var(--shopici-background)] rounded-[2rem] overflow-hidden group border border-shopici-gray/10 shadow-inner">
                 {product.images.length > 0 ? (
                     <>
-                        <img
+                        <CldImage
                             src={product.images[selectedImage].url}
                             alt={product.images[selectedImage].alt || product.name}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy"
                         />
 
                         {/* Navigation Arrows (Glass Effect) */}
@@ -66,12 +70,12 @@ export default function ImageGallery({
                 )}
 
                 {/* ── Low Stock Alert ── */}
-                {product.stock > 0 && product.stock < 10 && (
+                {/* {product.stock > 0 && product.stock < 10 && (
                     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/90 backdrop-blur-sm border border-orange-500/20 text-orange-600 font-black text-[10px] uppercase tracking-[0.2em] rounded-full shadow-lg flex items-center gap-2">
                         <span className="w-2 h-2 bg-orange-500 rounded-full animate-ping" />
                         Plus que {product.stock} exemplaires
                     </div>
-                )}
+                )} */}
             </div>
 
             {/* ── Thumbnails Grid ── */}
@@ -98,15 +102,17 @@ export default function ImageGallery({
                                On desktop (md:), we bumped it slightly to 100px.
                             */
                             className={`relative min-w-[80px] max-w-[80px] md:min-w-[100px] md:max-w-[100px] aspect-square transition-all duration-300 p-1 rounded-2xl flex-shrink-0 ${selectedImage === idx
-                                    ? "ring-4 ring-shopici-blue ring-offset-2 scale-95"
-                                    : "opacity-70 hover:opacity-100 grayscale-[30%] hover:grayscale-0"
+                                ? "ring-4 ring-shopici-blue ring-offset-2 scale-95"
+                                : "opacity-70 hover:opacity-100 grayscale-[30%] hover:grayscale-0"
                                 }`}
                         >
                             <div className="w-full h-full rounded-xl overflow-hidden relative shadow-sm border border-shopici-gray/10">
-                                <img
+                                <CldImage
                                     src={img.url}
                                     alt={img.alt || `Vue ${idx + 1}`}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    sizes="(max-width: 768px) 20vw, 10vw"
+                                    className="object-cover"
                                 />
                                 {selectedImage === idx && (
                                     <div className="absolute inset-0 bg-shopici-blue/10" />

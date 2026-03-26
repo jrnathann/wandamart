@@ -4,6 +4,7 @@ import { Edit, Trash2, ImageIcon, AlertTriangle, Star, X, Loader2 } from "lucide
 import type { Product } from "@/types/Product";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CldImage } from "next-cloudinary";
 
 export default function ProductCard({ product, onDelete }: { product: Product, onDelete: (id: string) => void; }) {
     const router = useRouter();
@@ -41,7 +42,7 @@ export default function ProductCard({ product, onDelete }: { product: Product, o
 
     return (
         <div className="group relative bg-white border border-shopici-black/30 rounded-none overflow-hidden transition-all md:hover:shadow-[8px_8px_0px_rgba(0,0,0,0.1)] flex flex-col h-full">
-            
+
             {/* --- DELETE CONFIRMATION OVERLAY --- */}
             {showConfirm && (
                 <div className="absolute inset-0 z-50 bg-shopici-black flex flex-col items-center justify-center p-4 text-center">
@@ -49,13 +50,13 @@ export default function ProductCard({ product, onDelete }: { product: Product, o
                         Confirmer la suppression ?
                     </p>
                     <div className="flex gap-2 w-full">
-                        <button 
+                        <button
                             onClick={(e) => { e.stopPropagation(); setShowConfirm(false); }}
                             className="flex-1 py-2 border border-white text-white text-[9px] font-black uppercase hover:bg-white hover:text-shopici-black transition-all"
                         >
                             Annuler
                         </button>
-                        <button 
+                        <button
                             onClick={(e) => { e.stopPropagation(); handleDelete(); }}
                             className="flex-1 py-2 bg-shopici-coral text-white text-[9px] font-black uppercase hover:bg-white hover:text-shopici-coral transition-all"
                         >
@@ -76,10 +77,12 @@ export default function ProductCard({ product, onDelete }: { product: Product, o
             {/* 1. MEDIA SECTION */}
             <div className="relative aspect-square bg-slate-50 overflow-hidden shrink-0">
                 {product.images[0] ? (
-                    <img
+                    <CldImage
                         src={product.images[0].url}
                         alt={product.name}
-                        className="w-full h-full object-cover grayscale-[0.2] md:group-hover:grayscale-0 md:group-hover:scale-105 transition-all duration-500"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover grayscale-[0.2] md:group-hover:grayscale-0 md:group-hover:scale-105 transition-all duration-500"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -150,14 +153,14 @@ export default function ProductCard({ product, onDelete }: { product: Product, o
 
             {/* 3. MOBILE ACTION BAR */}
             <div className="md:hidden flex border-t-2 border-shopici-black/10 h-12">
-                <button 
+                <button
                     onClick={handleEdit}
                     className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest bg-white active:bg-slate-100"
                 >
                     <Edit size={14} /> Modifier
                 </button>
                 <div className="w-[2px] bg-shopici-black" />
-                <button 
+                <button
                     onClick={confirmDelete}
                     className="flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-shopici-coral bg-white active:bg-shopici-coral/5"
                 >
