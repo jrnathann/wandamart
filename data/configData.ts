@@ -41,7 +41,7 @@ export const storeConfig = {
     colors: {
       black: "#020202",
       blue: "#869FAD",
-      coral: "#E9796F",
+      coral: "#fe6448",
     }
   },
     features: {
