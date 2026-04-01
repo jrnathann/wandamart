@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: `${storeConfig.name}`,
     short_name: "Admin",
-    description: "Administration Dashboard",
+    description: `${storeConfig.name} Administration Dashboard`,
     start_url: "/admin",
     scope: "/admin",
     display: "standalone",
