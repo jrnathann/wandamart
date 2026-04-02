@@ -35,7 +35,7 @@ export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {customer.hasWhatsApp && (
             <a
-              href={`https://wa.me/${customer.phone.replace(/\s/g, "")}?text=${encodeURIComponent(`Bonjour ${customer.name}, votre commande a bien été reçue ✅.\n\nNotre équipe va vous contacter pour confirmation et livraison 🚚.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received ✅.\n\nOur team will contact you shortly to confirm and arrange delivery 🚚.\nThank you for your trust 🙏`)}`}
+              href={`https://wa.me/${customer.phone.replace(/\s/g, "")}?text=${encodeURIComponent(`Bonjour ${customer.name}, votre commande a bien été reçue.\n\nNotre équipe va vous contacter pour confirmation et livraison.\nMerci pour votre confiance \n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\nOur team will contact you shortly to confirm and arrange delivery.\nThank you for your trust.`)}`}
               target="_blank"
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
             >
