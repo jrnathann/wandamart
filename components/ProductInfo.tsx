@@ -47,46 +47,48 @@ export default function ProductInfo({
                 )}
             </div>
 
-            {/* ── Price Section ── */}
-            <div className="space-y-3">
-                {/* ── The Main Price Line ── */}
-                <div className="flex items-center gap-3">
-                    {/* Large, Bold Main Price */}
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-black text-shopici-black tracking-tighter tabular-nums leading-none">
-                            {formatPrice(product.price)}
-                        </span>
-                        <span className="text-sm font-black text-shopici-blue uppercase tracking-widest self-end pb-1">
-                            XAF
-                        </span>
-                    </div>
+{/* ── Price Section ── */}
+<div className="space-y-3">
+    {/* ── Main Price Row ── */}
+    <div className="flex items-center gap-3 flex-wrap">
+        
+        {/* Current Price */}
+        <div className="flex items-baseline gap-1">
+            <span className="text-5xl font-black text-shopici-black tracking-tighter tabular-nums leading-none">
+                {formatPrice(product.price)}
+            </span>
+            <span className="text-sm font-black text-shopici-blue uppercase tracking-widest self-end pb-1">
+                XAF
+            </span>
+        </div>
 
-                    {/* Vertical Separator */}
-                    <div className="h-8 w-px bg-shopici-gray/20 rotate-[15deg]" />
+        {/* Old Price (inline, subtle strike) */}
+        {product.compareAtPrice && (
+            <span className="text-lg text-gray-400 line-through font-bold ml-1">
+                {formatPrice(product.compareAtPrice)}
+            </span>
+        )}
 
-                    {/* Savings Badge - Clean & Circular */}
-                    {product.compareAtPrice && (() => {
-                        const oldPrice = product.compareAtPrice; // TypeScript "narrows" this to just a number here
-                        const savings = oldPrice - product.price;
+        {/* Discount % Badge */}
+        {product.compareAtPrice && (() => {
+            const oldPrice = product.compareAtPrice;
+            const discount = Math.round(((oldPrice - product.price) / oldPrice) * 100);
 
-                        return (
-                            <span className="text-xs font-black text-green-600">
-                                Économisez {formatPrice(savings)} XAF
-                            </span>
-                        );
-                    })()}
-                </div>
+            return (
+                <span className="px-2.5 py-1 text-xs font-black bg-red-500 text-white rounded-full">
+                    -{discount}%
+                </span>
+            );
+        })()}
+    </div>
 
-                {/* ── The "Trust & Value" Ribbon ── */}
-                {product.compareAtPrice && (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-shopici-coral/5 border border-shopici-coral/10 rounded-xl">
-                        <Zap className="w-3.5 h-3.5 text-shopici-coral fill-shopici-coral" />
-                        <p className="text-[11px] font-bold text-shopici-coral uppercase tracking-tight">
-                            Offre Spéciale : Économisez {formatPrice(product.compareAtPrice - product.price)} XAF
-                        </p>
-                    </div>
-                )}
-            </div>
+    {/* ── Savings Line (Cleaner, less salesy) ── */}
+    {product.compareAtPrice && (
+        <p className="text-sm text-green-600 font-semibold">
+            Vous économisez {formatPrice(product.compareAtPrice - product.price)} XAF
+        </p>
+    )}
+</div>
 
             {/* ── Quantity Selector ── */}
             <div className="flex items-center justify-between bg-white border border-shopici-gray/20 rounded-2xl p-4">
