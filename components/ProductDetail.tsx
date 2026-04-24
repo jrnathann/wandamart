@@ -32,6 +32,52 @@ function getCookie(name: string): string | undefined {
     return match?.[2];
 }
 
+// SHA-256 hash a string (returns hex string)
+async function hashString(value: string): Promise<string> {
+    const cleaned = value.trim().toLowerCase();
+    if (!cleaned) return "";
+    const encoder = new TextEncoder();
+    const data = encoder.encode(cleaned);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+// Normalize Cameroonian phone to E.164 (+237XXXXXXXXX) then hash
+async function hashPhone(phone: string): Promise<string> {
+    let normalized = phone.trim().replace(/\s+/g, "").replace(/-/g, "");
+    if (!normalized.startsWith("+")) {
+        // If starts with 237, add +
+        if (normalized.startsWith("237")) {
+            normalized = "+" + normalized;
+        } else {
+            normalized = "+237" + normalized;
+        }
+    }
+    return hashString(normalized);
+}
+
+// Build hashed user data object from name + phone
+async function buildUserData(name: string, phone: string): Promise<Record<string, string>> {
+    const parts = name.trim().split(/\s+/);
+    const firstName = parts[0] ?? "";
+    const lastName = parts.slice(1).join(" ");
+
+    const [ph, fn, ln] = await Promise.all([
+        hashPhone(phone),
+        hashString(firstName),
+        hashString(lastName),
+    ]);
+
+    const userData: Record<string, string> = { country: "cm" };
+    if (ph) userData.ph = ph;
+    if (fn) userData.fn = fn;
+    if (ln) userData.ln = ln;
+
+    return userData;
+}
+
 export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
@@ -53,6 +99,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 if (!res.ok) throw new Error("Produit non trouvé");
                 const data = await res.json();
                 setProduct(data);
+                // ViewContent: no user data available yet — that's fine
                 if (typeof window !== "undefined" && (window as any).fbq) {
                     (window as any).fbq("track", "ViewContent", {
                         content_name: data.name,
@@ -78,20 +125,31 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         return () => clearInterval(timer);
     }, []);
 
+    // InitiateCheckout: fire when paymentMode is selected + we have phone
     useEffect(() => {
         if (paymentMode && product && !checkoutTracked) {
-            if (typeof window !== "undefined" && (window as any).fbq) {
-                (window as any).fbq("track", "InitiateCheckout", {
+            const track = async () => {
+                const fbq = typeof window !== "undefined" ? (window as any).fbq : null;
+                if (!fbq) return;
+
+                // Build user data if phone is already filled (e.g. returning user)
+                const userData =
+                    orderForm.phone && orderForm.name
+                        ? await buildUserData(orderForm.name, orderForm.phone)
+                        : { country: "cm" };
+
+                fbq("track", "InitiateCheckout", {
                     content_name: product.name,
                     content_ids: [product._id],
                     value: product.price * quantity,
                     currency: "XAF",
                     num_items: quantity,
-                });
-            }
+                }, userData);
+            };
+            track();
             setCheckoutTracked(true);
         }
-    }, [paymentMode, product, checkoutTracked, quantity]);
+    }, [paymentMode, product, checkoutTracked, quantity, orderForm.phone, orderForm.name]);
 
     const handleCloseModal = () => {
         setPaymentMode(null);
@@ -126,14 +184,17 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         try {
             const newOrder = await addOrder([{ product: product!, quantity }], customer, facebookTracking);
             setOrderSubmitted(true);
+
+            // Lead: we now have name + phone — pass hashed user data
             if (typeof window !== "undefined" && (window as any).fbq) {
+                const userData = await buildUserData(orderForm.name, normalizedPhone);
                 (window as any).fbq("track", "Lead", {
                     content_name: product!.name,
                     content_category: product!.category,
                     value: product!.price * quantity,
                     currency: "XAF",
                     order_id: newOrder.id,
-                });
+                }, userData);
             }
         } catch (error) {
             console.error("COD order error:", error);
@@ -143,48 +204,64 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         }
     };
 
-    const handleOnlineSubmit = async (normalizedPhone: string) => {
-        setSubmitting(true);
-        setPaymentError(null);
-        try {
-            const customer: CustomerInfo = {
-                name: orderForm.name,
-                phone: normalizedPhone,
-                hasWhatsApp: orderForm.hasWhatsApp,
-                deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
-                callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
-            };
-
-            const res = await fetch("/api/payment/create-order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    items: [{ productId: product!._id, quantity, price: product!.price }],
-                    customer,
-                    _fbp: getCookie("_fbp"),
-                    _fbc: getCookie("_fbc"),
-                    _ua: navigator.userAgent,
-                    existingOrderId: failedOrderId ?? undefined,
-                }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                if (data.orderId) setFailedOrderId(data.orderId);
-                const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
-                setPaymentError(msg);
-                setSubmitting(false);
-                return;
-            }
-
-            setFailedOrderId(null);
-            setPaymentError(null);
-            window.location.href = `/order/${data.orderId}?payment=success`;
-        } catch (error: any) {
-            setPaymentError(error.message ?? "Une erreur s'est produite.");
+const handleOnlineSubmit = async (normalizedPhone: string) => {
+    setSubmitting(true);
+    setPaymentError(null);
+    try {
+        const customer: CustomerInfo = {
+            name: orderForm.name,
+            phone: normalizedPhone,
+            hasWhatsApp: orderForm.hasWhatsApp,
+            deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
+            callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
+        };
+ 
+        const res = await fetch("/api/payment/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                items: [{ productId: product!._id, quantity, price: product!.price }],
+                customer,
+                _fbp: getCookie("_fbp"),
+                _fbc: getCookie("_fbc"),
+                _ua: navigator.userAgent,
+                existingOrderId: failedOrderId ?? undefined,
+            }),
+        });
+ 
+        const data = await res.json();
+        if (!res.ok) {
+            if (data.orderId) setFailedOrderId(data.orderId);
+            const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
+            setPaymentError(msg);
             setSubmitting(false);
+            return;
         }
-    };
+ 
+        // Fire Purchase with hashed user data
+        if (typeof window !== "undefined" && (window as any).fbq) {
+            const userData = await buildUserData(orderForm.name, normalizedPhone);
+            (window as any).fbq("track", "Purchase", {
+                content_name: product!.name,
+                content_ids: [product!._id],
+                value: product!.price * quantity,
+                currency: "XAF",
+                num_items: quantity,
+                order_id: data.orderId,
+            }, userData);
+        }
+ 
+        // Give fbq 300ms to send before navigating away
+        await new Promise(resolve => setTimeout(resolve, 300));
+ 
+        setFailedOrderId(null);
+        setPaymentError(null);
+        window.location.href = `/order/${data.orderId}?payment=success`;
+    } catch (error: any) {
+        setPaymentError(error.message ?? "Une erreur s'est produite.");
+        setSubmitting(false);
+    }
+};
 
     if (loading) return <ProductDetailsSkeleton />;
 
@@ -226,12 +303,9 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     href="/products"
                     className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 hover:text-shopici-blue transition-colors duration-300 mb-10"
                 >
-                    {/* The arrow now has a subtle move animation to feel "light" */}
                     <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
-
                     <span className="relative py-1">
                         Retour Boutique
-                        {/* A very thin, light underline that only appears on hover */}
                         <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-shopici-blue/40 transition-all duration-300 group-hover:w-full" />
                     </span>
                 </Link>
@@ -266,7 +340,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                         </h2>
                     </div>
                     <div className="bg-white border border-shopici-gray/10 p-8 md:p-12 shadow-sm">
-                        <p className=" whitespace-pre-line max-w-4xl text-shopici-black/70 leading-relaxed text-sm md:text-base font-medium">
+                        <p className="whitespace-pre-line max-w-4xl text-shopici-black/70 leading-relaxed text-sm md:text-base font-medium">
                             {product.description}
                         </p>
                     </div>
@@ -275,9 +349,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 {/* Visual Content Blocks */}
                 {product.contentBlocks && product.contentBlocks.length > 0 && (
                     <div className="mb-24 md:mb-32">
-                        <AlternatingContentSection
-                            blocks={product.contentBlocks}
-                        />
+                        <AlternatingContentSection blocks={product.contentBlocks} />
                     </div>
                 )}
 
