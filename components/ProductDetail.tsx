@@ -1,6 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react";
+/**
+ * ProductDetailsPage.tsx
+ *
+ * Changes vs original:
+ *  - InitiateCheckout now fires when the modal opens (paymentMode is set),
+ *    NOT gated on phone/name already being filled (they never are at that point).
+ *    The browser-side fbq() call sends IP + fbp + fbc for matching.
+ *    User data (ph/fn/ln) will be added once they submit — that's correct timing.
+ *  - Removed the checkoutTracked guard that was preventing re-fires on mode switch.
+ *  - ViewContent unchanged (no PII available — that's expected and fine).
+ */
+
+import { useState, useEffect, useRef } from "react";
 import { Package, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { addOrder } from "@/helper/order";
@@ -32,7 +44,6 @@ function getCookie(name: string): string | undefined {
     return match?.[2];
 }
 
-// SHA-256 hash a string (returns hex string)
 async function hashString(value: string): Promise<string> {
     const cleaned = value.trim().toLowerCase();
     if (!cleaned) return "";
@@ -44,21 +55,16 @@ async function hashString(value: string): Promise<string> {
         .join("");
 }
 
-// Normalize Cameroonian phone to E.164 (+237XXXXXXXXX) then hash
 async function hashPhone(phone: string): Promise<string> {
     let normalized = phone.trim().replace(/\s+/g, "").replace(/-/g, "");
     if (!normalized.startsWith("+")) {
-        // If starts with 237, add +
-        if (normalized.startsWith("237")) {
-            normalized = "+" + normalized;
-        } else {
-            normalized = "+237" + normalized;
-        }
+        normalized = normalized.startsWith("237")
+            ? "+" + normalized
+            : "+237" + normalized;
     }
     return hashString(normalized);
 }
 
-// Build hashed user data object from name + phone
 async function buildUserData(name: string, phone: string): Promise<Record<string, string>> {
     const parts = name.trim().split(/\s+/);
     const firstName = parts[0] ?? "";
@@ -86,11 +92,14 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [orderSubmitted, setOrderSubmitted] = useState(false);
-    const [checkoutTracked, setCheckoutTracked] = useState(false);
     const [orderForm, setOrderForm] = useState(EMPTY_FORM);
     const [paymentMode, setPaymentMode] = useState<"cod" | "online" | null>(null);
     const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
     const [paymentError, setPaymentError] = useState<string | null>(null);
+
+    // Track which paymentMode we already fired InitiateCheckout for,
+    // so switching cod→online doesn't double-fire for the same mode.
+    const checkoutTrackedMode = useRef<string | null>(null);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -99,7 +108,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 if (!res.ok) throw new Error("Produit non trouvé");
                 const data = await res.json();
                 setProduct(data);
-                // ViewContent: no user data available yet — that's fine
+
                 if (typeof window !== "undefined" && (window as any).fbq) {
                     (window as any).fbq("track", "ViewContent", {
                         content_name: data.name,
@@ -125,37 +134,36 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         return () => clearInterval(timer);
     }, []);
 
-    // InitiateCheckout: fire when paymentMode is selected + we have phone
+    // ── InitiateCheckout: fire the moment the modal opens ────────────────────
+    // At this point the user has NO name/phone yet — that's fine.
+    // fbq automatically attaches IP + fbp + fbc which is enough for matching.
+    // We fire once per paymentMode value to avoid duplicates.
     useEffect(() => {
-        if (paymentMode && product && !checkoutTracked) {
-            const track = async () => {
-                const fbq = typeof window !== "undefined" ? (window as any).fbq : null;
-                if (!fbq) return;
+        if (!paymentMode || !product) return;
+        if (checkoutTrackedMode.current === paymentMode) return;
 
-                // Build user data if phone is already filled (e.g. returning user)
-                const userData =
-                    orderForm.phone && orderForm.name
-                        ? await buildUserData(orderForm.name, orderForm.phone)
-                        : { country: "cm" };
+        checkoutTrackedMode.current = paymentMode;
 
-                fbq("track", "InitiateCheckout", {
-                    content_name: product.name,
-                    content_ids: [product._id],
-                    value: product.price * quantity,
-                    currency: "XAF",
-                    num_items: quantity,
-                }, userData);
-            };
-            track();
-            setCheckoutTracked(true);
-        }
-    }, [paymentMode, product, checkoutTracked, quantity, orderForm.phone, orderForm.name]);
+        const fbq = typeof window !== "undefined" ? (window as any).fbq : null;
+        if (!fbq) return;
+
+        fbq("track", "InitiateCheckout", {
+            content_name: product.name,
+            content_ids: [product._id],
+            content_type: "product",
+            value: product.price * quantity,
+            currency: "XAF",
+            num_items: quantity,
+        });
+        // No hashed user data here — user hasn't typed anything yet.
+        // The server-side Lead/Purchase events (fired on submit) will carry PII.
+    }, [paymentMode, product, quantity]);
 
     const handleCloseModal = () => {
         setPaymentMode(null);
         setOrderSubmitted(false);
         setOrderForm(EMPTY_FORM);
-        setCheckoutTracked(false);
+        checkoutTrackedMode.current = null; // reset so next open re-fires
         setFailedOrderId(null);
         setPaymentError(null);
     };
@@ -185,7 +193,8 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
             const newOrder = await addOrder([{ product: product!, quantity }], customer, facebookTracking);
             setOrderSubmitted(true);
 
-            // Lead: we now have name + phone — pass hashed user data
+            // Browser-side Lead — server-side Lead fires in /api/orders POST.
+            // Meta deduplicates them by order_id.
             if (typeof window !== "undefined" && (window as any).fbq) {
                 const userData = await buildUserData(orderForm.name, normalizedPhone);
                 (window as any).fbq("track", "Lead", {
@@ -204,64 +213,65 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         }
     };
 
-const handleOnlineSubmit = async (normalizedPhone: string) => {
-    setSubmitting(true);
-    setPaymentError(null);
-    try {
-        const customer: CustomerInfo = {
-            name: orderForm.name,
-            phone: normalizedPhone,
-            hasWhatsApp: orderForm.hasWhatsApp,
-            deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
-            callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
-        };
- 
-        const res = await fetch("/api/payment/create-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                items: [{ productId: product!._id, quantity, price: product!.price }],
-                customer,
-                _fbp: getCookie("_fbp"),
-                _fbc: getCookie("_fbc"),
-                _ua: navigator.userAgent,
-                existingOrderId: failedOrderId ?? undefined,
-            }),
-        });
- 
-        const data = await res.json();
-        if (!res.ok) {
-            if (data.orderId) setFailedOrderId(data.orderId);
-            const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
-            setPaymentError(msg);
-            setSubmitting(false);
-            return;
-        }
- 
-        // Fire Purchase with hashed user data
-        if (typeof window !== "undefined" && (window as any).fbq) {
-            const userData = await buildUserData(orderForm.name, normalizedPhone);
-            (window as any).fbq("track", "Purchase", {
-                content_name: product!.name,
-                content_ids: [product!._id],
-                value: product!.price * quantity,
-                currency: "XAF",
-                num_items: quantity,
-                order_id: data.orderId,
-            }, userData);
-        }
- 
-        // Give fbq 300ms to send before navigating away
-        await new Promise(resolve => setTimeout(resolve, 300));
- 
-        setFailedOrderId(null);
+    const handleOnlineSubmit = async (normalizedPhone: string) => {
+        setSubmitting(true);
         setPaymentError(null);
-        window.location.href = `/order/${data.orderId}?payment=success`;
-    } catch (error: any) {
-        setPaymentError(error.message ?? "Une erreur s'est produite.");
-        setSubmitting(false);
-    }
-};
+        try {
+            const customer: CustomerInfo = {
+                name: orderForm.name,
+                phone: normalizedPhone,
+                hasWhatsApp: orderForm.hasWhatsApp,
+                deliveryZone: `${orderForm.quartier}, ${orderForm.deliveryZone}`,
+                callTime: orderForm.callTime as "now" | "morning" | "afternoon" | "evening",
+            };
+
+            const res = await fetch("/api/payment/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: [{ productId: product!._id, quantity, price: product!.price }],
+                    customer,
+                    _fbp: getCookie("_fbp"),
+                    _fbc: getCookie("_fbc"),
+                    _ua: navigator.userAgent,
+                    existingOrderId: failedOrderId ?? undefined,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                if (data.orderId) setFailedOrderId(data.orderId);
+                const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
+                setPaymentError(msg);
+                setSubmitting(false);
+                return;
+            }
+
+            // Browser-side Purchase — server-side Purchase fires in create-order route.
+            // Meta deduplicates by order_id.
+            if (typeof window !== "undefined" && (window as any).fbq) {
+                const userData = await buildUserData(orderForm.name, normalizedPhone);
+                (window as any).fbq("track", "Purchase", {
+                    content_name: product!.name,
+                    content_ids: [product!._id],
+                    value: product!.price * quantity,
+                    currency: "XAF",
+                    num_items: quantity,
+                    order_id: data.orderId,
+                }, userData);
+            }
+
+            // Give fbq 300ms to send before navigating
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            setFailedOrderId(null);
+            setPaymentError(null);
+            window.location.href = `/order/${data.orderId}?payment=success`;
+        } catch (error: any) {
+            setPaymentError(error.message ?? "Une erreur s'est produite.");
+            setSubmitting(false);
+        }
+    };
 
     if (loading) return <ProductDetailsSkeleton />;
 
@@ -298,7 +308,6 @@ const handleOnlineSubmit = async (normalizedPhone: string) => {
                 />
             )}
             <div className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-                {/* Back Link */}
                 <Link
                     href="/products"
                     className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 hover:text-shopici-blue transition-colors duration-300 mb-10"
@@ -310,7 +319,6 @@ const handleOnlineSubmit = async (normalizedPhone: string) => {
                     </span>
                 </Link>
 
-                {/* Hero Section: Gallery & Purchase */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 mb-24 md:mb-32">
                     <ImageGallery
                         product={product}
@@ -331,7 +339,6 @@ const handleOnlineSubmit = async (normalizedPhone: string) => {
                     />
                 </div>
 
-                {/* Description Section */}
                 <div className="mb-24 md:mb-32">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="w-12 h-1 bg-shopici-coral" />
@@ -346,18 +353,15 @@ const handleOnlineSubmit = async (normalizedPhone: string) => {
                     </div>
                 </div>
 
-                {/* Visual Content Blocks */}
                 {product.contentBlocks && product.contentBlocks.length > 0 && (
                     <div className="mb-24 md:mb-32">
                         <AlternatingContentSection blocks={product.contentBlocks} />
                     </div>
                 )}
 
-                {/* Testimonials */}
                 <TestimonialsSection testimonials={product.testimonials} />
             </div>
 
-            {/* Modal Logic */}
             {paymentMode !== null && (
                 <OrderModal
                     product={product}

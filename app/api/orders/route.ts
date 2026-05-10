@@ -5,10 +5,12 @@ import { sendEmail } from "@/helper/sendEmail";
 import { Product } from "@/models/Product";
 import { Types } from "mongoose";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { sendLeadEvent } from "@/lib/metaCapi";
 
 type LeanProduct = {
     _id: Types.ObjectId;
     name: string;
+    category?: string;
 };
 export async function POST(req: Request) {
     await connectDB();
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
         }
         // ✅ Get customer's real IP from request headers
         const _ip =
-            req.headers.get("x-forwarded-for")?.split(",")[0] ??
+            req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
             req.headers.get("x-real-ip") ??
             undefined;
 
@@ -79,11 +81,36 @@ export async function POST(req: Request) {
             <p>– Shopici</p>
             `;
 
-        await sendEmail({
-            to: process.env.ADMIN_EMAIL!,
-            subject: `Nouvelle commande reçue (${id})`,
-            html,
-        });
+        // Fire email + CAPI in parallel — neither blocks the 201 response
+        const firstProduct = products[0];
+ 
+        await Promise.allSettled([
+            sendEmail({
+                to: process.env.ADMIN_EMAIL!,
+                subject: `Nouvelle commande reçue (${id})`,
+                html,
+            }),
+ 
+            // ✅ Server-side Lead — deduplicates with the browser fbq("Lead") call
+            // Meta matches them by order_id and drops the duplicate automatically.
+            sendLeadEvent({
+                orderId: id,
+                productName: firstProduct?.name ?? "Produit Shopici",
+                productCategory: (firstProduct as any)?.category,
+                value: total,
+                currency: "XAF",
+                name: customer.name,
+                phone: customer.phone,
+                ip: _ip,
+                ua: _ua,
+                fbp: _fbp,
+                fbc: _fbc,
+                // Reconstruct the product page URL so Meta knows the event source
+                eventSourceUrl: process.env.NEXT_PUBLIC_APP_URL
+                    ? `${process.env.NEXT_PUBLIC_APP_URL}/products`
+                    : undefined,
+            }),
+        ]);
         return NextResponse.json(newOrder, { status: 201 });
     } catch (err) {
         console.error(err);

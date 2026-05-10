@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { Order } from "@/models/Order";
 import { connectDB } from "@/lib/mongodb";
 import type { OrderStatus, TrackingCheckpoint } from "@/types/OrderTracking";
-import { Product } from "@/models/Product"; // Import your Product model
+import { Product } from "@/models/Product";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { sendPurchaseEvent } from "@/lib/facebook-capi";
+import { sendPurchaseEvent } from "@/lib/metaCapi"; // ← updated import
 
 interface PatchOrderBody {
     status?: OrderStatus;
@@ -26,19 +26,17 @@ export async function PATCH(
     const { id } = await params;
 
     try {
-        // Type the request body
         const body: PatchOrderBody = await req.json();
-        const { status, newCheckpoint, isSeriousCustomer, fbc, fbp } = body;
+        const { status, newCheckpoint, isSeriousCustomer } = body;
 
         const order = await Order.findOne({ id });
         if (!order) {
             return NextResponse.json({ error: "Order not found" }, { status: 404 });
         }
+
         const previousStatus = order.status;
 
-        if (status) {
-            order.status = status;
-        }
+        if (status) order.status = status;
 
         if (newCheckpoint) {
             order.checkpoints.push(newCheckpoint);
@@ -46,11 +44,15 @@ export async function PATCH(
                 new Date(b.time).getTime() - new Date(a.time).getTime()
             );
         }
+
         if (isSeriousCustomer !== undefined) {
             order.isSeriousCustomer = isSeriousCustomer;
         }
-        // ✅ Deduct stock if status changed to "Livré" and was not "Livré" before
+
+        // ── Deduct stock + fire Purchase when status → "Livré" ───────────────
         if (status === "Livré" && previousStatus !== "Livré") {
+
+            // 1. Deduct stock
             for (const item of order.items) {
                 const product = await Product.findById(item.productId);
                 if (product) {
@@ -58,66 +60,63 @@ export async function PATCH(
                     await product.save();
                 }
             }
-            // ✅ Save original state
+
             const wasPaid = order.paid;
 
-            // Send FB CAPI Purchase — but only if NOT already paid online.
-            // Online orders fire the Purchase event in the Fapshi webhook the
-            // moment payment is confirmed, so we must not fire it a second time.
+            // 2. Fire server-side Purchase only for COD orders (online orders
+            //    already fired Purchase in /api/payment/create-order).
             if (!wasPaid) {
+                const nameParts = order.customer.name.trim().split(/\s+/);
+                const firstName = nameParts[0] ?? "";
+                const lastName  = nameParts.slice(1).join(" ");
+
+                // Fire and forget — don't block the admin response
                 sendPurchaseEvent({
-                    orderId: order.id,
-                    value: order.total,
-                    currency: "XAF",
-                    userData: {
-                        firstName: order.customer.name.split(" ")[0],
-                        lastName: order.customer.name.split(" ").slice(1).join(" ") || undefined,
-                        phone: order.customer.phone,
-                        city: order.customer.deliveryZone.split(",").pop()?.trim(),
-                        country: "CM",
-                        fbp: order._fbp,
-                        fbc: order._fbc,
-                        ipAddress: order._ip,
-                        userAgent: order._ua,
-                    },
-                    // testEventCode: "TEST57609",
-                }).then((result) => {
-                    if (result.success) {
-                        console.log(`[Facebook CAPI] ✅ Purchase event sent for order ${order.id}`);
-                    } else {
-                        console.error(`[Facebook CAPI] ❌ Failed for order ${order.id}:`, result.error);
-                    }
+                    orderId:      order.id,
+                    productName:  "Produit Shopici", // no product name stored on order
+                    productIds:   order.items.map((i: any) => String(i.productId)),
+                    value:        order.total,
+                    currency:     "XAF",
+                    numItems:     order.items.reduce((s: number, i: any) => s + i.quantity, 0),
+                    name:         `${firstName} ${lastName}`.trim(),
+                    phone:        order.customer.phone,
+                    ip:           order._ip,
+                    ua:           order._ua,
+                    fbp:          order._fbp,
+                    fbc:          order._fbc,
+                    eventSourceUrl: process.env.NEXT_PUBLIC_APP_URL
+                        ? `${process.env.NEXT_PUBLIC_APP_URL}/products`
+                        : undefined,
+                }).then(() => {
+                    console.log(`✅ Meta CAPI Purchase sent for COD order ${order.id}`);
+                }).catch((err: any) => {
+                    console.error(`❌ Meta CAPI Purchase failed for order ${order.id}:`, err);
                 });
-            } else {
-                console.log(
-                    `[Facebook CAPI] Skipped for order ${order.id} — already fired on payment`
-                );
-            }
-            // ✅ THEN mark as paid
-            if (!wasPaid) {
-                order.paid = true;
+
+                // Mark as paid after firing event
+                order.paid  = true;
                 order.paidAt = new Date();
+            } else {
+                console.log(`[Meta CAPI] Skipped Purchase for ${order.id} — already fired on online payment`);
             }
         }
 
         await order.save();
-
         return NextResponse.json(order, { status: 200 });
+
     } catch (err) {
         console.error(err);
-        return NextResponse.json(
-            { error: "Impossible to update order" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Impossible to update order" }, { status: 500 });
     }
 }
+
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ id: string }> } // note: params is a Promise
+    { params }: { params: Promise<{ id: string }> }
 ) {
     await connectDB();
 
-    const { id } = await params; // <-- unwrap the promise here
+    const { id } = await params;
 
     try {
         const order = await Order.findOne({ id });
@@ -126,7 +125,6 @@ export async function GET(
             return NextResponse.json({ error: "Order not found" }, { status: 404 });
         }
 
-        // Optional: sort checkpoints by time descending (latest first)
         order.checkpoints.sort((a: TrackingCheckpoint, b: TrackingCheckpoint) =>
             new Date(a.time).getTime() - new Date(b.time).getTime()
         );
@@ -134,9 +132,6 @@ export async function GET(
         return NextResponse.json(order, { status: 200 });
     } catch (err) {
         console.error(err);
-        return NextResponse.json(
-            { error: "Impossible to fetch order" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Impossible to fetch order" }, { status: 500 });
     }
 }

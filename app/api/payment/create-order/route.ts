@@ -18,6 +18,8 @@ import { Product } from "@/models/Product";
 import { sendEmail } from "@/helper/sendEmail";
 import { directPay, isFapshiError } from "@/lib/fapshi";
 import { Types } from "mongoose";
+import { sendPurchaseEvent } from "@/lib/metaCapi"; // ← new
+
 
 type LeanProduct = { _id: Types.ObjectId; name: string };
 
@@ -82,11 +84,11 @@ export async function POST(req: NextRequest) {
                 customer,
                 checkpoints: [{
                     location: "Shopici Warehouse",
-                    time:     new Date().toISOString(),
-                    status:   "En préparation",
+                    time: new Date().toISOString(),
+                    status: "En préparation",
                 }],
                 paymentMethod: "online",
-                paid:          false,
+                paid: false,
                 _fbp,
                 _fbc,
                 _ua,
@@ -100,16 +102,16 @@ export async function POST(req: NextRequest) {
         if (isNewOrder) {
             try {
                 const productIds = items.map((i: any) => i.productId);
-                const products   = await Product.find({ _id: { $in: productIds } }).lean<LeanProduct[]>();
+                const products = await Product.find({ _id: { $in: productIds } }).lean<LeanProduct[]>();
 
                 const itemsHtml = items.map((item: any) => {
                     const product = products.find(p => p._id.toString() === item.productId);
-                    const name    = product?.name ?? "Produit inconnu";
+                    const name = product?.name ?? "Produit inconnu";
                     return `<li>${item.quantity} × ${name} — ${(item.price * item.quantity).toLocaleString()} XAF</li>`;
                 }).join("");
 
                 await sendEmail({
-                    to:      process.env.ADMIN_EMAIL!,
+                    to: process.env.ADMIN_EMAIL!,
                     subject: `Nouvelle commande en ligne (${orderId})`,
                     html: `
                         <h2>Nouvelle commande en ligne reçue !</h2>
@@ -128,11 +130,11 @@ export async function POST(req: NextRequest) {
 
         // ── 6. Push USSD payment request to customer's phone ─────────────────
         const fapshiRes = await directPay({
-            amount:      total,
-            phone:       customer.phone,
-            name:        customer.name,
-            externalId:  orderId,
-            message:     `Commande Shopici #${orderId}`,
+            amount: total,
+            phone: customer.phone,
+            name: customer.name,
+            externalId: orderId,
+            message: `Commande Shopici #${orderId}`,
         });
 
         if (isFapshiError(fapshiRes)) {
@@ -143,9 +145,34 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // ── 7. Save latest transId on the order ───────────────────────────────
-        // On retry this overwrites the previous failed transId — intentional.
-        await Order.updateOne({ id: orderId }, { fapshiTransId: fapshiRes.transId });
+        // ── 7. Save transId + fire server-side Purchase (in parallel) ─────────
+        const productIds = items.map((i: any) => i.productId);
+        const products = await Product.find({ _id: { $in: productIds } }).lean<LeanProduct[]>();
+        const firstProduct = products[0];
+
+        await Promise.allSettled([
+            Order.updateOne({ id: orderId }, { fapshiTransId: fapshiRes.transId }),
+
+            // ✅ Server-side Purchase — deduplicates with browser fbq("Purchase").
+            // Meta matches by order_id and keeps only one event.
+            sendPurchaseEvent({
+                orderId,
+                productName: firstProduct?.name ?? "Produit Shopici",
+                productIds: productIds.map(String),
+                value: total,
+                currency: "XAF",
+                numItems: items.reduce((s: number, i: any) => s + i.quantity, 0),
+                name: customer.name,
+                phone: customer.phone,
+                ip: _ip,
+                ua: _ua,
+                fbp: _fbp,
+                fbc: _fbc,
+                eventSourceUrl: process.env.NEXT_PUBLIC_APP_URL
+                    ? `${process.env.NEXT_PUBLIC_APP_URL}/products`
+                    : undefined,
+            }),
+        ]);
 
         console.log(`📲 directPay pushed for order ${orderId} — transId: ${fapshiRes.transId}`);
 
