@@ -78,74 +78,74 @@ export default function OrdersPage() {
 
     // Stats (based on all orders, not filtered)
     const stats = {
-        total: orders.length,
-        enPreparation: orders.filter(o => o.status === "En préparation").length,
-        enRoute: orders.filter(o => o.status === "En route").length,
-        livre: orders.filter(o => o.status === "Livré").length,
+        total: filteredOrders.length,
+        enPreparation: filteredOrders.filter(o => o.status === "En préparation").length,
+        enRoute: filteredOrders.filter(o => o.status === "En route").length,
+        livre: filteredOrders.filter(o => o.status === "Livré").length,
     };
-const exportOrdersToCSV = () => {
-    // 1. START SYSTEM PROCESSING
-    setExporting(true);
+    const exportOrdersToCSV = () => {
+        // 1. START SYSTEM PROCESSING
+        setExporting(true);
 
-    // 2. GUARD CLAUSE (Validation)
-    if (filteredOrders.length === 0) {
-        notify("ALERTE", "Aucune commande détectée pour l'exportation", "warning");
-        
-        // CRITICAL: Reset the loading state before exiting
-        setExporting(false); 
-        return;
-    }
+        // 2. GUARD CLAUSE (Validation)
+        if (filteredOrders.length === 0) {
+            notify("ALERTE", "Aucune commande détectée pour l'exportation", "warning");
 
-    try {
-        const headers = [
-            "ID", "Statut", "Total (XAF)", "Date", "Client", 
-            "Téléphone", "Zone de livraison", "Créneau d'appel", 
-            "Nombre d'articles", "Articles", "Checkpoints"
-        ];
+            // CRITICAL: Reset the loading state before exiting
+            setExporting(false);
+            return;
+        }
 
-        const rows = filteredOrders.map(order => [
-            order.id,
-            order.status,
-            order.total,
-            new Date(order.createdAt).toLocaleDateString("fr-FR"),
-            order.customer.name,
-            order.customer.phone,
-            order.customer.deliveryZone,
-            order.customer.callTime,
-            order.items.length,
-            order.items.map(i => `${i.productId} x${i.quantity}`).join(" | "),
-            order.checkpoints.map(c => `${c.status} @ ${c.location}`).join(" → ")
-        ]);
+        try {
+            const headers = [
+                "ID", "Statut", "Total (XAF)", "Date", "Client",
+                "Téléphone", "Zone de livraison", "Créneau d'appel",
+                "Nombre d'articles", "Articles", "Checkpoints"
+            ];
 
-        const csvContent = [headers, ...rows]
-            .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(","))
-            .join("\n");
+            const rows = filteredOrders.map(order => [
+                order.id,
+                order.status,
+                order.total,
+                new Date(order.createdAt).toLocaleDateString("fr-FR"),
+                order.customer.name,
+                order.customer.phone,
+                order.customer.deliveryZone,
+                order.customer.callTime,
+                order.items.length,
+                order.items.map(i => `${i.productId} x${i.quantity}`).join(" | "),
+                order.checkpoints.map(c => `${c.status} @ ${c.location}`).join(" → ")
+            ]);
 
-        // 3. FILE GENERATION
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        
-        link.href = url;
-        // Clean filename (zero underscores in display, just tech format)
-        link.download = `EXTRACT_ORDERS_${new Date().toISOString().slice(0, 10)}.csv`;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+            const csvContent = [headers, ...rows]
+                .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(","))
+                .join("\n");
 
-        // 4. SUCCESS FEEDBACK (Optional: if you added a success state to your notify)
-        notify("SYSTÈME", "Extraction du registre terminée","success");
+            // 3. FILE GENERATION
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
 
-    } catch (error) {
-        // Handle unexpected engine failures
-        notify("ERREUR", "Une erreur est survenue lors de la génération", "error");
-    } finally {
-        // 5. END SYSTEM PROCESSING (Always runs)
-        setExporting(false);
-    }
-};
+            link.href = url;
+            // Clean filename (zero underscores in display, just tech format)
+            link.download = `EXTRACT_ORDERS_${new Date().toISOString().slice(0, 10)}.csv`;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            // 4. SUCCESS FEEDBACK (Optional: if you added a success state to your notify)
+            notify("SYSTÈME", "Extraction du registre terminée", "success");
+
+        } catch (error) {
+            // Handle unexpected engine failures
+            notify("ERREUR", "Une erreur est survenue lors de la génération", "error");
+        } finally {
+            // 5. END SYSTEM PROCESSING (Always runs)
+            setExporting(false);
+        }
+    };
 
     const toggleStatusFilter = (status: OrderStatus) => {
         setStatusFilter(prev =>

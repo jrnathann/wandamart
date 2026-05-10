@@ -1,13 +1,14 @@
 "use client"
 
 import { MapPin, MessageCircle, Copy, Clock, Phone } from "lucide-react";
-import type { CustomerInfo } from "@/types/OrderTracking";
+import type { CustomerInfo, OrderItem } from "@/types/OrderTracking";
 
 interface CustomerInfoCardProps {
   customer: CustomerInfo;
+  items?: Array<{ name: string; quantity: number }>; // ← new prop
 }
 
-export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
+export default function CustomerInfoCard({ customer, items }: CustomerInfoCardProps) {
   const getCallTimeLabel = (time: CustomerInfo["callTime"]) => {
     const labels: Record<CustomerInfo["callTime"], string> = {
       now: "Maintenant",
@@ -17,6 +18,15 @@ export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
     };
     return labels[time];
   };
+
+  // Build a readable product summary e.g. "2x Crème Visage, 1x Sérum"
+  const productSummary = items && items.length > 0
+    ? items.map(i => `${i.quantity}x ${i.name}`).join(", ")
+    : null;
+
+  const whatsappMessage = productSummary
+    ? `Bonjour ${customer.name}, votre commande a bien été reçue.\n\n🛍️ Produit(s) commandé(s) : ${productSummary}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\n🛍️ Ordered item(s): ${productSummary}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`
+    : `Bonjour ${customer.name}, votre commande a bien été reçue.\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`;
 
   return (
     <div className="bg-white border border-shopici-black/10 p-5 md:p-8 rounded-none">
@@ -35,7 +45,7 @@ export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
         <div className="flex items-center gap-2 w-full sm:w-auto">
           {customer.hasWhatsApp && (
             <a
-              href={`https://wa.me/${customer.phone.replace(/\s/g, "")}?text=${encodeURIComponent(`Bonjour ${customer.name}, votre commande a bien été reçue.\n\nNotre équipe va vous contacter concernant la livraison..\nMerci pour votre confiance \n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`)}`}
+              href={`https://wa.me/${customer.phone.replace(/\s/g, "")}?text=${encodeURIComponent(whatsappMessage)}`}
               target="_blank"
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
             >
@@ -51,9 +61,8 @@ export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
 
       {/* 2. DATA GRID */}
       <div className="space-y-8">
-        {/* ROW 1: Contact & Delivery (Top Priority) */}
+        {/* ROW 1: Contact & Delivery */}
         <div className="grid grid-cols-2 gap-x-8">
-          {/* Telephone */}
           <div className="space-y-2">
             <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40">Téléphone</p>
             <div className="flex items-center gap-2">
@@ -64,7 +73,6 @@ export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
             </div>
           </div>
 
-          {/* Livraison - Now has 50% of the card width to prevent truncation */}
           <div className="space-y-2">
             <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40">Livraison</p>
             <div className="flex items-center gap-2 text-sm font-black text-shopici-black uppercase leading-tight">
@@ -74,7 +82,7 @@ export default function CustomerInfoCard({ customer }: CustomerInfoCardProps) {
           </div>
         </div>
 
-        {/* ROW 2: Availability (Shifted Down) */}
+        {/* ROW 2: Availability */}
         <div className="pt-6 border-t border-shopici-black/5">
           <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40 mb-3">
             Disponibilité d'appel
