@@ -192,6 +192,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         try {
             const newOrder = await addOrder([{ product: product!, quantity }], customer, facebookTracking);
             setOrderSubmitted(true);
+            const hashedOrderId = await hashString(newOrder.id);
 
             // Browser-side Lead — server-side Lead fires in /api/orders POST.
             // Meta deduplicates them by order_id.
@@ -203,7 +204,10 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     value: product!.price * quantity,
                     currency: "XAF",
                     order_id: newOrder.id,
-                }, userData);
+                }, {
+                    ...userData,
+                    external_id: hashedOrderId,   // ← hashed, for matching
+                });
             }
         } catch (error) {
             console.error("COD order error:", error);
@@ -246,6 +250,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 setSubmitting(false);
                 return;
             }
+            const hashedOrderId = await hashString(data.orderId);
 
             // Browser-side Purchase — server-side Purchase fires in create-order route.
             // Meta deduplicates by order_id.
@@ -258,7 +263,10 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                     currency: "XAF",
                     num_items: quantity,
                     order_id: data.orderId,
-                }, userData);
+                }, {
+                    ...userData,
+                    external_id: hashedOrderId,   // ← hashed
+                });
             }
 
             // Give fbq 300ms to send before navigating

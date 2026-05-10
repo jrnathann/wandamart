@@ -21,6 +21,7 @@ export interface CapiUserData {
   ph?: string;       // hashed phone (E.164 → SHA-256)
   fn?: string;       // hashed first name
   ln?: string;       // hashed last name
+  external_id?: string;
   client_ip_address?: string;
   client_user_agent?: string;
   fbp?: string;      // _fbp cookie — NOT hashed
@@ -168,6 +169,7 @@ export async function sendLeadEvent({
       ...hashed,
       // Only include ln if the customer actually has a last name
       ...(ln ? { ln } : {}),
+      external_id: sha256(orderId),
       client_ip_address: ip,
       client_user_agent: ua,
       fbp: fbp || undefined,
@@ -227,6 +229,7 @@ export async function sendPurchaseEvent({
     user_data: {
       ...hashed,
       ...(ln ? { ln } : {}),
+      external_id: sha256(orderId),
       client_ip_address: ip,
       client_user_agent: ua,
       fbp: fbp || undefined,
