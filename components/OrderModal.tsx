@@ -32,19 +32,19 @@ interface OrderForm {
 }
 
 interface OrderModalProps {
-    product:        Product;
-    quantity:       number;
-    orderForm:      OrderForm;
+    product: Product;
+    quantity: number;
+    orderForm: OrderForm;
     orderSubmitted: boolean;
-    submitting:     boolean;
-    paymentMode:    "cod" | "online";
-    paymentError:   string | null;
-    onClose:        () => void;
-    onFormChange:   (form: OrderForm) => void;
+    submitting: boolean;
+    paymentMode: "cod" | "online";
+    paymentError: string | null;
+    onClose: () => void;
+    onFormChange: (form: OrderForm) => void;
     /** Receives the 237-prefixed normalized phone so no state race occurs */
-    onSubmit:       (normalizedPhone: string) => void;
-    onRetry:        (normalizedPhone: string) => void;
-    formatPrice:    (price: number) => string;
+    onSubmit: (normalizedPhone: string) => void;
+    onRetry: (normalizedPhone: string) => void;
+    formatPrice: (price: number) => string;
 }
 
 const SCROLLBAR_CSS = `
@@ -70,9 +70,9 @@ function parseCMPhone(raw: string): string | null {
 function detectOperator(local9: string): "orange" | "mtn" | null {
     const prefix = parseInt(local9.slice(0, 3), 10);
     const orangePrefixes = [655, 656, 657, 658, 659, 690, 691, 692, 693, 694, 695, 696, 697, 698, 699];
-    const mtnPrefixes    = [650, 651, 652, 653, 654, 670, 671, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684];
+    const mtnPrefixes = [650, 651, 652, 653, 654, 670, 671, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 684];
     if (orangePrefixes.includes(prefix)) return "orange";
-    if (mtnPrefixes.includes(prefix))    return "mtn";
+    if (mtnPrefixes.includes(prefix)) return "mtn";
     return null;
 }
 
@@ -94,14 +94,14 @@ function useSteps(paymentMode: "cod" | "online") {
     const [idx, setIdx] = useState(0);
 
     return {
-        step:    steps[idx],
+        step: steps[idx],
         display: idx + 1,
-        total:   TOTAL,
+        total: TOTAL,
         canBack: idx > 0,
         canNext: idx < TOTAL - 1,
-        isLast:  idx === TOTAL - 1,
-        next:    () => setIdx(i => i + 1),
-        back:    () => setIdx(i => i - 1),
+        isLast: idx === TOTAL - 1,
+        next: () => setIdx(i => i + 1),
+        back: () => setIdx(i => i - 1),
         goToStep: (stepValue: number) => {
             const i = steps.indexOf(stepValue);
             if (i !== -1) setIdx(i);
@@ -121,7 +121,7 @@ export default function OrderModal({
     onClose, onFormChange, onSubmit, onRetry, formatPrice,
 }: OrderModalProps) {
     const totalPrice = product.price * quantity;
-    const nav        = useSteps(paymentMode);
+    const nav = useSteps(paymentMode);
 
     const local9 = parseCMPhone(orderForm.phone);
 
@@ -196,11 +196,10 @@ export default function OrderModal({
                         {/* Dot progress */}
                         <div className="flex items-center justify-center gap-2">
                             {Array.from({ length: nav.total }).map((_, i) => (
-                                <div key={i} className={`rounded-full transition-all duration-300 ${
-                                    i + 1 === nav.display ? "w-6 h-2.5 bg-shopici-coral"
+                                <div key={i} className={`rounded-full transition-all duration-300 ${i + 1 === nav.display ? "w-6 h-2.5 bg-shopici-coral"
                                     : i + 1 < nav.display ? "w-2.5 h-2.5 bg-shopici-coral/40"
-                                    : "w-2.5 h-2.5 bg-gray-200"
-                                }`} />
+                                        : "w-2.5 h-2.5 bg-gray-200"
+                                    }`} />
                             ))}
                         </div>
 
@@ -243,11 +242,10 @@ export default function OrderModal({
                             <button
                                 onClick={nav.next}
                                 disabled={!stepValid[nav.step]}
-                                className={`w-full py-4 text-white text-base font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${
-                                    !stepValid[nav.step]
-                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                        : "bg-shopici-coral hover:brightness-105 active:scale-[0.98] shadow-lg shadow-shopici-coral/30"
-                                }`}
+                                className={`w-full py-4 text-white text-base font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${!stepValid[nav.step]
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-shopici-coral hover:brightness-105 active:scale-[0.98] shadow-lg shadow-shopici-coral/30"
+                                    }`}
                             >
                                 Continuer →
                             </button>
@@ -255,13 +253,12 @@ export default function OrderModal({
                             <button
                                 onClick={handleSubmit}
                                 disabled={submitting || !stepValid[4]}
-                                className={`w-full py-4 text-white text-base font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${
-                                    !stepValid[4]
-                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                        : submitting
+                                className={`w-full py-4 text-white text-base font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${!stepValid[4]
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : submitting
                                         ? "bg-shopici-coral opacity-70 animate-pulse cursor-not-allowed"
                                         : "bg-shopici-coral hover:brightness-105 active:scale-[0.98] shadow-lg shadow-shopici-coral/30"
-                                }`}
+                                    }`}
                             >
                                 {submitting ? (
                                     <><Spinner /> {paymentMode === "online" ? "Envoi en cours..." : "Envoi..."}</>
@@ -348,11 +345,10 @@ function PaymentFailedScreen({ error, phone, totalPrice, formatPrice, submitting
                         <button
                             onClick={() => onRetry(normalizedPhone)}
                             disabled={submitting}
-                            className={`w-full py-4 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${
-                                submitting
-                                    ? "bg-red-400 opacity-70 animate-pulse cursor-not-allowed"
-                                    : "bg-red-500 hover:brightness-105 active:scale-[0.98] shadow-lg shadow-red-200"
-                            }`}
+                            className={`w-full py-4 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${submitting
+                                ? "bg-red-400 opacity-70 animate-pulse cursor-not-allowed"
+                                : "bg-red-500 hover:brightness-105 active:scale-[0.98] shadow-lg shadow-red-200"
+                                }`}
                         >
                             {submitting ? (
                                 <><Spinner /> Envoi en cours...</>
@@ -387,20 +383,22 @@ function StepCash({ totalPrice, formatPrice, hasCash, onChange, onClose }: {
                 <p className="text-5xl font-bold text-shopici-coral leading-none">{formatPrice(totalPrice)}</p>
                 <p className="text-sm text-white/60 mt-2">XAF en espèces</p>
             </div>
+            <p className="text-sm text-blue-500 font-bold text-center">
+                <span className="underline">N.B</span> Chaque commande nous coûte de l’argent. Merci de ne pas faire de fausses commandes.
+            </p>
             <p className="text-base font-bold text-shopici-black text-center">
                 Avez-vous déjà <span className="text-shopici-coral">{formatPrice(totalPrice)} XAF</span> pour payer le livreur ?
             </p>
+
             <div className="flex flex-col gap-3">
                 <button type="button" onClick={() => onChange(true)}
-                    className={`w-full py-4 rounded-2xl border-2 font-bold text-base transition-all flex items-center justify-center gap-2 ${
-                        hasCash === true ? "bg-green-500 border-green-500 text-white shadow-lg" : "bg-white border-gray-200 text-shopici-black hover:border-green-400"
-                    }`}>
+                    className={`w-full py-4 rounded-2xl border-2 font-bold text-base transition-all flex items-center justify-center gap-2 ${hasCash === true ? "bg-green-500 border-green-500 text-white shadow-lg" : "bg-white border-gray-200 text-shopici-black hover:border-green-400"
+                        }`}>
                     <CheckCircle className="w-5 h-5" /> OUI, j'ai l'argent prêt
                 </button>
                 <button type="button" onClick={() => onChange(false)}
-                    className={`w-full py-4 rounded-2xl border-2 font-bold text-base transition-all ${
-                        hasCash === false ? "bg-red-400 border-red-400 text-white shadow-lg" : "bg-white border-gray-200 text-shopici-black hover:border-red-300"
-                    }`}>
+                    className={`w-full py-4 rounded-2xl border-2 font-bold text-base transition-all ${hasCash === false ? "bg-red-400 border-red-400 text-white shadow-lg" : "bg-white border-gray-200 text-shopici-black hover:border-red-300"
+                        }`}>
                     NON, pas encore
                 </button>
             </div>
@@ -420,10 +418,10 @@ function StepCash({ totalPrice, formatPrice, hasCash, onChange, onClose }: {
 function StepContact({ orderForm, onFormChange, paymentMode }: {
     orderForm: OrderForm; onFormChange: (f: OrderForm) => void; paymentMode: "cod" | "online";
 }) {
-    const local9   = parseCMPhone(orderForm.phone);
+    const local9 = parseCMPhone(orderForm.phone);
     const operator = local9 ? detectOperator(local9) : null;
-    const isValid  = local9 !== null;
-    const isDirty  = orderForm.phone.trim() !== "";
+    const isValid = local9 !== null;
+    const isDirty = orderForm.phone.trim() !== "";
 
     return (
         <div className="flex flex-col gap-4">
@@ -468,8 +466,8 @@ function StepContact({ orderForm, onFormChange, paymentMode }: {
                             ${!isDirty
                                 ? "border-gray-200 focus:border-shopici-blue"
                                 : isValid
-                                ? "border-green-400 focus:border-green-500"
-                                : "border-red-400 focus:border-red-500"
+                                    ? "border-green-400 focus:border-green-500"
+                                    : "border-red-400 focus:border-red-500"
                             }`}
                     />
                     {isDirty && (
@@ -505,9 +503,8 @@ function StepContact({ orderForm, onFormChange, paymentMode }: {
                 )}
 
                 {isValid && (
-                    <label className={`mt-2 flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all ${
-                        orderForm.phoneConfirmed ? "border-green-400 bg-green-50" : "border-orange-200 bg-orange-50"
-                    }`}>
+                    <label className={`mt-2 flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all ${orderForm.phoneConfirmed ? "border-green-400 bg-green-50" : "border-orange-200 bg-orange-50"
+                        }`}>
                         <input
                             type="checkbox"
                             checked={orderForm.phoneConfirmed}
@@ -525,15 +522,13 @@ function StepContact({ orderForm, onFormChange, paymentMode }: {
                 <label className="block text-sm font-bold text-shopici-black mb-2">Ce numéro est sur WhatsApp ?</label>
                 <div className="grid grid-cols-2 gap-2.5">
                     <button type="button" onClick={() => onFormChange({ ...orderForm, hasWhatsApp: true })}
-                        className={`py-3 rounded-xl border-2 font-bold text-sm transition-all flex flex-col items-center gap-1 ${
-                            orderForm.hasWhatsApp ? "bg-green-500 border-green-500 text-white shadow-md" : "bg-white border-gray-200 text-shopici-black hover:border-green-400"
-                        }`}>
+                        className={`py-3 rounded-xl border-2 font-bold text-sm transition-all flex flex-col items-center gap-1 ${orderForm.hasWhatsApp ? "bg-green-500 border-green-500 text-white shadow-md" : "bg-white border-gray-200 text-shopici-black hover:border-green-400"
+                            }`}>
                         <MessageCircle className="w-5 h-5" /> OUI WhatsApp
                     </button>
                     <button type="button" onClick={() => onFormChange({ ...orderForm, hasWhatsApp: false })}
-                        className={`py-3 rounded-xl border-2 font-bold text-sm transition-all flex flex-col items-center gap-1 ${
-                            !orderForm.hasWhatsApp && orderForm.phone !== "" ? "bg-gray-500 border-gray-500 text-white shadow-md" : "bg-white border-gray-200 text-shopici-black hover:border-gray-400"
-                        }`}>
+                        className={`py-3 rounded-xl border-2 font-bold text-sm transition-all flex flex-col items-center gap-1 ${!orderForm.hasWhatsApp && orderForm.phone !== "" ? "bg-gray-500 border-gray-500 text-white shadow-md" : "bg-white border-gray-200 text-shopici-black hover:border-gray-400"
+                            }`}>
                         <Phone className="w-5 h-5" /> Appel seulement
                     </button>
                 </div>
@@ -593,11 +588,11 @@ function StepCallAndConfirm({ orderForm, product, totalPrice, formatPrice, payme
 
             <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100 overflow-hidden">
                 {[
-                    { label: "Produit",   value: product.name },
-                    { label: "Nom",       value: orderForm.name },
+                    { label: "Produit", value: product.name },
+                    { label: "Nom", value: orderForm.name },
                     { label: "Téléphone", value: displayPhone },
-                    { label: "Adresse",   value: `${orderForm.quartier}, ${orderForm.deliveryZone}` },
-                    { label: "À payer",   value: `${formatPrice(totalPrice)} XAF` },
+                    { label: "Adresse", value: `${orderForm.quartier}, ${orderForm.deliveryZone}` },
+                    { label: "À payer", value: `${formatPrice(totalPrice)} XAF` },
                 ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between items-start gap-3 px-4 py-2.5">
                         <span className="text-xs text-gray-400 flex-shrink-0">{label}</span>
@@ -634,9 +629,9 @@ function CallTimeSelector({ value, onChange }: { value: string; onChange: (val: 
     const h = getHour();
     const slots = [
         ...(h >= 8 && h < 20 ? [{ value: "now", emoji: "📲", label: "MAINTENANT", sub: "On vous appelle dans les minutes qui suivent", highlight: true, tomorrow: false }] : []),
-        { value: "morning",   emoji: "🌅", label: "MATIN",      sub: h >= 12 ? "Demain 8h–12h"  : "Aujourd'hui 8h–12h",  highlight: false, tomorrow: h >= 12 },
+        { value: "morning", emoji: "🌅", label: "MATIN", sub: h >= 12 ? "Demain 8h–12h" : "Aujourd'hui 8h–12h", highlight: false, tomorrow: h >= 12 },
         { value: "afternoon", emoji: "☀️", label: "APRÈS-MIDI", sub: h >= 17 ? "Demain 12h–17h" : "Aujourd'hui 12h–17h", highlight: false, tomorrow: h >= 17 },
-        { value: "evening",   emoji: "🌙", label: "SOIR",       sub: h >= 20 ? "Demain 17h–20h" : "Aujourd'hui 17h–20h", highlight: false, tomorrow: h >= 20 },
+        { value: "evening", emoji: "🌙", label: "SOIR", sub: h >= 20 ? "Demain 17h–20h" : "Aujourd'hui 17h–20h", highlight: false, tomorrow: h >= 20 },
     ];
     return (
         <div className="space-y-2">
@@ -644,10 +639,9 @@ function CallTimeSelector({ value, onChange }: { value: string; onChange: (val: 
                 const sel = value === slot.value;
                 return (
                     <button key={slot.value} type="button" onClick={() => onChange(slot.value)}
-                        className={`w-full px-4 py-3 rounded-xl border-2 font-bold text-sm transition-all flex items-center gap-3 ${
-                            sel ? slot.highlight ? "bg-green-500 border-green-500 text-white shadow-md" : "bg-shopici-blue border-shopici-blue text-white shadow-md"
-                                : "bg-white border-gray-200 text-shopici-black hover:border-shopici-blue"
-                        }`}>
+                        className={`w-full px-4 py-3 rounded-xl border-2 font-bold text-sm transition-all flex items-center gap-3 ${sel ? slot.highlight ? "bg-green-500 border-green-500 text-white shadow-md" : "bg-shopici-blue border-shopici-blue text-white shadow-md"
+                            : "bg-white border-gray-200 text-shopici-black hover:border-shopici-blue"
+                            }`}>
                         <span className="text-lg flex-shrink-0">{slot.emoji}</span>
                         <span className="flex-1 text-left min-w-0">
                             <span className="block text-sm leading-tight">{slot.label}</span>
