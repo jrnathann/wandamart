@@ -45,7 +45,7 @@ export default function ShippingTicker() {
                             Zones Éligibles
                         </span>
                         <h2 className="text-base md:text-xl font-black italic uppercase tracking-tighter text-white leading-none">
-                            Livraison <span className="text-shopici-blue">Gratuite</span>
+                            Livraison<span className="text-shopici-blue"> & Expédition</span>
                         </h2>
                     </div>
                 </div>
