@@ -176,6 +176,8 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
     };
 
     const handleCodSubmit = async (normalizedPhone: string) => {
+        const orderItems = [{ product: product!, quantity }];
+        const confirmedTotal = product!.price * quantity;
         setSubmitting(true);
         const customer: CustomerInfo = {
             name: orderForm.name,
@@ -190,7 +192,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
             _ua: navigator.userAgent,
         };
         try {
-            const newOrder = await addOrder([{ product: product!, quantity }], customer, facebookTracking);
+            const newOrder = await addOrder(orderItems, customer, facebookTracking);
             setOrderSubmitted(true);
             const hashedOrderId = await hashString(newOrder.id);
 
@@ -201,7 +203,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 (window as any).fbq("track", "Lead", {
                     content_name: product!.name,
                     content_category: product!.category,
-                    value: product!.price * quantity,
+                    value: confirmedTotal,
                     currency: "XAF",
                     order_id: newOrder.id,
                 }, {
@@ -259,7 +261,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 (window as any).fbq("track", "Purchase", {
                     content_name: product!.name,
                     content_ids: [product!._id],
-                    value: product!.price * quantity,
+                    value: data.total,
                     currency: "XAF",
                     num_items: quantity,
                     order_id: data.orderId,

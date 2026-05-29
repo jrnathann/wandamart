@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
         console.log(`📲 directPay pushed for order ${orderId} — transId: ${fapshiRes.transId}`);
 
         // ── 8. Return orderId ─────────────────────────────────────────────────
-        return NextResponse.json({ orderId }, { status: isNewOrder ? 201 : 200 });
+        return NextResponse.json({ orderId, total }, { status: isNewOrder ? 201 : 200 });
 
     } catch (err: any) {
         console.error("POST /api/payment/create-order error:", err);
