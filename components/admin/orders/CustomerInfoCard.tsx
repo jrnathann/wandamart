@@ -28,23 +28,30 @@ export default function CustomerInfoCard({ customer, orderId, items }: CustomerI
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/shipping?id=${orderId}`
     : null;
 
-  const trackingBlock = trackingLink
-    ? `\n\n🔗 Suivez votre commande en temps réel ici :\n${trackingLink}\n\n🔗 Track your order in real time here:\n${trackingLink}`
-    : "";
-
   const automatedNotice =
     `⚠️ _Ceci est un message automatique — Automated message_ ⚠️\n` +
-    `_Merci de ne pas répondre directement à ce message. / Please do not reply directly to this message._\n` +
     `─────────────────────────\n\n`;
 
-  const agencyPaymentBlock =
-    `\n\n💳 *Si vous êtes en dehors de Yaoundé :* votre commande sera expédiée via une agence de voyage. Le règlement s'effectue par *MTN MoMo* ou *Orange Money* — le numéro vous sera communiqué sur demande.\n\n` +
-    `💳 *If you are outside Yaoundé:* your order will be shipped via a travel agency. Payment is made via *MTN MoMo* or *Orange Money* — the number will be provided upon request.`;
+  // ── French blocks ──────────────────────────────────────────────────────────
+  const frTrackingBlock = trackingLink
+    ? `\n\n🔗 Suivez votre commande en temps réel ici :\n${trackingLink}`
+    : "";
+
+  const frAgencyBlock =
+    `\n\n💳 *Si vous êtes en dehors de Yaoundé :* votre commande sera expédiée via une agence de voyage. Le règlement s'effectue par *MTN MoMo* ou *Orange Money* — le numéro vous sera communiqué sur demande.`;
+
+  // ── English blocks ─────────────────────────────────────────────────────────
+  const enTrackingBlock = trackingLink
+    ? `\n\n🔗 Track your order in real time here:\n${trackingLink}`
+    : "";
+
+  const enAgencyBlock =
+    `\n\n💳 *If you are outside Yaoundé:* your order will be shipped via a travel agency. Payment is made via *MTN MoMo* or *Orange Money* — the number will be provided upon request.`;
 
   // ── Message 1: Order confirmed ─────────────────────────────────────────────
   const confirmedMessage = automatedNotice + (productSummary
-    ? `Bonjour ${customer.name}, votre commande a bien été reçue.\n\n🛍️ Produit(s) commandé(s) : ${productSummary}${trackingBlock}${agencyPaymentBlock}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\n🛍️ Ordered item(s): ${productSummary}${trackingBlock}${agencyPaymentBlock}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`
-    : `Bonjour ${customer.name}, votre commande a bien été reçue.${trackingBlock}${agencyPaymentBlock}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.${trackingBlock}${agencyPaymentBlock}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`);
+    ? `Bonjour ${customer.name}, votre commande a bien été reçue.\n\n🛍️ Produit(s) commandé(s) : ${productSummary}${frTrackingBlock}${frAgencyBlock}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\n🛍️ Ordered item(s): ${productSummary}${enTrackingBlock}${enAgencyBlock}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`
+    : `Bonjour ${customer.name}, votre commande a bien été reçue.${frTrackingBlock}${frAgencyBlock}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.${enTrackingBlock}${enAgencyBlock}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`);
 
   // ── Message 2: Order cancelled ─────────────────────────────────────────────
   const cancelledMessage = automatedNotice + (productSummary
