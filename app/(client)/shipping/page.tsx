@@ -104,6 +104,21 @@ export default function OrderTrackingPage() {
     // Safe phone — only render contact links when config is ready
     const phone = storeConfig?.contact?.phone ?? null;
 
+    // Auto-search when ?id=ORD-XXXXXXXX is in the URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("id");
+        if (!id) return;
+        setTrackingId(id);
+        setOrderLoading(true);
+        getOrderById(id.trim()).then((foundOrder) => {
+            if (!foundOrder)
+                setError("Commande introuvable. Vérifiez votre numéro de suivi.");
+            else setOrder(foundOrder);
+            setOrderLoading(false);
+        });
+    }, []); // runs once on mount
+
     useEffect(() => {
         fetch("/api/products")
             .then((r) => r.json())

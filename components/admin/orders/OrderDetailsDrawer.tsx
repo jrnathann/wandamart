@@ -130,6 +130,7 @@ export default function OrderDetailsDrawer({ order, onClose, onOrderUpdate }: Or
                     {/* ✅ Pass resolved product names to CustomerInfoCard */}
                     <CustomerInfoCard
                         customer={localOrder.customer}
+                        orderId={localOrder.id}
                         items={resolvedItems}
                     />
                     <OrderItemsList items={localOrder.items} total={localOrder.total} />

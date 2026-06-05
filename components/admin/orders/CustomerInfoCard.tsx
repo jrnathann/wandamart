@@ -1,14 +1,15 @@
 "use client"
 
 import { MapPin, MessageCircle, Copy, Clock, Phone } from "lucide-react";
-import type { CustomerInfo, OrderItem } from "@/types/OrderTracking";
+import type { CustomerInfo } from "@/types/OrderTracking";
 
 interface CustomerInfoCardProps {
   customer: CustomerInfo;
-  items?: Array<{ name: string; quantity: number }>; // ← new prop
+  orderId?: string;
+  items?: Array<{ name: string; quantity: number }>;
 }
 
-export default function CustomerInfoCard({ customer, items }: CustomerInfoCardProps) {
+export default function CustomerInfoCard({ customer, orderId, items }: CustomerInfoCardProps) {
   const getCallTimeLabel = (time: CustomerInfo["callTime"]) => {
     const labels: Record<CustomerInfo["callTime"], string> = {
       now: "Maintenant",
@@ -19,18 +20,42 @@ export default function CustomerInfoCard({ customer, items }: CustomerInfoCardPr
     return labels[time];
   };
 
-  // Build a readable product summary e.g. "2x Crème Visage, 1x Sérum"
   const productSummary = items && items.length > 0
     ? items.map(i => `${i.quantity}x ${i.name}`).join(", ")
     : null;
 
-  const whatsappMessage = productSummary
-    ? `Bonjour ${customer.name}, votre commande a bien été reçue.\n\n🛍️ Produit(s) commandé(s) : ${productSummary}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\n🛍️ Ordered item(s): ${productSummary}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`
-    : `Bonjour ${customer.name}, votre commande a bien été reçue.\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`;
+  const trackingLink = orderId
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/shipping?id=${orderId}`
+    : null;
+
+  const trackingBlock = trackingLink
+    ? `\n\n🔗 Suivez votre commande en temps réel ici :\n${trackingLink}\n\n🔗 Track your order in real time here:\n${trackingLink}`
+    : "";
+
+  const automatedNotice =
+    `⚠️ _Ceci est un message automatique — Automated message_ ⚠️\n` +
+    `_Merci de ne pas répondre directement à ce message. / Please do not reply directly to this message._\n` +
+    `─────────────────────────\n\n`;
+
+  const agencyPaymentBlock =
+    `\n\n💳 *Si vous êtes en dehors de Yaoundé :* votre commande sera expédiée via une agence de voyage. Le règlement s'effectue par *MTN MoMo* ou *Orange Money* — le numéro vous sera communiqué sur demande.\n\n` +
+    `💳 *If you are outside Yaoundé:* your order will be shipped via a travel agency. Payment is made via *MTN MoMo* or *Orange Money* — the number will be provided upon request.`;
+
+  // ── Message 1: Order confirmed ─────────────────────────────────────────────
+  const confirmedMessage = automatedNotice + (productSummary
+    ? `Bonjour ${customer.name}, votre commande a bien été reçue.\n\n🛍️ Produit(s) commandé(s) : ${productSummary}${trackingBlock}${agencyPaymentBlock}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.\n\n🛍️ Ordered item(s): ${productSummary}${trackingBlock}${agencyPaymentBlock}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`
+    : `Bonjour ${customer.name}, votre commande a bien été reçue.${trackingBlock}${agencyPaymentBlock}\n\nNotre équipe va vous contacter concernant la livraison.\nMerci pour votre confiance 🙏\n\n---\n\nHello ${customer.name}, your order has been successfully received.${trackingBlock}${agencyPaymentBlock}\n\nOur team will be in touch shortly to arrange your delivery.\nThank you for your trust.`);
+
+  // ── Message 2: Order cancelled ─────────────────────────────────────────────
+  const cancelledMessage = automatedNotice + (productSummary
+    ? `Bonjour ${customer.name}, nous vous informons que votre commande a malheureusement été annulée.\n\n🛍️ Produit(s) concerné(s) : ${productSummary}\n\nNous sommes désolés pour ce désagrément. N'hésitez pas à nous contacter ou à passer une nouvelle commande.\n\n---\n\nHello ${customer.name}, we regret to inform you that your order has been cancelled.\n\n🛍️ Item(s): ${productSummary}\n\nWe apologize for the inconvenience. Feel free to contact us or place a new order.`
+    : `Bonjour ${customer.name}, nous vous informons que votre commande a malheureusement été annulée.\n\nNous sommes désolés pour ce désagrément. N'hésitez pas à nous contacter ou à passer une nouvelle commande.\n\n---\n\nHello ${customer.name}, we regret to inform you that your order has been cancelled.\n\nWe apologize for the inconvenience. Feel free to contact us or place a new order.`);
+
+  const waBase = `https://wa.me/${customer.phone.replace(/\s/g, "")}?text=`;
 
   return (
     <div className="bg-white border border-shopici-black/10 p-5 md:p-8 rounded-none">
-      
+
       {/* 1. HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 pb-6 border-b border-shopici-black/5">
         <div className="space-y-1">
@@ -41,19 +66,37 @@ export default function CustomerInfoCard({ customer, items }: CustomerInfoCardPr
             {customer.name}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* WhatsApp: Confirmer */}
           {customer.hasWhatsApp && (
             <a
-              href={`https://wa.me/${customer.phone.replace(/\s/g, "")}?text=${encodeURIComponent(whatsappMessage)}`}
+              href={`${waBase}${encodeURIComponent(confirmedMessage)}`}
               target="_blank"
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
             >
               <MessageCircle size={14} fill="currentColor" />
-              WhatsApp
+              Confirmer
             </a>
           )}
-          <a href={`tel:${customer.phone}`} className="p-3 border-2 border-shopici-black text-shopici-black hover:bg-black hover:text-white">
+
+          {/* WhatsApp: Annuler */}
+          {customer.hasWhatsApp && (
+            <a
+              href={`${waBase}${encodeURIComponent(cancelledMessage)}`}
+              target="_blank"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
+            >
+              <MessageCircle size={14} fill="currentColor" />
+              Annuler
+            </a>
+          )}
+
+          {/* Call button */}
+          <a
+            href={`tel:${customer.phone}`}
+            className="p-3 border-2 border-shopici-black text-shopici-black hover:bg-black hover:text-white transition-all"
+          >
             <Phone size={16} />
           </a>
         </div>
@@ -67,7 +110,10 @@ export default function CustomerInfoCard({ customer, items }: CustomerInfoCardPr
             <p className="text-[9px] font-black uppercase tracking-widest text-shopici-black/40">Téléphone</p>
             <div className="flex items-center gap-2">
               <span className="text-sm font-black tabular-nums text-shopici-black">{customer.phone}</span>
-              <button onClick={() => navigator.clipboard.writeText(customer.phone)} className="text-shopici-black/20 hover:text-shopici-black">
+              <button
+                onClick={() => navigator.clipboard.writeText(customer.phone)}
+                className="text-shopici-black/20 hover:text-shopici-black"
+              >
                 <Copy size={14} />
               </button>
             </div>
