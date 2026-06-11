@@ -4,8 +4,8 @@ import { getToken } from "next-auth/jwt";
 
 // Define your admin emails here
 const ADMIN_EMAILS = [
-  "jordanjuniordjimelykheambo@gmail.com",
-  "coachcraft.space@gmail.com",
+  "jrnathan.gau.edu@gmail.com",
+  "bekenierandy6@gmail.com",
 ];
 
 export async function middleware(req: NextRequest) {
