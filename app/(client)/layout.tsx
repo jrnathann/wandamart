@@ -3,9 +3,9 @@ import "../globals.css";
 import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
-  title: "Shopici",
+  title: "WandaMart",
   description:
-    "Shopici est votre boutique en ligne pour des produits tendance et des essentiels du quotidien. Produits de qualité, prix malins et livraison dans tout le Cameroun",
+    "WandaMart est une place de marché en ligne au Cameroun proposant des produits électroniques, des articles de mode, des articles ménagers et divers autres produits de consommation, avec des paiements sécurisés et des services de livraison pratiques.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
