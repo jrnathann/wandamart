@@ -126,7 +126,7 @@ export default function ProductsPage() {
           <div className="space-y-4 max-w-2xl">
             {/* Small Eyebrow Label */}
             <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-shopici-blue">
-              Conciergerie Shopici
+              Conciergerie WandaMart
             </span>
 
             {/* Main Title: Black, Sharp, and Statue-like */}

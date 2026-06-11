@@ -19,13 +19,13 @@ const bannerSlides = [
   },
 ];
 export const storeConfig = {
-  name: "Shopici",
+  name: "WandaMart",
   logo: "/logo2.png",
   description: "Votre boutique en ligne pour tous vos besoins",
   objective: "Vous offrir une expérience d’achat simple, sécurisée et agréable, sans stress.",
   contact: {
-    email: "contact@shopici.com",
-    phone: "+237 6 22 57 13 96",
+    email: "contact@wandamart.com",
+    phone: "+237 X XX XX XX XX",
     address: "Yaoundé, Cameroun"
   },
   currency: "XAF",
@@ -33,8 +33,8 @@ export const storeConfig = {
     facebook: "https://web.facebook.com/profile.php?id=61582791245183",
   },
   tracking: {
-    facebookPixelId: "735596049606757",
-    googleAnalyticsId: "G-EH6KJZMW7W",
+    facebookPixelId: "",
+    googleAnalyticsId: "",
   },
   bannerSlides,
   theme: {
