@@ -174,10 +174,13 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
         }
         setOrderForm(form);
     };
+    const isSubmittingRef = useRef(false);
 
     const handleCodSubmit = async (normalizedPhone: string) => {
         const orderItems = [{ product: product!, quantity }];
         const confirmedTotal = product!.price * quantity;
+        if (isSubmittingRef.current) return;        // ← synchronous guard
+        isSubmittingRef.current = true;
         setSubmitting(true);
         const customer: CustomerInfo = {
             name: orderForm.name,
@@ -216,10 +219,13 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
             alert("Une erreur s'est produite. Veuillez réessayer.");
         } finally {
             setSubmitting(false);
+            isSubmittingRef.current = false;
         }
     };
 
     const handleOnlineSubmit = async (normalizedPhone: string) => {
+        if (isSubmittingRef.current) return;        // ← same guard
+        isSubmittingRef.current = true;
         setSubmitting(true);
         setPaymentError(null);
         try {
@@ -250,6 +256,7 @@ export default function ProductDetailsPage({ slug }: ProductDetailsPageProps) {
                 const msg = (data.detail as string | undefined) ?? (data.error as string | undefined) ?? "Erreur lors du paiement";
                 setPaymentError(msg);
                 setSubmitting(false);
+                isSubmittingRef.current = false;
                 return;
             }
             const hashedOrderId = await hashString(data.orderId);
